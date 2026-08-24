@@ -1,0 +1,53 @@
+package com.robson.financas.di
+
+import android.content.Context
+import androidx.room.Room
+import androidx.room.RoomDatabase
+import androidx.sqlite.db.SupportSQLiteDatabase
+import com.robson.financas.data.local.AppDatabase
+import com.robson.financas.data.local.dao.AccountDao
+import com.robson.financas.data.local.dao.CategoryDao
+import com.robson.financas.data.local.dao.TransactionDao
+import com.robson.financas.data.local.seed.DefaultCategorySeeder
+import dagger.Module
+import dagger.Provides
+import dagger.hilt.InstallIn
+import dagger.hilt.android.qualifiers.ApplicationContext
+import dagger.hilt.components.SingletonComponent
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
+import javax.inject.Provider
+import javax.inject.Singleton
+
+@Module
+@InstallIn(SingletonComponent::class)
+object DatabaseModule {
+
+    @Provides
+    @Singleton
+    fun provideAppDatabase(
+        @ApplicationContext context: Context,
+        databaseProvider: Provider<AppDatabase>,
+    ): AppDatabase =
+        Room.databaseBuilder(context, AppDatabase::class.java, "financas.db")
+            .fallbackToDestructiveMigration(dropAllTables = true)
+            .addCallback(object : RoomDatabase.Callback() {
+                override fun onCreate(db: SupportSQLiteDatabase) {
+                    super.onCreate(db)
+                    CoroutineScope(Dispatchers.IO).launch {
+                        databaseProvider.get().categoryDao().insertAll(DefaultCategorySeeder.buildDefaultCategories())
+                    }
+                }
+            })
+            .build()
+
+    @Provides
+    fun provideAccountDao(database: AppDatabase): AccountDao = database.accountDao()
+
+    @Provides
+    fun provideCategoryDao(database: AppDatabase): CategoryDao = database.categoryDao()
+
+    @Provides
+    fun provideTransactionDao(database: AppDatabase): TransactionDao = database.transactionDao()
+}
