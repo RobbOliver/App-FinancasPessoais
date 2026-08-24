@@ -14,4 +14,11 @@ sealed class Screen(val route: String) {
         const val ARG_CATEGORY_ID = "categoryId"
         fun routeFor(categoryId: Long? = null) = "categories/edit?categoryId=${categoryId ?: -1L}"
     }
+
+    data object Transactions : Screen("transactions")
+
+    data object AddEditTransaction : Screen("transactions/edit?transactionId={transactionId}") {
+        const val ARG_TRANSACTION_ID = "transactionId"
+        fun routeFor(transactionId: Long? = null) = "transactions/edit?transactionId=${transactionId ?: -1L}"
+    }
 }

@@ -14,6 +14,8 @@ import com.robson.financas.ui.accounts.AccountsScreen
 import com.robson.financas.ui.accounts.AddEditAccountScreen
 import com.robson.financas.ui.categories.AddEditCategoryScreen
 import com.robson.financas.ui.categories.CategoriesScreen
+import com.robson.financas.ui.transactions.AddEditTransactionScreen
+import com.robson.financas.ui.transactions.TransactionsScreen
 
 @Composable
 fun FinanceNavHost() {
@@ -62,6 +64,23 @@ fun FinanceNavHost() {
                 ),
             ) {
                 AddEditCategoryScreen(onBack = { navController.popBackStack() })
+            }
+            composable(Screen.Transactions.route) {
+                TransactionsScreen(
+                    onAddTransaction = { navController.navigate(Screen.AddEditTransaction.routeFor()) },
+                    onEditTransaction = { id -> navController.navigate(Screen.AddEditTransaction.routeFor(id)) },
+                )
+            }
+            composable(
+                route = Screen.AddEditTransaction.route,
+                arguments = listOf(
+                    navArgument(Screen.AddEditTransaction.ARG_TRANSACTION_ID) {
+                        type = NavType.LongType
+                        defaultValue = -1L
+                    },
+                ),
+            ) {
+                AddEditTransactionScreen(onBack = { navController.popBackStack() })
             }
         }
     }

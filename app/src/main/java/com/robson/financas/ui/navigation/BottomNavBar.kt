@@ -3,6 +3,7 @@ package com.robson.financas.ui.navigation
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.AccountBalanceWallet
 import androidx.compose.material.icons.filled.Category
+import androidx.compose.material.icons.filled.Receipt
 import androidx.compose.material3.Icon
 import androidx.compose.material3.NavigationBar
 import androidx.compose.material3.NavigationBarItem
@@ -18,6 +19,7 @@ private data class BottomTab(val screen: Screen, val label: String, val icon: an
 
 private val bottomTabs = listOf(
     BottomTab(Screen.Accounts, "Contas", Icons.Filled.AccountBalanceWallet),
+    BottomTab(Screen.Transactions, "Transações", Icons.Filled.Receipt),
     BottomTab(Screen.Categories, "Categorias", Icons.Filled.Category),
 )
 
