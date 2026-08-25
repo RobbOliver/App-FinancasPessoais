@@ -30,6 +30,8 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.unit.dp
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
+import com.robson.financas.ui.common.DonutChart
+import com.robson.financas.ui.common.MonthlyBarChart
 import com.robson.financas.ui.common.TransactionListItem
 import com.robson.financas.ui.theme.GreenIncome
 import com.robson.financas.ui.theme.RedExpense
@@ -94,6 +96,39 @@ fun DashboardScreen(
                         color = RedExpense,
                         icon = Icons.Filled.ArrowDownward,
                     )
+                }
+            }
+            item {
+                Card(modifier = Modifier.fillMaxWidth()) {
+                    Column(modifier = Modifier.padding(16.dp)) {
+                        Text("Despesas por categoria", style = MaterialTheme.typography.titleMedium)
+                        if (uiState.expenseByCategory.isEmpty()) {
+                            Text(
+                                "Sem despesas este mês.",
+                                style = MaterialTheme.typography.bodyMedium,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                modifier = Modifier.padding(top = 8.dp),
+                            )
+                        } else {
+                            DonutChart(
+                                slices = uiState.expenseByCategory,
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .padding(top = 12.dp),
+                            )
+                        }
+                    }
+                }
+            }
+            item {
+                Card(modifier = Modifier.fillMaxWidth()) {
+                    Column(modifier = Modifier.padding(16.dp)) {
+                        Text("Receita x despesa", style = MaterialTheme.typography.titleMedium)
+                        MonthlyBarChart(
+                            data = uiState.monthlyHistory,
+                            modifier = Modifier.padding(top = 12.dp),
+                        )
+                    }
                 }
             }
             item {

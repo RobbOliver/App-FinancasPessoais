@@ -6,6 +6,7 @@ import androidx.room.Insert
 import androidx.room.Query
 import androidx.room.Update
 import com.robson.financas.data.local.entity.TransactionEntity
+import com.robson.financas.data.local.relation.CategoryExpenseSlice
 import com.robson.financas.data.local.relation.MonthSummary
 import com.robson.financas.data.local.relation.TransactionWithDetails
 import kotlinx.coroutines.flow.Flow
@@ -94,4 +95,17 @@ interface TransactionDao {
         """,
     )
     fun observeMonthSummary(start: LocalDate, end: LocalDate): Flow<MonthSummary>
+
+    @Query(
+        """
+        SELECT c.id AS categoryId, c.name AS categoryName, c.colorHex AS categoryColorHex,
+            SUM(t.amountCents) AS totalCents
+        FROM transactions t
+        JOIN categories c ON c.id = t.categoryId
+        WHERE t.type = 'EXPENSE' AND t.date >= :start AND t.date <= :end
+        GROUP BY c.id
+        ORDER BY totalCents DESC
+        """,
+    )
+    fun observeExpenseByCategoryForMonth(start: LocalDate, end: LocalDate): Flow<List<CategoryExpenseSlice>>
 }

@@ -2,6 +2,7 @@ package com.robson.financas.data.repository
 
 import com.robson.financas.data.local.dao.TransactionDao
 import com.robson.financas.data.local.entity.TransactionEntity
+import com.robson.financas.data.local.relation.CategoryExpenseSlice
 import com.robson.financas.data.local.relation.MonthSummary
 import com.robson.financas.data.local.relation.TransactionWithDetails
 import kotlinx.coroutines.flow.Flow
@@ -34,4 +35,7 @@ class TransactionRepository @Inject constructor(
 
     fun observeMonthSummary(start: LocalDate, end: LocalDate): Flow<MonthSummary> =
         transactionDao.observeMonthSummary(start, end)
+
+    fun observeExpenseByCategoryForMonth(start: LocalDate, end: LocalDate): Flow<List<CategoryExpenseSlice>> =
+        transactionDao.observeExpenseByCategoryForMonth(start, end)
 }
