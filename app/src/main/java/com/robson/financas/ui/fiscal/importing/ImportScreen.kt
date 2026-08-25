@@ -10,6 +10,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Description
+import androidx.compose.material.icons.filled.PhotoCamera
 import androidx.compose.material.icons.filled.QrCodeScanner
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -39,20 +40,33 @@ fun ImportScreen(
     onBack: () -> Unit,
     onImported: (documentId: Long) -> Unit,
     onScanQrCode: () -> Unit,
-    viewModel: ImportViewModel = hiltViewModel(),
+    xmlViewModel: ImportViewModel = hiltViewModel(),
+    photoViewModel: PhotoImportViewModel = hiltViewModel(),
 ) {
-    val uiState by viewModel.uiState.collectAsState()
+    val xmlState by xmlViewModel.uiState.collectAsState()
+    val photoState by photoViewModel.uiState.collectAsState()
 
     val pickXmlLauncher = rememberLauncherForActivityResult(ActivityResultContracts.GetContent()) { uri ->
-        uri?.let(viewModel::importXmlFile)
+        uri?.let(xmlViewModel::importXmlFile)
+    }
+    val pickPhotoLauncher = rememberLauncherForActivityResult(ActivityResultContracts.GetContent()) { uri ->
+        uri?.let(photoViewModel::importPhoto)
     }
 
-    LaunchedEffect(uiState) {
-        if (uiState is ImportUiState.Success) {
-            onImported((uiState as ImportUiState.Success).documentId)
-            viewModel.consumeResult()
+    LaunchedEffect(xmlState) {
+        if (xmlState is ImportUiState.Success) {
+            onImported((xmlState as ImportUiState.Success).documentId)
+            xmlViewModel.consumeResult()
         }
     }
+    LaunchedEffect(photoState) {
+        if (photoState is ImportUiState.Success) {
+            onImported((photoState as ImportUiState.Success).documentId)
+            photoViewModel.consumeResult()
+        }
+    }
+
+    val busy = xmlState is ImportUiState.Loading || photoState is ImportUiState.Loading
 
     Scaffold(
         topBar = {
@@ -76,9 +90,9 @@ fun ImportScreen(
             EmptyState(
                 icon = Icons.Filled.Description,
                 title = "Importar XML de NF-e ou NFC-e",
-                subtitle = "Selecione o arquivo XML da nota — o app extrai estabelecimento, itens e valores automaticamente.",
-                actionLabel = if (uiState is ImportUiState.Loading) null else "Escolher arquivo XML",
-                onAction = if (uiState is ImportUiState.Loading) null else { { pickXmlLauncher.launch("*/*") } },
+                subtitle = "Selecione o arquivo XML da nota — o app extrai estabelecimento, itens e valores automaticamente. É o caminho mais confiável.",
+                actionLabel = if (busy) null else "Escolher arquivo XML",
+                onAction = if (busy) null else { { pickXmlLauncher.launch("*/*") } },
             )
 
             AppOutlinedButton(
@@ -88,36 +102,49 @@ fun ImportScreen(
                 modifier = Modifier.fillMaxWidth(),
             )
 
-            when (val state = uiState) {
-                is ImportUiState.Loading -> AppCard(modifier = Modifier.fillMaxWidth()) {
-                    Column(horizontalAlignment = Alignment.CenterHorizontally, modifier = Modifier.fillMaxWidth()) {
-                        CircularProgressIndicator()
-                        Text(
-                            "Lendo e classificando itens…",
-                            style = MaterialTheme.typography.bodyMedium,
-                            modifier = Modifier.padding(top = Spacing.md),
-                        )
-                    }
-                }
-                is ImportUiState.Duplicate -> AppCard(modifier = Modifier.fillMaxWidth()) {
-                    Text("Esta nota já foi importada antes.", style = MaterialTheme.typography.bodyMedium)
-                    AppPrimaryButton(
-                        text = "Ver nota importada",
-                        onClick = { onImported(state.existingDocumentId) },
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(top = Spacing.md),
-                    )
-                }
-                is ImportUiState.Error -> AppCard(modifier = Modifier.fillMaxWidth()) {
-                    Text(
-                        state.message,
-                        style = MaterialTheme.typography.bodyMedium,
-                        color = RedExpense,
-                    )
-                }
-                else -> Unit
+            AppOutlinedButton(
+                text = "Importar foto da nota",
+                onClick = { pickPhotoLauncher.launch("image/*") },
+                icon = { Icon(Icons.Filled.PhotoCamera, contentDescription = null) },
+                modifier = Modifier.fillMaxWidth(),
+            )
+
+            ImportStatusCard(xmlState, onImported)
+            ImportStatusCard(photoState, onImported)
+        }
+    }
+}
+
+@Composable
+private fun ImportStatusCard(state: ImportUiState, onImported: (Long) -> Unit) {
+    when (state) {
+        is ImportUiState.Loading -> AppCard(modifier = Modifier.fillMaxWidth()) {
+            Column(horizontalAlignment = Alignment.CenterHorizontally, modifier = Modifier.fillMaxWidth()) {
+                CircularProgressIndicator()
+                Text(
+                    "Lendo e classificando itens…",
+                    style = MaterialTheme.typography.bodyMedium,
+                    modifier = Modifier.padding(top = Spacing.md),
+                )
             }
         }
+        is ImportUiState.Duplicate -> AppCard(modifier = Modifier.fillMaxWidth()) {
+            Text("Esta nota já foi importada antes.", style = MaterialTheme.typography.bodyMedium)
+            AppPrimaryButton(
+                text = "Ver nota importada",
+                onClick = { onImported(state.existingDocumentId) },
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(top = Spacing.md),
+            )
+        }
+        is ImportUiState.Error -> AppCard(modifier = Modifier.fillMaxWidth()) {
+            Text(
+                state.message,
+                style = MaterialTheme.typography.bodyMedium,
+                color = RedExpense,
+            )
+        }
+        else -> Unit
     }
 }

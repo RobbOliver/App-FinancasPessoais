@@ -36,6 +36,7 @@ import com.robson.financas.domain.fiscal.model.NormalizedProduct
 import com.robson.financas.domain.fiscal.model.ParsedFiscalDocument
 import com.robson.financas.domain.fiscal.model.ParsedItem
 import com.robson.financas.domain.fiscal.normalization.ItemNormalizer
+import com.robson.financas.domain.fiscal.ocr.ReceiptTextParser
 import com.robson.financas.domain.fiscal.parser.FiscalXmlParseException
 import com.robson.financas.domain.fiscal.parser.NfeXmlParser
 import com.robson.financas.domain.fiscal.price.PriceNormalizer
@@ -149,6 +150,15 @@ class FiscalDocumentRepository @Inject constructor(
             NfeXmlParser.parse(xml)
         } catch (e: FiscalXmlParseException) {
             return FiscalImportResult.Invalid(e.message ?: "XML fora do padrão de NF-e/NFC-e.")
+        }
+        return importParsedDocument(parsed)
+    }
+
+    /** Caminho de menor confiança estrutural (seção 2/24) — mais itens tendem a cair em revisão. */
+    suspend fun importFromOcrText(rawText: String, establishmentNameGuess: String? = null): FiscalImportResult {
+        val parsed = ReceiptTextParser.parse(rawText, establishmentNameGuess)
+        if (parsed.items.isEmpty()) {
+            return FiscalImportResult.Invalid("Não conseguimos identificar itens com preço no texto reconhecido nessa foto.")
         }
         return importParsedDocument(parsed)
     }
