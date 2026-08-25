@@ -16,6 +16,7 @@ import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.FactCheck
 import androidx.compose.material.icons.filled.ReportProblem
+import androidx.compose.material.icons.filled.Savings
 import androidx.compose.material.icons.filled.Description
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
@@ -47,6 +48,7 @@ fun FiscalDocumentsScreen(
     onAddDocument: () -> Unit,
     onOpenDocument: (Long) -> Unit,
     onOpenReview: () -> Unit,
+    onOpenBudget: () -> Unit,
     viewModel: FiscalDocumentsViewModel = hiltViewModel(),
 ) {
     val documents by viewModel.documents.collectAsState()
@@ -61,6 +63,9 @@ fun FiscalDocumentsScreen(
                     }
                 },
                 actions = {
+                    IconButton(onClick = onOpenBudget) {
+                        Icon(Icons.Filled.Savings, contentDescription = "Orçamento por categoria")
+                    }
                     IconButton(onClick = onOpenReview) {
                         Icon(Icons.Filled.FactCheck, contentDescription = "Revisar itens")
                     }

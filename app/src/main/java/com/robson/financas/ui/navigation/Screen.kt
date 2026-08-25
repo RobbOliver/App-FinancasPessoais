@@ -69,6 +69,8 @@ sealed class Screen(val route: String) {
 
     data object FiscalReview : Screen("fiscal/review")
 
+    data object FiscalBudget : Screen("fiscal/budget")
+
     data object ProductPriceHistory : Screen("fiscal/products/{productId}") {
         const val ARG_PRODUCT_ID = "productId"
         fun routeFor(productId: Long) = "fiscal/products/$productId"

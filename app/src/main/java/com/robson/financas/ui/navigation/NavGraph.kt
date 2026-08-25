@@ -28,6 +28,7 @@ import com.robson.financas.ui.dashboard.DashboardScreen
 import com.robson.financas.ui.fiscal.documents.FiscalDocumentDetailScreen
 import com.robson.financas.ui.fiscal.documents.FiscalDocumentsScreen
 import com.robson.financas.ui.fiscal.importing.ImportScreen
+import com.robson.financas.ui.fiscal.budget.FiscalBudgetScreen
 import com.robson.financas.ui.fiscal.products.ProductPriceHistoryScreen
 import com.robson.financas.ui.fiscal.review.ReviewScreen
 import com.robson.financas.ui.goals.GoalsScreen
@@ -222,10 +223,14 @@ fun FinanceNavHost(
                     onAddDocument = { navController.navigate(Screen.FiscalImport.route) },
                     onOpenDocument = { id -> navController.navigate(Screen.FiscalDocumentDetail.routeFor(id)) },
                     onOpenReview = { navController.navigate(Screen.FiscalReview.route) },
+                    onOpenBudget = { navController.navigate(Screen.FiscalBudget.route) },
                 )
             }
             composable(Screen.FiscalReview.route) {
                 ReviewScreen(onBack = { navController.popBackStack() })
+            }
+            composable(Screen.FiscalBudget.route) {
+                FiscalBudgetScreen(onBack = { navController.popBackStack() })
             }
             composable(Screen.FiscalImport.route) {
                 ImportScreen(
