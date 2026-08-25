@@ -12,7 +12,9 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.CompareArrows
+import androidx.compose.material.icons.filled.ContentCopy
 import androidx.compose.material.icons.filled.Delete
+import androidx.compose.material.icons.filled.Favorite
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
@@ -34,6 +36,7 @@ fun TransactionListItem(
     modifier: Modifier = Modifier,
     onDeleteClick: (() -> Unit)? = null,
     onTogglePaid: (() -> Unit)? = null,
+    onUseAsTemplate: (() -> Unit)? = null,
 ) {
     val transaction = item.transaction
     val title = when (transaction.type) {
@@ -83,13 +86,32 @@ fun TransactionListItem(
                 }
             }
             Column(modifier = Modifier.padding(start = 12.dp)) {
-                Text(title, style = MaterialTheme.typography.bodyLarge)
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    Text(title, style = MaterialTheme.typography.bodyLarge)
+                    if (transaction.isFavorite) {
+                        Icon(
+                            Icons.Filled.Favorite,
+                            contentDescription = "Favorita",
+                            tint = MaterialTheme.colorScheme.error,
+                            modifier = Modifier
+                                .padding(start = 6.dp)
+                                .size(14.dp),
+                        )
+                    }
+                }
                 Text(subtitle, style = MaterialTheme.typography.bodySmall)
                 if (transaction.needsReview) {
                     Text(
                         "Pendente de revisão",
                         style = MaterialTheme.typography.labelSmall,
                         color = MaterialTheme.colorScheme.tertiary,
+                    )
+                }
+                if (transaction.isIgnored) {
+                    Text(
+                        "Ignorada",
+                        style = MaterialTheme.typography.labelSmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
                     )
                 }
             }
@@ -106,6 +128,11 @@ fun TransactionListItem(
                     },
             )
             AmountText(amountCents = transaction.amountCents, type = transaction.type)
+            if (transaction.isFavorite && onUseAsTemplate != null) {
+                IconButton(onClick = onUseAsTemplate) {
+                    Icon(Icons.Filled.ContentCopy, contentDescription = "Usar como modelo")
+                }
+            }
             if (onDeleteClick != null) {
                 IconButton(onClick = onDeleteClick) {
                     Icon(Icons.Filled.Delete, contentDescription = "Excluir")

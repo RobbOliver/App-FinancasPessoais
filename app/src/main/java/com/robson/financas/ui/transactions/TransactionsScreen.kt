@@ -1,5 +1,6 @@
 package com.robson.financas.ui.transactions
 
+import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -9,6 +10,7 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material3.DropdownMenuItem
@@ -48,6 +50,7 @@ import kotlinx.coroutines.launch
 fun TransactionsScreen(
     onAddTransaction: () -> Unit,
     onEditTransaction: (Long) -> Unit,
+    onUseAsTemplate: (Long) -> Unit,
     viewModel: TransactionsViewModel = hiltViewModel(),
 ) {
     val filter by viewModel.filter.collectAsState()
@@ -108,7 +111,9 @@ fun TransactionsScreen(
                 }
             }
             Row(
-                modifier = Modifier.padding(horizontal = 16.dp, vertical = 4.dp),
+                modifier = Modifier
+                    .padding(horizontal = 16.dp, vertical = 4.dp)
+                    .horizontalScroll(rememberScrollState()),
                 horizontalArrangement = Arrangement.spacedBy(8.dp),
             ) {
                 FilterChip(
@@ -125,6 +130,11 @@ fun TransactionsScreen(
                     selected = filter.onlyScheduled,
                     onClick = { viewModel.toggleScheduled(!filter.onlyScheduled) },
                     label = { Text("Agendadas") },
+                )
+                FilterChip(
+                    selected = filter.onlyFavorite,
+                    onClick = { viewModel.toggleFavorite(!filter.onlyFavorite) },
+                    label = { Text("Favoritas") },
                 )
             }
 
@@ -154,6 +164,7 @@ fun TransactionsScreen(
                                 onClick = { onEditTransaction(item.transaction.id) },
                                 onDeleteClick = { pendingDelete = item.transaction },
                                 onTogglePaid = { viewModel.togglePaid(item.transaction) },
+                                onUseAsTemplate = { onUseAsTemplate(item.transaction.id) },
                             )
                         }
                     }

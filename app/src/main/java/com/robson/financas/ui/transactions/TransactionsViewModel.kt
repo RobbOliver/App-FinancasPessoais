@@ -30,6 +30,7 @@ data class TransactionsFilterState(
     val onlyCurrentMonth: Boolean = false,
     val onlyNeedsReview: Boolean = false,
     val onlyScheduled: Boolean = false,
+    val onlyFavorite: Boolean = false,
 )
 
 @OptIn(kotlinx.coroutines.ExperimentalCoroutinesApi::class)
@@ -69,6 +70,7 @@ class TransactionsViewModel @Inject constructor(
                 end,
                 f.onlyNeedsReview,
                 f.onlyScheduled,
+                f.onlyFavorite,
                 f.tagId,
             )
         }
@@ -80,6 +82,7 @@ class TransactionsViewModel @Inject constructor(
     fun toggleCurrentMonth(only: Boolean) = _filter.update { it.copy(onlyCurrentMonth = only) }
     fun toggleNeedsReview(only: Boolean) = _filter.update { it.copy(onlyNeedsReview = only) }
     fun toggleScheduled(only: Boolean) = _filter.update { it.copy(onlyScheduled = only) }
+    fun toggleFavorite(only: Boolean) = _filter.update { it.copy(onlyFavorite = only) }
 
     fun deleteTransaction(transaction: TransactionEntity) {
         viewModelScope.launch { transactionRepository.delete(transaction) }

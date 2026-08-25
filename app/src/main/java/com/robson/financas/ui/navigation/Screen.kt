@@ -19,9 +19,11 @@ sealed class Screen(val route: String) {
 
     data object Transactions : Screen("transactions")
 
-    data object AddEditTransaction : Screen("transactions/edit?transactionId={transactionId}") {
+    data object AddEditTransaction : Screen("transactions/edit?transactionId={transactionId}&templateId={templateId}") {
         const val ARG_TRANSACTION_ID = "transactionId"
-        fun routeFor(transactionId: Long? = null) = "transactions/edit?transactionId=${transactionId ?: -1L}"
+        const val ARG_TEMPLATE_ID = "templateId"
+        fun routeFor(transactionId: Long? = null, templateId: Long? = null) =
+            "transactions/edit?transactionId=${transactionId ?: -1L}&templateId=${templateId ?: -1L}"
     }
 
     data object Settings : Screen("settings")

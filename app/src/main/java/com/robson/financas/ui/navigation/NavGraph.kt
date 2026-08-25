@@ -95,12 +95,17 @@ fun FinanceNavHost(
                 TransactionsScreen(
                     onAddTransaction = { navController.navigate(Screen.AddEditTransaction.routeFor()) },
                     onEditTransaction = { id -> navController.navigate(Screen.AddEditTransaction.routeFor(id)) },
+                    onUseAsTemplate = { id -> navController.navigate(Screen.AddEditTransaction.routeFor(templateId = id)) },
                 )
             }
             composable(
                 route = Screen.AddEditTransaction.route,
                 arguments = listOf(
                     navArgument(Screen.AddEditTransaction.ARG_TRANSACTION_ID) {
+                        type = NavType.LongType
+                        defaultValue = -1L
+                    },
+                    navArgument(Screen.AddEditTransaction.ARG_TEMPLATE_ID) {
                         type = NavType.LongType
                         defaultValue = -1L
                     },

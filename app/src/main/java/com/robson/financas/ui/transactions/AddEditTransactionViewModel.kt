@@ -35,6 +35,9 @@ data class AddEditTransactionUiState(
     val date: LocalDate = LocalDate.now(),
     val description: String = "",
     val isPaid: Boolean = true,
+    val isFavorite: Boolean = false,
+    val isIgnored: Boolean = false,
+    val attachmentPath: String? = null,
     val selectedTagIds: Set<Long> = emptySet(),
     val existingTransaction: TransactionEntity? = null,
     val isSaved: Boolean = false,
@@ -58,6 +61,8 @@ class AddEditTransactionViewModel @Inject constructor(
 
     private val transactionId: Long? =
         savedStateHandle.get<Long>(Screen.AddEditTransaction.ARG_TRANSACTION_ID)?.takeIf { it >= 0 }
+    private val templateId: Long? =
+        savedStateHandle.get<Long>(Screen.AddEditTransaction.ARG_TEMPLATE_ID)?.takeIf { it >= 0 }
 
     private val _uiState = MutableStateFlow(AddEditTransactionUiState())
     val uiState: StateFlow<AddEditTransactionUiState> = _uiState
@@ -89,12 +94,35 @@ class AddEditTransactionViewModel @Inject constructor(
                             date = transaction.date,
                             description = transaction.description,
                             isPaid = transaction.isPaid,
+                            isFavorite = transaction.isFavorite,
+                            isIgnored = transaction.isIgnored,
+                            attachmentPath = transaction.attachmentPath,
                             existingTransaction = transaction,
                         )
                     }
                 }
                 val tagIds = tagRepository.observeTagsForTransaction(id).first().map { it.id }.toSet()
                 _uiState.update { it.copy(selectedTagIds = tagIds) }
+            }
+        }
+        if (transactionId == null) {
+            templateId?.let { id ->
+                viewModelScope.launch {
+                    transactionRepository.getById(id)?.let { template ->
+                        _uiState.update {
+                            it.copy(
+                                type = template.type,
+                                amountCents = template.amountCents,
+                                accountId = template.accountId,
+                                transferToAccountId = template.transferToAccountId,
+                                categoryId = template.categoryId,
+                                description = template.description,
+                            )
+                        }
+                    }
+                    val tagIds = tagRepository.observeTagsForTransaction(id).first().map { it.id }.toSet()
+                    _uiState.update { it.copy(selectedTagIds = tagIds) }
+                }
             }
         }
     }
@@ -110,6 +138,9 @@ class AddEditTransactionViewModel @Inject constructor(
     fun updateDate(date: LocalDate) = _uiState.update { it.copy(date = date) }
     fun updateDescription(description: String) = _uiState.update { it.copy(description = description) }
     fun updateIsPaid(isPaid: Boolean) = _uiState.update { it.copy(isPaid = isPaid) }
+    fun toggleFavorite() = _uiState.update { it.copy(isFavorite = !it.isFavorite) }
+    fun updateIsIgnored(isIgnored: Boolean) = _uiState.update { it.copy(isIgnored = isIgnored) }
+    fun updateAttachmentPath(path: String?) = _uiState.update { it.copy(attachmentPath = path) }
 
     fun toggleTag(tagId: Long) = _uiState.update {
         val newIds = if (tagId in it.selectedTagIds) it.selectedTagIds - tagId else it.selectedTagIds + tagId
@@ -141,9 +172,9 @@ class AddEditTransactionViewModel @Inject constructor(
                 counterpartyName = state.existingTransaction?.counterpartyName,
                 rawNotificationText = state.existingTransaction?.rawNotificationText,
                 isPaid = state.isPaid,
-                isIgnored = state.existingTransaction?.isIgnored ?: false,
-                isFavorite = state.existingTransaction?.isFavorite ?: false,
-                attachmentPath = state.existingTransaction?.attachmentPath,
+                isIgnored = state.isIgnored,
+                isFavorite = state.isFavorite,
+                attachmentPath = state.attachmentPath,
             )
             val savedId = if (state.existingTransaction != null) {
                 transactionRepository.update(entity)

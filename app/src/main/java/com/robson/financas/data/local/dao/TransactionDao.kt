@@ -58,6 +58,7 @@ interface TransactionDao {
           AND (:endDate IS NULL OR t.date <= :endDate)
           AND (:onlyNeedsReview = 0 OR t.needsReview = 1)
           AND (:onlyScheduled = 0 OR t.isPaid = 0)
+          AND (:onlyFavorite = 0 OR t.isFavorite = 1)
           AND (:tagId IS NULL OR EXISTS (
               SELECT 1 FROM transaction_tag_cross_refs x WHERE x.transactionId = t.id AND x.tagId = :tagId
           ))
@@ -71,6 +72,7 @@ interface TransactionDao {
         endDate: LocalDate?,
         onlyNeedsReview: Boolean = false,
         onlyScheduled: Boolean = false,
+        onlyFavorite: Boolean = false,
         tagId: Long? = null,
     ): Flow<List<TransactionWithDetails>>
 

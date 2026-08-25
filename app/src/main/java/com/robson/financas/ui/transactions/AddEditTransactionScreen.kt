@@ -1,15 +1,25 @@
 package com.robson.financas.ui.transactions
 
+import android.graphics.BitmapFactory
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material.icons.filled.AttachFile
+import androidx.compose.material.icons.filled.Delete
+import androidx.compose.material.icons.filled.Favorite
+import androidx.compose.material.icons.filled.FavoriteBorder
 import androidx.compose.material3.Button
 import androidx.compose.material3.DatePicker
 import androidx.compose.material3.DatePickerDialog
@@ -22,6 +32,7 @@ import androidx.compose.material3.FilterChip
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.SegmentedButton
@@ -38,9 +49,14 @@ import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.asImageBitmap
+import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import com.robson.financas.data.local.entity.AccountEntity
@@ -48,7 +64,11 @@ import com.robson.financas.data.local.entity.CategoryEntity
 import com.robson.financas.data.local.entity.TransactionType
 import com.robson.financas.ui.common.CurrencyInputField
 import com.robson.financas.ui.common.label
+import com.robson.financas.util.AttachmentStorage
 import com.robson.financas.util.DateFormatter
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 import java.time.Instant
 import java.time.LocalDate
 import java.time.ZoneOffset
@@ -63,6 +83,21 @@ fun AddEditTransactionScreen(
     val accounts by viewModel.accounts.collectAsState()
     val categories by viewModel.categories.collectAsState()
     val allTags by viewModel.allTags.collectAsState()
+    val context = LocalContext.current
+    val coroutineScope = rememberCoroutineScope()
+
+    val pickImageLauncher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.GetContent(),
+    ) { uri ->
+        if (uri != null) {
+            coroutineScope.launch(Dispatchers.IO) {
+                val path = AttachmentStorage.copyToInternalStorage(context, uri)
+                if (path != null) {
+                    withContext(Dispatchers.Main) { viewModel.updateAttachmentPath(path) }
+                }
+            }
+        }
+    }
 
     LaunchedEffect(uiState.isSaved) {
         if (uiState.isSaved) onBack()
@@ -90,6 +125,14 @@ fun AddEditTransactionScreen(
                 navigationIcon = {
                     IconButton(onClick = onBack) {
                         Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Voltar")
+                    }
+                },
+                actions = {
+                    IconButton(onClick = viewModel::toggleFavorite) {
+                        Icon(
+                            imageVector = if (uiState.isFavorite) Icons.Filled.Favorite else Icons.Filled.FavoriteBorder,
+                            contentDescription = "Favoritar",
+                        )
                     }
                 },
             )
@@ -164,6 +207,19 @@ fun AddEditTransactionScreen(
                 Switch(checked = uiState.isPaid, onCheckedChange = viewModel::updateIsPaid)
             }
 
+            if (uiState.type != TransactionType.TRANSFER) {
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(top = 8.dp),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.CenterVertically,
+                ) {
+                    Text("Ignorar despesa")
+                    Switch(checked = uiState.isIgnored, onCheckedChange = viewModel::updateIsIgnored)
+                }
+            }
+
             OutlinedTextField(
                 value = uiState.description,
                 onValueChange = viewModel::updateDescription,
@@ -192,6 +248,45 @@ fun AddEditTransactionScreen(
                             label = { Text(tag.name) },
                         )
                     }
+                }
+            }
+
+            Text(
+                "Anexo",
+                style = MaterialTheme.typography.labelLarge,
+                modifier = Modifier.padding(top = 16.dp),
+            )
+            if (uiState.attachmentPath != null) {
+                val bitmap = remember(uiState.attachmentPath) {
+                    BitmapFactory.decodeFile(uiState.attachmentPath)?.asImageBitmap()
+                }
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(top = 8.dp),
+                    verticalAlignment = Alignment.CenterVertically,
+                ) {
+                    bitmap?.let {
+                        Image(
+                            bitmap = it,
+                            contentDescription = "Comprovante anexado",
+                            contentScale = ContentScale.Crop,
+                            modifier = Modifier
+                                .size(64.dp)
+                                .clip(RoundedCornerShape(8.dp)),
+                        )
+                    }
+                    IconButton(onClick = { viewModel.updateAttachmentPath(null) }) {
+                        Icon(Icons.Filled.Delete, contentDescription = "Remover anexo")
+                    }
+                }
+            } else {
+                OutlinedButton(
+                    onClick = { pickImageLauncher.launch("image/*") },
+                    modifier = Modifier.padding(top = 8.dp),
+                ) {
+                    Icon(Icons.Filled.AttachFile, contentDescription = null, modifier = Modifier.size(18.dp))
+                    Text("Anexar comprovante", modifier = Modifier.padding(start = 8.dp))
                 }
             }
 
