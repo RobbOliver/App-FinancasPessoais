@@ -11,6 +11,7 @@ import androidx.compose.material.icons.automirrored.filled.KeyboardArrowRight
 import androidx.compose.material.icons.filled.AccountBalanceWallet
 import androidx.compose.material.icons.filled.Category
 import androidx.compose.material.icons.filled.CreditCard
+import androidx.compose.material.icons.filled.Description
 import androidx.compose.material.icons.filled.Label
 import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material.icons.filled.TrackChanges
@@ -40,6 +41,7 @@ fun MoreScreen(
     onNavigateToTags: () -> Unit,
     onNavigateToObjectives: () -> Unit,
     onNavigateToCreditCards: () -> Unit,
+    onNavigateToFiscalDocuments: () -> Unit,
 ) {
     Scaffold(
         topBar = { TopAppBar(title = { Text("Mais opções") }) },
@@ -56,6 +58,8 @@ fun MoreScreen(
                     MoreListItem(icon = Icons.Filled.AccountBalanceWallet, label = "Contas", onClick = onNavigateToAccounts)
                     HorizontalDivider(color = BorderSubtle)
                     MoreListItem(icon = Icons.Filled.CreditCard, label = "Cartão de crédito", onClick = onNavigateToCreditCards)
+                    HorizontalDivider(color = BorderSubtle)
+                    MoreListItem(icon = Icons.Filled.Description, label = "Notas fiscais", onClick = onNavigateToFiscalDocuments)
                     HorizontalDivider(color = BorderSubtle)
                     MoreListItem(icon = Icons.Filled.Category, label = "Categorias", onClick = onNavigateToCategories)
                     HorizontalDivider(color = BorderSubtle)

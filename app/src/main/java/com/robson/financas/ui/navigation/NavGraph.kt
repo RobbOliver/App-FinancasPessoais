@@ -25,6 +25,9 @@ import com.robson.financas.ui.creditcards.AddPurchaseScreen
 import com.robson.financas.ui.creditcards.CreditCardDetailScreen
 import com.robson.financas.ui.creditcards.CreditCardsScreen
 import com.robson.financas.ui.dashboard.DashboardScreen
+import com.robson.financas.ui.fiscal.documents.FiscalDocumentDetailScreen
+import com.robson.financas.ui.fiscal.documents.FiscalDocumentsScreen
+import com.robson.financas.ui.fiscal.importing.ImportScreen
 import com.robson.financas.ui.goals.GoalsScreen
 import com.robson.financas.ui.more.MoreScreen
 import com.robson.financas.ui.objectives.AddEditObjectiveScreen
@@ -141,6 +144,7 @@ fun FinanceNavHost(
                     onNavigateToTags = { navController.navigate(Screen.Tags.route) },
                     onNavigateToObjectives = { navController.navigate(Screen.Objectives.route) },
                     onNavigateToCreditCards = { navController.navigate(Screen.CreditCards.route) },
+                    onNavigateToFiscalDocuments = { navController.navigate(Screen.FiscalDocuments.route) },
                 )
             }
             composable(Screen.Tags.route) {
@@ -209,6 +213,31 @@ fun FinanceNavHost(
                 ),
             ) {
                 AddPurchaseScreen(onBack = { navController.popBackStack() })
+            }
+            composable(Screen.FiscalDocuments.route) {
+                FiscalDocumentsScreen(
+                    onBack = { navController.popBackStack() },
+                    onAddDocument = { navController.navigate(Screen.FiscalImport.route) },
+                    onOpenDocument = { id -> navController.navigate(Screen.FiscalDocumentDetail.routeFor(id)) },
+                )
+            }
+            composable(Screen.FiscalImport.route) {
+                ImportScreen(
+                    onBack = { navController.popBackStack() },
+                    onImported = { id ->
+                        navController.navigate(Screen.FiscalDocumentDetail.routeFor(id)) {
+                            popUpTo(Screen.FiscalDocuments.route)
+                        }
+                    },
+                )
+            }
+            composable(
+                route = Screen.FiscalDocumentDetail.route,
+                arguments = listOf(
+                    navArgument(Screen.FiscalDocumentDetail.ARG_DOCUMENT_ID) { type = NavType.LongType },
+                ),
+            ) {
+                FiscalDocumentDetailScreen(onBack = { navController.popBackStack() })
             }
         }
     }
