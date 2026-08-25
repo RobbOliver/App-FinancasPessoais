@@ -3,6 +3,7 @@ package com.robson.financas.ui.navigation
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.Scaffold
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.navigation.NavType
 import androidx.navigation.compose.NavHost
@@ -20,7 +21,10 @@ import com.robson.financas.ui.transactions.AddEditTransactionScreen
 import com.robson.financas.ui.transactions.TransactionsScreen
 
 @Composable
-fun FinanceNavHost() {
+fun FinanceNavHost(
+    pendingEditTransactionId: Long? = null,
+    onPendingEditConsumed: () -> Unit = {},
+) {
     val navController = rememberNavController()
     val backStackEntry by navController.currentBackStackEntryAsState()
     val showBottomBar = backStackEntry?.destination?.route in bottomTabRoutes
@@ -34,6 +38,12 @@ fun FinanceNavHost() {
             modifier = androidx.compose.ui.Modifier.padding(scaffoldPadding),
         ) {
             composable(Screen.Dashboard.route) {
+                LaunchedEffect(pendingEditTransactionId) {
+                    if (pendingEditTransactionId != null) {
+                        navController.navigate(Screen.AddEditTransaction.routeFor(pendingEditTransactionId))
+                        onPendingEditConsumed()
+                    }
+                }
                 DashboardScreen(
                     onAddTransaction = { navController.navigate(Screen.AddEditTransaction.routeFor()) },
                     onEditTransaction = { id -> navController.navigate(Screen.AddEditTransaction.routeFor(id)) },

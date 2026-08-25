@@ -84,11 +84,19 @@ fun TransactionsScreen(
                     modifier = Modifier.weight(1f),
                 )
             }
-            Row(modifier = Modifier.padding(horizontal = 16.dp, vertical = 4.dp)) {
+            Row(
+                modifier = Modifier.padding(horizontal = 16.dp, vertical = 4.dp),
+                horizontalArrangement = Arrangement.spacedBy(8.dp),
+            ) {
                 FilterChip(
                     selected = filter.onlyCurrentMonth,
                     onClick = { viewModel.toggleCurrentMonth(!filter.onlyCurrentMonth) },
                     label = { Text("Este mês") },
+                )
+                FilterChip(
+                    selected = filter.onlyNeedsReview,
+                    onClick = { viewModel.toggleNeedsReview(!filter.onlyNeedsReview) },
+                    label = { Text("Pendências") },
                 )
             }
 

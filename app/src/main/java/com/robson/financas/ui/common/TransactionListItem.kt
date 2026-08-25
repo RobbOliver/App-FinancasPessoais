@@ -83,6 +83,13 @@ fun TransactionListItem(
             Column(modifier = Modifier.padding(start = 12.dp)) {
                 Text(title, style = MaterialTheme.typography.bodyLarge)
                 Text(subtitle, style = MaterialTheme.typography.bodySmall)
+                if (transaction.needsReview) {
+                    Text(
+                        "Pendente de revisão",
+                        style = MaterialTheme.typography.labelSmall,
+                        color = MaterialTheme.colorScheme.tertiary,
+                    )
+                }
             }
         }
         Row(verticalAlignment = Alignment.CenterVertically) {

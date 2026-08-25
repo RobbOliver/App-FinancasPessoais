@@ -25,6 +25,7 @@ data class TransactionsFilterState(
     val accountId: Long? = null,
     val categoryId: Long? = null,
     val onlyCurrentMonth: Boolean = false,
+    val onlyNeedsReview: Boolean = false,
 )
 
 @OptIn(kotlinx.coroutines.ExperimentalCoroutinesApi::class)
@@ -52,13 +53,14 @@ class TransactionsViewModel @Inject constructor(
             val today = LocalDate.now()
             val start = if (f.onlyCurrentMonth) today.withDayOfMonth(1) else null
             val end = if (f.onlyCurrentMonth) today.withDayOfMonth(today.lengthOfMonth()) else null
-            transactionRepository.observeFiltered(f.accountId, f.categoryId, start, end)
+            transactionRepository.observeFiltered(f.accountId, f.categoryId, start, end, f.onlyNeedsReview)
         }
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
 
     fun updateAccountFilter(id: Long?) = _filter.update { it.copy(accountId = id) }
     fun updateCategoryFilter(id: Long?) = _filter.update { it.copy(categoryId = id) }
     fun toggleCurrentMonth(only: Boolean) = _filter.update { it.copy(onlyCurrentMonth = only) }
+    fun toggleNeedsReview(only: Boolean) = _filter.update { it.copy(onlyNeedsReview = only) }
 
     fun deleteTransaction(transaction: TransactionEntity) {
         viewModelScope.launch { transactionRepository.delete(transaction) }

@@ -54,6 +54,7 @@ interface TransactionDao {
           AND (:categoryId IS NULL OR t.categoryId = :categoryId)
           AND (:startDate IS NULL OR t.date >= :startDate)
           AND (:endDate IS NULL OR t.date <= :endDate)
+          AND (:onlyNeedsReview = 0 OR t.needsReview = 1)
         ORDER BY t.date DESC, t.createdAt DESC
         """,
     )
@@ -62,6 +63,7 @@ interface TransactionDao {
         categoryId: Long?,
         startDate: LocalDate?,
         endDate: LocalDate?,
+        onlyNeedsReview: Boolean = false,
     ): Flow<List<TransactionWithDetails>>
 
     @Query(
