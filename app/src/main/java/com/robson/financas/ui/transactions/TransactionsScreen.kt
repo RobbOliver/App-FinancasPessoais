@@ -20,8 +20,6 @@ import androidx.compose.material3.ExposedDropdownMenuAnchorType
 import androidx.compose.material3.ExposedDropdownMenuBox
 import androidx.compose.material3.ExposedDropdownMenuDefaults
 import androidx.compose.material3.FilterChip
-import androidx.compose.material3.FloatingActionButton
-import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Scaffold
@@ -44,6 +42,7 @@ import com.robson.financas.data.local.entity.TransactionEntity
 import com.robson.financas.ui.common.ConfirmDeleteDialog
 import com.robson.financas.ui.common.TransactionListItem
 import com.robson.financas.ui.designsystem.AppCard
+import com.robson.financas.ui.designsystem.AppFab
 import com.robson.financas.ui.designsystem.EmptyState
 import com.robson.financas.ui.designsystem.appTextFieldColors
 import com.robson.financas.ui.theme.Spacing
@@ -73,9 +72,7 @@ fun TransactionsScreen(
         topBar = { TopAppBar(title = { Text("Transações") }) },
         snackbarHost = { SnackbarHost(snackbarHostState) },
         floatingActionButton = {
-            FloatingActionButton(onClick = onAddTransaction) {
-                Icon(Icons.Filled.Add, contentDescription = "Nova transação")
-            }
+            AppFab(onClick = onAddTransaction, contentDescription = "Nova transação", icon = Icons.Filled.Add)
         },
     ) { innerPadding ->
         Column(modifier = Modifier.padding(innerPadding)) {

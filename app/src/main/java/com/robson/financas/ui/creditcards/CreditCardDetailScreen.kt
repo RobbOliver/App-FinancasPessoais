@@ -15,7 +15,6 @@ import androidx.compose.material.icons.automirrored.filled.KeyboardArrowLeft
 import androidx.compose.material.icons.automirrored.filled.KeyboardArrowRight
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
@@ -29,6 +28,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import com.robson.financas.ui.designsystem.AppCard
+import com.robson.financas.ui.designsystem.AppFab
 import com.robson.financas.ui.designsystem.AppPrimaryButton
 import com.robson.financas.ui.theme.GreenIncome
 import com.robson.financas.ui.theme.Spacing
@@ -60,9 +60,7 @@ fun CreditCardDetailScreen(
             )
         },
         floatingActionButton = {
-            FloatingActionButton(onClick = onAddPurchase) {
-                Icon(Icons.Filled.Add, contentDescription = "Nova compra")
-            }
+            AppFab(onClick = onAddPurchase, contentDescription = "Nova compra", icon = Icons.Filled.Add)
         },
     ) { innerPadding ->
         LazyColumn(

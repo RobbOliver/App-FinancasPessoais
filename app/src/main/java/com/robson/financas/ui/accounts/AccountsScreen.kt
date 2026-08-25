@@ -18,7 +18,6 @@ import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
@@ -47,6 +46,7 @@ import com.robson.financas.ui.common.ConfirmDeleteDialog
 import com.robson.financas.ui.common.IconCatalog
 import com.robson.financas.ui.common.label
 import com.robson.financas.ui.designsystem.AppCard
+import com.robson.financas.ui.designsystem.AppFab
 import com.robson.financas.ui.designsystem.EmptyState
 import com.robson.financas.ui.theme.GreenIncome
 import com.robson.financas.ui.theme.RedExpense
@@ -81,9 +81,7 @@ fun AccountsScreen(
         },
         snackbarHost = { SnackbarHost(snackbarHostState) },
         floatingActionButton = {
-            FloatingActionButton(onClick = onAddAccount) {
-                Icon(Icons.Filled.Add, contentDescription = "Nova conta")
-            }
+            AppFab(onClick = onAddAccount, contentDescription = "Nova conta", icon = Icons.Filled.Add)
         },
     ) { innerPadding ->
         if (accounts.isEmpty()) {

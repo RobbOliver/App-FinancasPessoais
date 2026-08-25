@@ -7,12 +7,15 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.width
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.FloatingActionButton
+import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.unit.dp
 import com.robson.financas.ui.theme.BorderSubtleStrong
 import com.robson.financas.ui.theme.Spacing
@@ -49,6 +52,25 @@ fun AppPrimaryButton(
             Spacer(Modifier.width(Spacing.xs))
         }
         Text(text, style = MaterialTheme.typography.labelLarge)
+    }
+}
+
+/** FAB — sempre accent azul cheio, consistente em todas as telas (nunca o container apagado do M3). */
+@Composable
+fun AppFab(
+    onClick: () -> Unit,
+    contentDescription: String,
+    icon: ImageVector,
+    modifier: Modifier = Modifier,
+) {
+    FloatingActionButton(
+        onClick = onClick,
+        containerColor = MaterialTheme.colorScheme.primary,
+        contentColor = MaterialTheme.colorScheme.onPrimary,
+        shape = MaterialTheme.shapes.large,
+        modifier = modifier,
+    ) {
+        Icon(icon, contentDescription = contentDescription)
     }
 }
 

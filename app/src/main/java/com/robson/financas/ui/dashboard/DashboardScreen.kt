@@ -35,6 +35,7 @@ import com.robson.financas.ui.common.GoalProgressBar
 import com.robson.financas.ui.common.MonthlyBarChart
 import com.robson.financas.ui.common.TransactionListItem
 import com.robson.financas.ui.designsystem.AppCard
+import com.robson.financas.ui.designsystem.AppFab
 import com.robson.financas.ui.designsystem.EmptyState
 import com.robson.financas.ui.designsystem.HeroCard
 import com.robson.financas.ui.designsystem.SurfaceLevel
@@ -57,13 +58,7 @@ fun DashboardScreen(
     Scaffold(
         topBar = { TopAppBar(title = { Text("Resumo") }) },
         floatingActionButton = {
-            FloatingActionButton(
-                onClick = onAddTransaction,
-                containerColor = MaterialTheme.colorScheme.primary,
-                contentColor = MaterialTheme.colorScheme.onPrimary,
-            ) {
-                Icon(Icons.Filled.Add, contentDescription = "Nova transação")
-            }
+            AppFab(onClick = onAddTransaction, contentDescription = "Nova transação", icon = Icons.Filled.Add)
         },
     ) { innerPadding ->
         if (uiState.accounts.isEmpty()) {
