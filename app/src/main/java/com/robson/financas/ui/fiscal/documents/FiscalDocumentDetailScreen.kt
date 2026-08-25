@@ -35,6 +35,7 @@ import com.robson.financas.util.DateFormatter
 @Composable
 fun FiscalDocumentDetailScreen(
     onBack: () -> Unit,
+    onOpenProduct: (Long) -> Unit,
     viewModel: FiscalDocumentDetailViewModel = hiltViewModel(),
 ) {
     val uiState by viewModel.uiState.collectAsState()
@@ -88,15 +89,15 @@ fun FiscalDocumentDetailScreen(
                 )
             }
             items(uiState.items, key = { it.item.id }) { item ->
-                ItemRow(item)
+                ItemRow(item, onClick = item.item.productId?.let { productId -> { onOpenProduct(productId) } })
             }
         }
     }
 }
 
 @Composable
-private fun ItemRow(item: PurchaseItemWithDetails) {
-    AppCard(modifier = Modifier.fillMaxWidth()) {
+private fun ItemRow(item: PurchaseItemWithDetails, onClick: (() -> Unit)?) {
+    AppCard(modifier = Modifier.fillMaxWidth(), onClick = onClick) {
         Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
             Column(modifier = Modifier.weight(1f)) {
                 Text(item.item.originalDescription, style = MaterialTheme.typography.bodyLarge)

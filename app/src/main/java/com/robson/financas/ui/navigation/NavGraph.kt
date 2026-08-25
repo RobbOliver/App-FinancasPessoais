@@ -28,6 +28,7 @@ import com.robson.financas.ui.dashboard.DashboardScreen
 import com.robson.financas.ui.fiscal.documents.FiscalDocumentDetailScreen
 import com.robson.financas.ui.fiscal.documents.FiscalDocumentsScreen
 import com.robson.financas.ui.fiscal.importing.ImportScreen
+import com.robson.financas.ui.fiscal.products.ProductPriceHistoryScreen
 import com.robson.financas.ui.fiscal.review.ReviewScreen
 import com.robson.financas.ui.goals.GoalsScreen
 import com.robson.financas.ui.more.MoreScreen
@@ -242,7 +243,18 @@ fun FinanceNavHost(
                     navArgument(Screen.FiscalDocumentDetail.ARG_DOCUMENT_ID) { type = NavType.LongType },
                 ),
             ) {
-                FiscalDocumentDetailScreen(onBack = { navController.popBackStack() })
+                FiscalDocumentDetailScreen(
+                    onBack = { navController.popBackStack() },
+                    onOpenProduct = { id -> navController.navigate(Screen.ProductPriceHistory.routeFor(id)) },
+                )
+            }
+            composable(
+                route = Screen.ProductPriceHistory.route,
+                arguments = listOf(
+                    navArgument(Screen.ProductPriceHistory.ARG_PRODUCT_ID) { type = NavType.LongType },
+                ),
+            ) {
+                ProductPriceHistoryScreen(onBack = { navController.popBackStack() })
             }
         }
     }
