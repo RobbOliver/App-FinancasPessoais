@@ -11,6 +11,8 @@ import java.time.Instant
 enum class ClassificationSource {
     USER_RULE, GTIN, KNOWN_PRODUCT, ESTABLISHMENT_CODE, EXACT_MATCH,
     KEYWORD_RULE, BRAND, ESTABLISHMENT_CONTEXT, TEXT_SIMILARITY, LLM, NEEDS_REVIEW,
+    /** O usuário corrigiu manualmente na tela de revisão — distinto de USER_RULE (regra automática). */
+    USER_CORRECTION,
 }
 
 /** "confirmado" / "automático" / "sugerido" / "a revisar" — nunca inferido pela UI, sempre gravado. */

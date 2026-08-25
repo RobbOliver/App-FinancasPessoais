@@ -1,19 +1,27 @@
 package com.robson.financas.data.repository.fiscal
 
 import com.robson.financas.data.local.dao.CategoryDao
+import com.robson.financas.data.local.dao.fiscal.ClassificationHistoryDao
 import com.robson.financas.data.local.dao.fiscal.EstablishmentDao
+import com.robson.financas.data.local.dao.fiscal.FiscalAuditLogDao
 import com.robson.financas.data.local.dao.fiscal.FiscalDocumentDao
 import com.robson.financas.data.local.dao.fiscal.MicrocategoryDao
 import com.robson.financas.data.local.dao.fiscal.PriceHistoryDao
 import com.robson.financas.data.local.dao.fiscal.ProductDao
 import com.robson.financas.data.local.dao.fiscal.PurchaseItemDao
 import com.robson.financas.data.local.dao.fiscal.UserClassificationRuleDao
+import com.robson.financas.data.local.entity.fiscal.ClassificationHistoryEntity
+import com.robson.financas.data.local.entity.fiscal.ClassificationSource
+import com.robson.financas.data.local.entity.fiscal.ClassificationStatus
 import com.robson.financas.data.local.entity.fiscal.EstablishmentEntity
+import com.robson.financas.data.local.entity.fiscal.FiscalAuditLogEntity
 import com.robson.financas.data.local.entity.fiscal.FiscalDocumentEntity
+import com.robson.financas.data.local.entity.fiscal.MatchType
 import com.robson.financas.data.local.entity.fiscal.PriceHistoryEntity
 import com.robson.financas.data.local.entity.fiscal.ProductEntity
 import com.robson.financas.data.local.entity.fiscal.PurchaseItemEntity
 import com.robson.financas.data.local.entity.fiscal.UserClassificationRuleEntity
+import com.robson.financas.data.local.seed.fiscal.toJsonArray
 import com.robson.financas.data.local.relation.fiscal.PurchaseItemWithDetails
 import com.robson.financas.data.local.seed.fiscal.parseJsonStringArray
 import com.robson.financas.domain.fiscal.AccessKeyValidator
@@ -51,6 +59,8 @@ class FiscalDocumentRepository @Inject constructor(
     private val userClassificationRuleDao: UserClassificationRuleDao,
     private val categoryDao: CategoryDao,
     private val priceHistoryDao: PriceHistoryDao,
+    private val classificationHistoryDao: ClassificationHistoryDao,
+    private val fiscalAuditLogDao: FiscalAuditLogDao,
 ) {
     private val classificationEngine = ClassificationEngine.default()
 
@@ -60,6 +70,77 @@ class FiscalDocumentRepository @Inject constructor(
 
     fun observeItems(documentId: Long): Flow<List<PurchaseItemWithDetails>> =
         purchaseItemDao.observeByDocument(documentId)
+
+    fun observeItemsNeedingReview(): Flow<List<PurchaseItemWithDetails>> = purchaseItemDao.observeNeedingReview()
+
+    /** O sistema já sugeriu certo — o usuário só confirma, sem trocar nada. */
+    suspend fun confirmClassification(itemId: Long) {
+        val item = purchaseItemDao.getById(itemId) ?: return
+        purchaseItemDao.update(item.copy(classificationStatus = ClassificationStatus.CONFIRMED))
+    }
+
+    /**
+     * O usuário escolheu a microcategoria certa manualmente. [createRuleForDescription] grava
+     * uma regra pessoal só se o usuário pedir explicitamente (seção 10 — nunca automático).
+     */
+    suspend fun correctClassification(itemId: Long, microcategoryId: Long, createRuleForDescription: Boolean) {
+        val item = purchaseItemDao.getById(itemId) ?: return
+        val microcategory = microcategoryDao.getById(microcategoryId) ?: return
+        val subcategory = categoryDao.getById(microcategory.subcategoryId) ?: return
+        val categoryId = subcategory.parentCategoryId ?: return
+
+        classificationHistoryDao.insert(
+            ClassificationHistoryEntity(
+                purchaseItemId = itemId,
+                previousCategoryId = item.categoryId,
+                previousSubcategoryId = item.subcategoryId,
+                previousMicrocategoryId = item.microcategoryId,
+                newCategoryId = categoryId,
+                newSubcategoryId = subcategory.id,
+                newMicrocategoryId = microcategoryId,
+                source = ClassificationSource.USER_CORRECTION,
+                confidence = 1.0f,
+                changedByUser = true,
+            ),
+        )
+
+        purchaseItemDao.update(
+            item.copy(
+                categoryId = categoryId,
+                subcategoryId = subcategory.id,
+                microcategoryId = microcategoryId,
+                classificationConfidence = 1.0f,
+                classificationSource = ClassificationSource.USER_CORRECTION,
+                classificationStatus = ClassificationStatus.CONFIRMED,
+                classificationReason = "Corrigido manualmente por você.",
+            ),
+        )
+
+        if (createRuleForDescription) {
+            userClassificationRuleDao.insert(
+                UserClassificationRuleEntity(
+                    matchType = MatchType.DESCRIPTION_CONTAINS,
+                    matchValue = listOf(item.normalizedDescription).toJsonArray(),
+                    categoryId = categoryId,
+                    subcategoryId = subcategory.id,
+                    microcategoryId = microcategoryId,
+                ),
+            )
+        }
+    }
+
+    /** Dispensa da fila sem atribuir categoria — para itens irrelevantes (troco, taxa, etc.). */
+    suspend fun ignoreItem(itemId: Long) {
+        val item = purchaseItemDao.getById(itemId) ?: return
+        purchaseItemDao.update(item.copy(classificationStatus = ClassificationStatus.CONFIRMED))
+        fiscalAuditLogDao.insert(
+            FiscalAuditLogEntity(
+                entityType = "purchase_item",
+                entityId = itemId,
+                action = "ignored_in_review",
+            ),
+        )
+    }
 
     suspend fun importFromXml(xml: String): FiscalImportResult {
         val parsed = try {
