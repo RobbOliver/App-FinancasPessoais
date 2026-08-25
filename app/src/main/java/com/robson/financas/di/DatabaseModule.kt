@@ -7,6 +7,7 @@ import androidx.sqlite.db.SupportSQLiteDatabase
 import com.robson.financas.data.local.AppDatabase
 import com.robson.financas.data.local.dao.AccountDao
 import com.robson.financas.data.local.dao.CategoryDao
+import com.robson.financas.data.local.dao.GoalDao
 import com.robson.financas.data.local.dao.NotificationAppMappingDao
 import com.robson.financas.data.local.dao.TransactionDao
 import com.robson.financas.data.local.seed.DefaultCategorySeeder
@@ -34,10 +35,13 @@ object DatabaseModule {
         Room.databaseBuilder(context, AppDatabase::class.java, "financas.db")
             .fallbackToDestructiveMigration(dropAllTables = true)
             .addCallback(object : RoomDatabase.Callback() {
-                override fun onCreate(db: SupportSQLiteDatabase) {
-                    super.onCreate(db)
+                override fun onOpen(db: SupportSQLiteDatabase) {
+                    super.onOpen(db)
                     CoroutineScope(Dispatchers.IO).launch {
-                        databaseProvider.get().categoryDao().insertAll(DefaultCategorySeeder.buildDefaultCategories())
+                        val categoryDao = databaseProvider.get().categoryDao()
+                        if (categoryDao.count() == 0) {
+                            categoryDao.insertAll(DefaultCategorySeeder.buildDefaultCategories())
+                        }
                     }
                 }
             })
@@ -55,4 +59,7 @@ object DatabaseModule {
     @Provides
     fun provideNotificationAppMappingDao(database: AppDatabase): NotificationAppMappingDao =
         database.notificationAppMappingDao()
+
+    @Provides
+    fun provideGoalDao(database: AppDatabase): GoalDao = database.goalDao()
 }

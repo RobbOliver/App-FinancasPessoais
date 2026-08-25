@@ -16,6 +16,7 @@ import com.robson.financas.ui.accounts.AddEditAccountScreen
 import com.robson.financas.ui.categories.AddEditCategoryScreen
 import com.robson.financas.ui.categories.CategoriesScreen
 import com.robson.financas.ui.dashboard.DashboardScreen
+import com.robson.financas.ui.goals.GoalsScreen
 import com.robson.financas.ui.settings.SettingsScreen
 import com.robson.financas.ui.transactions.AddEditTransactionScreen
 import com.robson.financas.ui.transactions.TransactionsScreen
@@ -102,6 +103,9 @@ fun FinanceNavHost(
             }
             composable(Screen.Settings.route) {
                 SettingsScreen()
+            }
+            composable(Screen.Goals.route) {
+                GoalsScreen()
             }
         }
     }
