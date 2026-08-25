@@ -18,6 +18,9 @@ import com.robson.financas.ui.categories.CategoriesScreen
 import com.robson.financas.ui.dashboard.DashboardScreen
 import com.robson.financas.ui.goals.GoalsScreen
 import com.robson.financas.ui.more.MoreScreen
+import com.robson.financas.ui.objectives.AddEditObjectiveScreen
+import com.robson.financas.ui.objectives.ObjectiveDetailScreen
+import com.robson.financas.ui.objectives.ObjectivesScreen
 import com.robson.financas.ui.settings.SettingsScreen
 import com.robson.financas.ui.tags.TagsScreen
 import com.robson.financas.ui.transactions.AddEditTransactionScreen
@@ -117,10 +120,37 @@ fun FinanceNavHost(
                     onNavigateToCategories = { navController.navigate(Screen.Categories.route) },
                     onNavigateToSettings = { navController.navigate(Screen.Settings.route) },
                     onNavigateToTags = { navController.navigate(Screen.Tags.route) },
+                    onNavigateToObjectives = { navController.navigate(Screen.Objectives.route) },
                 )
             }
             composable(Screen.Tags.route) {
                 TagsScreen(onBack = { navController.popBackStack() })
+            }
+            composable(Screen.Objectives.route) {
+                ObjectivesScreen(
+                    onBack = { navController.popBackStack() },
+                    onAddObjective = { navController.navigate(Screen.AddEditObjective.routeFor()) },
+                    onOpenObjective = { id -> navController.navigate(Screen.ObjectiveDetail.routeFor(id)) },
+                )
+            }
+            composable(
+                route = Screen.AddEditObjective.route,
+                arguments = listOf(
+                    navArgument(Screen.AddEditObjective.ARG_OBJECTIVE_ID) {
+                        type = NavType.LongType
+                        defaultValue = -1L
+                    },
+                ),
+            ) {
+                AddEditObjectiveScreen(onBack = { navController.popBackStack() })
+            }
+            composable(
+                route = Screen.ObjectiveDetail.route,
+                arguments = listOf(
+                    navArgument(Screen.ObjectiveDetail.ARG_OBJECTIVE_ID) { type = NavType.LongType },
+                ),
+            ) {
+                ObjectiveDetailScreen(onBack = { navController.popBackStack() })
             }
         }
     }

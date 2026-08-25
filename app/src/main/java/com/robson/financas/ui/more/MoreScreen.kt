@@ -11,6 +11,7 @@ import androidx.compose.material.icons.filled.AccountBalanceWallet
 import androidx.compose.material.icons.filled.Category
 import androidx.compose.material.icons.filled.Label
 import androidx.compose.material.icons.filled.Settings
+import androidx.compose.material.icons.filled.TrackChanges
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
@@ -31,6 +32,7 @@ fun MoreScreen(
     onNavigateToCategories: () -> Unit,
     onNavigateToSettings: () -> Unit,
     onNavigateToTags: () -> Unit,
+    onNavigateToObjectives: () -> Unit,
 ) {
     Scaffold(
         topBar = { TopAppBar(title = { Text("Mais opções") }) },
@@ -54,6 +56,10 @@ fun MoreScreen(
             item { HorizontalDivider() }
             item {
                 MoreListItem(icon = Icons.Filled.Label, label = "Tags", onClick = onNavigateToTags)
+            }
+            item { HorizontalDivider() }
+            item {
+                MoreListItem(icon = Icons.Filled.TrackChanges, label = "Objetivos", onClick = onNavigateToObjectives)
             }
             item { HorizontalDivider() }
             item {

@@ -31,4 +31,16 @@ sealed class Screen(val route: String) {
     data object More : Screen("more")
 
     data object Tags : Screen("tags")
+
+    data object Objectives : Screen("objectives")
+
+    data object AddEditObjective : Screen("objectives/edit?objectiveId={objectiveId}") {
+        const val ARG_OBJECTIVE_ID = "objectiveId"
+        fun routeFor(objectiveId: Long? = null) = "objectives/edit?objectiveId=${objectiveId ?: -1L}"
+    }
+
+    data object ObjectiveDetail : Screen("objectives/detail/{objectiveId}") {
+        const val ARG_OBJECTIVE_ID = "objectiveId"
+        fun routeFor(objectiveId: Long) = "objectives/detail/$objectiveId"
+    }
 }
