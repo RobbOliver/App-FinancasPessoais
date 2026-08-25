@@ -5,6 +5,12 @@ import com.robson.financas.data.local.entity.AccountType
 import com.robson.financas.data.local.entity.CategoryType
 import com.robson.financas.data.local.entity.TransactionSource
 import com.robson.financas.data.local.entity.TransactionType
+import com.robson.financas.data.local.entity.fiscal.ClassificationSource
+import com.robson.financas.data.local.entity.fiscal.ClassificationStatus
+import com.robson.financas.data.local.entity.fiscal.DocumentStatus
+import com.robson.financas.data.local.entity.fiscal.FiscalDocumentSource
+import com.robson.financas.data.local.entity.fiscal.MatchType
+import com.robson.financas.data.local.entity.fiscal.RecurrenceFrequency
 import java.time.Instant
 import java.time.LocalDate
 
@@ -44,4 +50,40 @@ class Converters {
 
     @TypeConverter
     fun fromTransactionSource(value: TransactionSource?): String? = value?.name
+
+    @TypeConverter
+    fun toFiscalDocumentSource(value: String?): FiscalDocumentSource? = value?.let { FiscalDocumentSource.valueOf(it) }
+
+    @TypeConverter
+    fun fromFiscalDocumentSource(value: FiscalDocumentSource?): String? = value?.name
+
+    @TypeConverter
+    fun toDocumentStatus(value: String?): DocumentStatus? = value?.let { DocumentStatus.valueOf(it) }
+
+    @TypeConverter
+    fun fromDocumentStatus(value: DocumentStatus?): String? = value?.name
+
+    @TypeConverter
+    fun toClassificationSource(value: String?): ClassificationSource? = value?.let { ClassificationSource.valueOf(it) }
+
+    @TypeConverter
+    fun fromClassificationSource(value: ClassificationSource?): String? = value?.name
+
+    @TypeConverter
+    fun toClassificationStatus(value: String?): ClassificationStatus? = value?.let { ClassificationStatus.valueOf(it) }
+
+    @TypeConverter
+    fun fromClassificationStatus(value: ClassificationStatus?): String? = value?.name
+
+    @TypeConverter
+    fun toMatchType(value: String?): MatchType? = value?.let { MatchType.valueOf(it) }
+
+    @TypeConverter
+    fun fromMatchType(value: MatchType?): String? = value?.name
+
+    @TypeConverter
+    fun toRecurrenceFrequency(value: String?): RecurrenceFrequency? = value?.let { RecurrenceFrequency.valueOf(it) }
+
+    @TypeConverter
+    fun fromRecurrenceFrequency(value: RecurrenceFrequency?): String? = value?.name
 }

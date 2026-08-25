@@ -36,6 +36,9 @@ interface CategoryDao {
     @Query("SELECT * FROM categories WHERE type = :type AND LOWER(name) = LOWER(:name) LIMIT 1")
     suspend fun findByNameAndType(name: String, type: CategoryType): CategoryEntity?
 
+    @Query("SELECT * FROM categories WHERE parentCategoryId = :parentId AND LOWER(name) = LOWER(:name) LIMIT 1")
+    suspend fun findByNameAndParent(name: String, parentId: Long): CategoryEntity?
+
     @Query("SELECT COUNT(*) FROM categories")
     suspend fun count(): Int
 
