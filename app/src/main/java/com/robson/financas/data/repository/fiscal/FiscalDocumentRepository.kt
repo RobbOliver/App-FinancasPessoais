@@ -73,6 +73,8 @@ class FiscalDocumentRepository @Inject constructor(
 
     fun observeItemsNeedingReview(): Flow<List<PurchaseItemWithDetails>> = purchaseItemDao.observeNeedingReview()
 
+    suspend fun findByAccessKey(accessKey: String): FiscalDocumentEntity? = fiscalDocumentDao.findByAccessKey(accessKey)
+
     /** O sistema já sugeriu certo — o usuário só confirma, sem trocar nada. */
     suspend fun confirmClassification(itemId: Long) {
         val item = purchaseItemDao.getById(itemId) ?: return

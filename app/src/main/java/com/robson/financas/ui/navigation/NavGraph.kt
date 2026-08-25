@@ -30,7 +30,10 @@ import com.robson.financas.ui.fiscal.documents.FiscalDocumentsScreen
 import com.robson.financas.ui.fiscal.importing.ImportScreen
 import com.robson.financas.ui.fiscal.budget.FiscalBudgetScreen
 import com.robson.financas.ui.fiscal.products.ProductPriceHistoryScreen
+import com.robson.financas.domain.fiscal.qrcode.NfceQrCodeParser
 import com.robson.financas.ui.fiscal.review.ReviewScreen
+import com.robson.financas.ui.fiscal.scanning.QrScanResultScreen
+import com.robson.financas.ui.fiscal.scanning.QrScannerScreen
 import com.robson.financas.ui.goals.GoalsScreen
 import com.robson.financas.ui.more.MoreScreen
 import com.robson.financas.ui.objectives.AddEditObjectiveScreen
@@ -236,6 +239,38 @@ fun FinanceNavHost(
                 ImportScreen(
                     onBack = { navController.popBackStack() },
                     onImported = { id ->
+                        navController.navigate(Screen.FiscalDocumentDetail.routeFor(id)) {
+                            popUpTo(Screen.FiscalDocuments.route)
+                        }
+                    },
+                    onScanQrCode = { navController.navigate(Screen.QrScanner.route) },
+                )
+            }
+            composable(Screen.QrScanner.route) {
+                QrScannerScreen(
+                    onBack = { navController.popBackStack() },
+                    onScanned = { rawQr ->
+                        val accessKey = NfceQrCodeParser.extractAccessKey(rawQr)
+                        if (accessKey != null) {
+                            navController.navigate(Screen.QrScanResult.routeFor(accessKey)) {
+                                popUpTo(Screen.FiscalImport.route)
+                            }
+                        }
+                    },
+                )
+            }
+            composable(
+                route = Screen.QrScanResult.route,
+                arguments = listOf(navArgument(Screen.QrScanResult.ARG_ACCESS_KEY) { type = NavType.StringType }),
+            ) {
+                QrScanResultScreen(
+                    onBack = { navController.popBackStack() },
+                    onGoToXmlImport = {
+                        navController.navigate(Screen.FiscalImport.route) {
+                            popUpTo(Screen.FiscalDocuments.route)
+                        }
+                    },
+                    onOpenDocument = { id ->
                         navController.navigate(Screen.FiscalDocumentDetail.routeFor(id)) {
                             popUpTo(Screen.FiscalDocuments.route)
                         }

@@ -71,6 +71,13 @@ sealed class Screen(val route: String) {
 
     data object FiscalBudget : Screen("fiscal/budget")
 
+    data object QrScanner : Screen("fiscal/scan")
+
+    data object QrScanResult : Screen("fiscal/scan/result/{accessKey}") {
+        const val ARG_ACCESS_KEY = "accessKey"
+        fun routeFor(accessKey: String) = "fiscal/scan/result/$accessKey"
+    }
+
     data object ProductPriceHistory : Screen("fiscal/products/{productId}") {
         const val ARG_PRODUCT_ID = "productId"
         fun routeFor(productId: Long) = "fiscal/products/$productId"

@@ -10,6 +10,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Description
+import androidx.compose.material.icons.filled.QrCodeScanner
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
@@ -26,6 +27,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import com.robson.financas.ui.designsystem.AppCard
+import com.robson.financas.ui.designsystem.AppOutlinedButton
 import com.robson.financas.ui.designsystem.AppPrimaryButton
 import com.robson.financas.ui.designsystem.EmptyState
 import com.robson.financas.ui.theme.RedExpense
@@ -36,6 +38,7 @@ import com.robson.financas.ui.theme.Spacing
 fun ImportScreen(
     onBack: () -> Unit,
     onImported: (documentId: Long) -> Unit,
+    onScanQrCode: () -> Unit,
     viewModel: ImportViewModel = hiltViewModel(),
 ) {
     val uiState by viewModel.uiState.collectAsState()
@@ -76,6 +79,13 @@ fun ImportScreen(
                 subtitle = "Selecione o arquivo XML da nota — o app extrai estabelecimento, itens e valores automaticamente.",
                 actionLabel = if (uiState is ImportUiState.Loading) null else "Escolher arquivo XML",
                 onAction = if (uiState is ImportUiState.Loading) null else { { pickXmlLauncher.launch("*/*") } },
+            )
+
+            AppOutlinedButton(
+                text = "Ler QR Code da nota",
+                onClick = onScanQrCode,
+                icon = { Icon(Icons.Filled.QrCodeScanner, contentDescription = null) },
+                modifier = Modifier.fillMaxWidth(),
             )
 
             when (val state = uiState) {
