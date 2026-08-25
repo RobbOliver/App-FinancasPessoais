@@ -14,6 +14,7 @@ import com.robson.financas.ui.accounts.AccountsScreen
 import com.robson.financas.ui.accounts.AddEditAccountScreen
 import com.robson.financas.ui.categories.AddEditCategoryScreen
 import com.robson.financas.ui.categories.CategoriesScreen
+import com.robson.financas.ui.dashboard.DashboardScreen
 import com.robson.financas.ui.transactions.AddEditTransactionScreen
 import com.robson.financas.ui.transactions.TransactionsScreen
 
@@ -28,9 +29,15 @@ fun FinanceNavHost() {
     ) { scaffoldPadding ->
         NavHost(
             navController = navController,
-            startDestination = Screen.Accounts.route,
+            startDestination = Screen.Dashboard.route,
             modifier = androidx.compose.ui.Modifier.padding(scaffoldPadding),
         ) {
+            composable(Screen.Dashboard.route) {
+                DashboardScreen(
+                    onAddTransaction = { navController.navigate(Screen.AddEditTransaction.routeFor()) },
+                    onEditTransaction = { id -> navController.navigate(Screen.AddEditTransaction.routeFor(id)) },
+                )
+            }
             composable(Screen.Accounts.route) {
                 AccountsScreen(
                     onAddAccount = { navController.navigate(Screen.AddEditAccount.routeFor()) },

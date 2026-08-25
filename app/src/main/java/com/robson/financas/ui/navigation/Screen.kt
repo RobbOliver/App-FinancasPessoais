@@ -1,6 +1,8 @@
 package com.robson.financas.ui.navigation
 
 sealed class Screen(val route: String) {
+    data object Dashboard : Screen("dashboard")
+
     data object Accounts : Screen("accounts")
 
     data object AddEditAccount : Screen("accounts/edit?accountId={accountId}") {
