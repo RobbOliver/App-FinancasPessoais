@@ -2,6 +2,7 @@ package com.robson.financas.ui.transactions
 
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
@@ -17,6 +18,7 @@ import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.ExposedDropdownMenuAnchorType
 import androidx.compose.material3.ExposedDropdownMenuBox
 import androidx.compose.material3.ExposedDropdownMenuDefaults
+import androidx.compose.material3.FilterChip
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
@@ -60,6 +62,7 @@ fun AddEditTransactionScreen(
     val uiState by viewModel.uiState.collectAsState()
     val accounts by viewModel.accounts.collectAsState()
     val categories by viewModel.categories.collectAsState()
+    val allTags by viewModel.allTags.collectAsState()
 
     LaunchedEffect(uiState.isSaved) {
         if (uiState.isSaved) onBack()
@@ -169,6 +172,28 @@ fun AddEditTransactionScreen(
                     .fillMaxWidth()
                     .padding(top = 16.dp),
             )
+
+            if (allTags.isNotEmpty()) {
+                Text(
+                    "Tags",
+                    style = MaterialTheme.typography.labelLarge,
+                    modifier = Modifier.padding(top = 16.dp),
+                )
+                FlowRow(
+                    horizontalArrangement = Arrangement.spacedBy(8.dp),
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(top = 8.dp),
+                ) {
+                    allTags.forEach { tag ->
+                        FilterChip(
+                            selected = tag.id in uiState.selectedTagIds,
+                            onClick = { viewModel.toggleTag(tag.id) },
+                            label = { Text(tag.name) },
+                        )
+                    }
+                }
+            }
 
             Button(
                 onClick = viewModel::save,

@@ -19,6 +19,7 @@ import com.robson.financas.ui.dashboard.DashboardScreen
 import com.robson.financas.ui.goals.GoalsScreen
 import com.robson.financas.ui.more.MoreScreen
 import com.robson.financas.ui.settings.SettingsScreen
+import com.robson.financas.ui.tags.TagsScreen
 import com.robson.financas.ui.transactions.AddEditTransactionScreen
 import com.robson.financas.ui.transactions.TransactionsScreen
 
@@ -115,7 +116,11 @@ fun FinanceNavHost(
                     onNavigateToAccounts = { navController.navigate(Screen.Accounts.route) },
                     onNavigateToCategories = { navController.navigate(Screen.Categories.route) },
                     onNavigateToSettings = { navController.navigate(Screen.Settings.route) },
+                    onNavigateToTags = { navController.navigate(Screen.Tags.route) },
                 )
+            }
+            composable(Screen.Tags.route) {
+                TagsScreen(onBack = { navController.popBackStack() })
             }
         }
     }

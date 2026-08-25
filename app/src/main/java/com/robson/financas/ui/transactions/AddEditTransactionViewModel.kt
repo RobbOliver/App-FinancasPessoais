@@ -6,16 +6,19 @@ import androidx.lifecycle.viewModelScope
 import com.robson.financas.data.local.entity.AccountEntity
 import com.robson.financas.data.local.entity.CategoryEntity
 import com.robson.financas.data.local.entity.CategoryType
+import com.robson.financas.data.local.entity.TagEntity
 import com.robson.financas.data.local.entity.TransactionEntity
 import com.robson.financas.data.local.entity.TransactionType
 import com.robson.financas.data.repository.AccountRepository
 import com.robson.financas.data.repository.CategoryRepository
+import com.robson.financas.data.repository.TagRepository
 import com.robson.financas.data.repository.TransactionRepository
 import com.robson.financas.ui.navigation.Screen
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.update
@@ -32,6 +35,7 @@ data class AddEditTransactionUiState(
     val date: LocalDate = LocalDate.now(),
     val description: String = "",
     val isPaid: Boolean = true,
+    val selectedTagIds: Set<Long> = emptySet(),
     val existingTransaction: TransactionEntity? = null,
     val isSaved: Boolean = false,
 ) {
@@ -49,6 +53,7 @@ class AddEditTransactionViewModel @Inject constructor(
     private val transactionRepository: TransactionRepository,
     private val accountRepository: AccountRepository,
     private val categoryRepository: CategoryRepository,
+    private val tagRepository: TagRepository,
 ) : ViewModel() {
 
     private val transactionId: Long? =
@@ -63,6 +68,10 @@ class AddEditTransactionViewModel @Inject constructor(
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
 
     val categories: StateFlow<List<CategoryEntity>> = categoryRepository
+        .observeAll()
+        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
+
+    val allTags: StateFlow<List<TagEntity>> = tagRepository
         .observeAll()
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
 
@@ -84,6 +93,8 @@ class AddEditTransactionViewModel @Inject constructor(
                         )
                     }
                 }
+                val tagIds = tagRepository.observeTagsForTransaction(id).first().map { it.id }.toSet()
+                _uiState.update { it.copy(selectedTagIds = tagIds) }
             }
         }
     }
@@ -99,6 +110,11 @@ class AddEditTransactionViewModel @Inject constructor(
     fun updateDate(date: LocalDate) = _uiState.update { it.copy(date = date) }
     fun updateDescription(description: String) = _uiState.update { it.copy(description = description) }
     fun updateIsPaid(isPaid: Boolean) = _uiState.update { it.copy(isPaid = isPaid) }
+
+    fun toggleTag(tagId: Long) = _uiState.update {
+        val newIds = if (tagId in it.selectedTagIds) it.selectedTagIds - tagId else it.selectedTagIds + tagId
+        it.copy(selectedTagIds = newIds)
+    }
 
     fun categoryTypeFor(type: TransactionType): CategoryType? = when (type) {
         TransactionType.INCOME -> CategoryType.INCOME
@@ -129,11 +145,13 @@ class AddEditTransactionViewModel @Inject constructor(
                 isFavorite = state.existingTransaction?.isFavorite ?: false,
                 attachmentPath = state.existingTransaction?.attachmentPath,
             )
-            if (state.existingTransaction != null) {
+            val savedId = if (state.existingTransaction != null) {
                 transactionRepository.update(entity)
+                entity.id
             } else {
                 transactionRepository.create(entity)
             }
+            tagRepository.setTagsForTransaction(savedId, state.selectedTagIds.toList())
             _uiState.update { it.copy(isSaved = true) }
         }
     }

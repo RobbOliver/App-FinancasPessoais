@@ -53,6 +53,7 @@ fun TransactionsScreen(
     val filter by viewModel.filter.collectAsState()
     val accounts by viewModel.accounts.collectAsState()
     val categories by viewModel.categories.collectAsState()
+    val tags by viewModel.tags.collectAsState()
     val transactions by viewModel.transactions.collectAsState()
     var pendingDelete by remember { mutableStateOf<TransactionEntity?>(null) }
     val snackbarHostState = remember { SnackbarHostState() }
@@ -90,6 +91,21 @@ fun TransactionsScreen(
                     onSelected = viewModel::updateCategoryFilter,
                     modifier = Modifier.weight(1f),
                 )
+            }
+            if (tags.isNotEmpty()) {
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(horizontal = 16.dp),
+                ) {
+                    SimpleFilterDropdown(
+                        label = "Tag",
+                        selectedLabel = tags.find { it.id == filter.tagId }?.name ?: "Todas",
+                        options = listOf("Todas" to null) + tags.map { it.name to it.id },
+                        onSelected = viewModel::updateTagFilter,
+                        modifier = Modifier.fillMaxWidth(),
+                    )
+                }
             }
             Row(
                 modifier = Modifier.padding(horizontal = 16.dp, vertical = 4.dp),

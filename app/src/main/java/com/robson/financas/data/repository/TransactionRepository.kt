@@ -30,8 +30,9 @@ class TransactionRepository @Inject constructor(
         endDate: LocalDate? = null,
         onlyNeedsReview: Boolean = false,
         onlyScheduled: Boolean = false,
+        tagId: Long? = null,
     ): Flow<List<TransactionWithDetails>> =
-        transactionDao.observeFiltered(accountId, categoryId, startDate, endDate, onlyNeedsReview, onlyScheduled)
+        transactionDao.observeFiltered(accountId, categoryId, startDate, endDate, onlyNeedsReview, onlyScheduled, tagId)
 
     fun observeRecent(limit: Int): Flow<List<TransactionWithDetails>> = transactionDao.observeRecent(limit)
 
