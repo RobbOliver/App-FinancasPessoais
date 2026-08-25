@@ -3,6 +3,7 @@ package com.robson.financas.ui.dashboard
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -13,8 +14,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.ArrowDownward
 import androidx.compose.material.icons.filled.ArrowUpward
-import androidx.compose.material3.Card
-import androidx.compose.material3.CardDefaults
+import androidx.compose.material.icons.filled.CreditCard
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.Icon
@@ -31,10 +31,17 @@ import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.unit.dp
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import com.robson.financas.ui.common.DonutChart
+import com.robson.financas.ui.common.GoalProgressBar
 import com.robson.financas.ui.common.MonthlyBarChart
 import com.robson.financas.ui.common.TransactionListItem
+import com.robson.financas.ui.designsystem.AppCard
+import com.robson.financas.ui.designsystem.EmptyState
+import com.robson.financas.ui.designsystem.HeroCard
+import com.robson.financas.ui.designsystem.SurfaceLevel
+import com.robson.financas.ui.designsystem.dotGridOverlay
 import com.robson.financas.ui.theme.GreenIncome
 import com.robson.financas.ui.theme.RedExpense
+import com.robson.financas.ui.theme.Spacing
 import com.robson.financas.util.CurrencyFormatter
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -42,6 +49,7 @@ import com.robson.financas.util.CurrencyFormatter
 fun DashboardScreen(
     onAddTransaction: () -> Unit,
     onEditTransaction: (Long) -> Unit,
+    onOpenCreditCards: () -> Unit,
     viewModel: DashboardViewModel = hiltViewModel(),
 ) {
     val uiState by viewModel.uiState.collectAsState()
@@ -49,7 +57,11 @@ fun DashboardScreen(
     Scaffold(
         topBar = { TopAppBar(title = { Text("Resumo") }) },
         floatingActionButton = {
-            FloatingActionButton(onClick = onAddTransaction) {
+            FloatingActionButton(
+                onClick = onAddTransaction,
+                containerColor = MaterialTheme.colorScheme.primary,
+                contentColor = MaterialTheme.colorScheme.onPrimary,
+            ) {
                 Icon(Icons.Filled.Add, contentDescription = "Nova transação")
             }
         },
@@ -58,12 +70,14 @@ fun DashboardScreen(
             Box(
                 modifier = Modifier
                     .fillMaxSize()
-                    .padding(innerPadding),
+                    .padding(innerPadding)
+                    .padding(Spacing.lg),
                 contentAlignment = Alignment.Center,
             ) {
-                Text(
-                    "Cadastre uma conta para começar.",
-                    style = MaterialTheme.typography.bodyLarge,
+                EmptyState(
+                    icon = Icons.Filled.Add,
+                    title = "Cadastre uma conta para começar",
+                    subtitle = "Suas contas concentram o saldo de todas as transações.",
                 )
             }
             return@Scaffold
@@ -73,8 +87,8 @@ fun DashboardScreen(
             modifier = Modifier
                 .fillMaxSize()
                 .padding(innerPadding),
-            contentPadding = androidx.compose.foundation.layout.PaddingValues(16.dp),
-            verticalArrangement = Arrangement.spacedBy(16.dp),
+            contentPadding = PaddingValues(Spacing.lg),
+            verticalArrangement = Arrangement.spacedBy(Spacing.lg),
         ) {
             item { TotalBalanceCard(totalCents = uiState.totalBalanceCents) }
             if (uiState.hasPending) {
@@ -88,7 +102,7 @@ fun DashboardScreen(
             item {
                 Row(
                     modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.spacedBy(12.dp),
+                    horizontalArrangement = Arrangement.spacedBy(Spacing.md),
                 ) {
                     SummaryCard(
                         modifier = Modifier.weight(1f),
@@ -107,36 +121,63 @@ fun DashboardScreen(
                 }
             }
             item {
-                Card(modifier = Modifier.fillMaxWidth()) {
-                    Column(modifier = Modifier.padding(16.dp)) {
-                        Text("Despesas por categoria", style = MaterialTheme.typography.titleMedium)
-                        if (uiState.expenseByCategory.isEmpty()) {
-                            Text(
-                                "Sem despesas este mês.",
-                                style = MaterialTheme.typography.bodyMedium,
-                                color = MaterialTheme.colorScheme.onSurfaceVariant,
-                                modifier = Modifier.padding(top = 8.dp),
-                            )
-                        } else {
-                            DonutChart(
-                                slices = uiState.expenseByCategory,
-                                modifier = Modifier
-                                    .fillMaxWidth()
-                                    .padding(top = 12.dp),
-                            )
+                if (uiState.creditCards.isEmpty()) {
+                    EmptyState(
+                        icon = Icons.Filled.CreditCard,
+                        title = "Nenhum cartão de crédito cadastrado",
+                        subtitle = "Ops! Você ainda não tem nenhum cartão de crédito cadastrado.",
+                        actionLabel = "Adicionar novo cartão",
+                        onAction = onOpenCreditCards,
+                    )
+                } else {
+                    AppCard(modifier = Modifier.fillMaxWidth(), onClick = onOpenCreditCards) {
+                        Text("Cartões de crédito", style = MaterialTheme.typography.titleMedium)
+                        uiState.creditCards.forEach { summary ->
+                            Column(modifier = Modifier.padding(top = Spacing.md)) {
+                                Row(
+                                    modifier = Modifier.fillMaxWidth(),
+                                    horizontalArrangement = Arrangement.SpaceBetween,
+                                ) {
+                                    Text(summary.card.name, style = MaterialTheme.typography.bodyLarge)
+                                    Text(CurrencyFormatter.formatCents(summary.invoiceTotalCents))
+                                }
+                                GoalProgressBar(
+                                    goalCents = summary.card.limitCents,
+                                    spentCents = summary.invoiceTotalCents,
+                                    modifier = Modifier.padding(top = Spacing.sm),
+                                )
+                            }
                         }
                     }
                 }
             }
             item {
-                Card(modifier = Modifier.fillMaxWidth()) {
-                    Column(modifier = Modifier.padding(16.dp)) {
-                        Text("Receita x despesa", style = MaterialTheme.typography.titleMedium)
-                        MonthlyBarChart(
-                            data = uiState.monthlyHistory,
-                            modifier = Modifier.padding(top = 12.dp),
+                AppCard(modifier = Modifier.fillMaxWidth()) {
+                    Text("Despesas por categoria", style = MaterialTheme.typography.titleMedium)
+                    if (uiState.expenseByCategory.isEmpty()) {
+                        Text(
+                            "Sem despesas este mês.",
+                            style = MaterialTheme.typography.bodyMedium,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant,
+                            modifier = Modifier.padding(top = Spacing.sm),
+                        )
+                    } else {
+                        DonutChart(
+                            slices = uiState.expenseByCategory,
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(top = Spacing.md),
                         )
                     }
+                }
+            }
+            item {
+                AppCard(modifier = Modifier.fillMaxWidth()) {
+                    Text("Receita x despesa", style = MaterialTheme.typography.titleMedium)
+                    MonthlyBarChart(
+                        data = uiState.monthlyHistory,
+                        modifier = Modifier.padding(top = Spacing.md),
+                    )
                 }
             }
             item {
@@ -150,11 +191,12 @@ fun DashboardScreen(
                     Text(
                         "Nenhuma transação lançada ainda.",
                         style = MaterialTheme.typography.bodyMedium,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
                     )
                 }
             } else {
                 items(uiState.recentTransactions, key = { it.transaction.id }) { item ->
-                    Card {
+                    AppCard(modifier = Modifier.fillMaxWidth(), contentPadding = PaddingValues(0.dp)) {
                         TransactionListItem(
                             item = item,
                             onClick = { onEditTransaction(item.transaction.id) },
@@ -168,32 +210,30 @@ fun DashboardScreen(
 
 @Composable
 private fun PendingSummaryCard(pendingIncomeCents: Long, pendingExpenseCents: Long) {
-    Card(
+    AppCard(
         modifier = Modifier.fillMaxWidth(),
-        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.primaryContainer),
+        level = SurfaceLevel.Elevated,
     ) {
-        Column(modifier = Modifier.padding(16.dp)) {
-            Text("Pendência e alertas", style = MaterialTheme.typography.titleSmall)
-            Row(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(top = 8.dp),
-                horizontalArrangement = Arrangement.SpaceBetween,
-            ) {
-                if (pendingIncomeCents > 0) {
-                    Text(
-                        "A receber: ${CurrencyFormatter.formatCents(pendingIncomeCents)}",
-                        style = MaterialTheme.typography.bodyMedium,
-                        color = GreenIncome,
-                    )
-                }
-                if (pendingExpenseCents > 0) {
-                    Text(
-                        "A pagar: ${CurrencyFormatter.formatCents(pendingExpenseCents)}",
-                        style = MaterialTheme.typography.bodyMedium,
-                        color = RedExpense,
-                    )
-                }
+        Text("Pendência e alertas", style = MaterialTheme.typography.titleSmall)
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(top = Spacing.sm),
+            horizontalArrangement = Arrangement.SpaceBetween,
+        ) {
+            if (pendingIncomeCents > 0) {
+                Text(
+                    "A receber: ${CurrencyFormatter.formatCents(pendingIncomeCents)}",
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = GreenIncome,
+                )
+            }
+            if (pendingExpenseCents > 0) {
+                Text(
+                    "A pagar: ${CurrencyFormatter.formatCents(pendingExpenseCents)}",
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = RedExpense,
+                )
             }
         }
     }
@@ -201,18 +241,17 @@ private fun PendingSummaryCard(pendingIncomeCents: Long, pendingExpenseCents: Lo
 
 @Composable
 private fun TotalBalanceCard(totalCents: Long) {
-    Card(modifier = Modifier.fillMaxWidth()) {
-        Column(modifier = Modifier.padding(20.dp)) {
-            Text(
-                "Saldo total",
-                style = MaterialTheme.typography.bodyMedium,
-                color = MaterialTheme.colorScheme.onSurfaceVariant,
-            )
-            Text(
-                CurrencyFormatter.formatCents(totalCents),
-                style = MaterialTheme.typography.headlineMedium,
-            )
-        }
+    HeroCard(modifier = Modifier.fillMaxWidth().dotGridOverlay()) {
+        Text(
+            "Saldo total",
+            style = MaterialTheme.typography.bodyMedium,
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
+        )
+        Text(
+            CurrencyFormatter.formatCents(totalCents),
+            style = MaterialTheme.typography.displaySmall,
+            modifier = Modifier.padding(top = Spacing.xs),
+        )
     }
 }
 
@@ -224,20 +263,16 @@ private fun SummaryCard(
     icon: ImageVector,
     modifier: Modifier = Modifier,
 ) {
-    Card(
-        modifier = modifier,
-        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant),
-    ) {
-        Column(modifier = Modifier.padding(16.dp)) {
-            Row(verticalAlignment = Alignment.CenterVertically) {
-                Icon(icon, contentDescription = null, tint = color, modifier = Modifier.padding(end = 4.dp))
-                Text(label, style = MaterialTheme.typography.bodySmall)
-            }
-            Text(
-                CurrencyFormatter.formatCents(amountCents),
-                style = MaterialTheme.typography.titleMedium,
-                color = color,
-            )
+    AppCard(modifier = modifier, level = SurfaceLevel.Elevated) {
+        Row(verticalAlignment = Alignment.CenterVertically) {
+            Icon(icon, contentDescription = null, tint = color, modifier = Modifier.padding(end = Spacing.xs))
+            Text(label, style = MaterialTheme.typography.bodySmall)
         }
+        Text(
+            CurrencyFormatter.formatCents(amountCents),
+            style = MaterialTheme.typography.titleMedium,
+            color = color,
+            modifier = Modifier.padding(top = Spacing.xs),
+        )
     }
 }

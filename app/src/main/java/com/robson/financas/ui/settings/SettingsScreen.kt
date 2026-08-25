@@ -3,7 +3,6 @@ package com.robson.financas.ui.settings
 import android.content.Intent
 import android.provider.Settings
 import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -12,8 +11,6 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
-import androidx.compose.material3.Button
-import androidx.compose.material3.Card
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.ExposedDropdownMenuAnchorType
@@ -36,9 +33,12 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.unit.dp
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import com.robson.financas.data.local.entity.AccountEntity
+import com.robson.financas.ui.designsystem.AppCard
+import com.robson.financas.ui.designsystem.AppPrimaryButton
+import com.robson.financas.ui.designsystem.appTextFieldColors
+import com.robson.financas.ui.theme.Spacing
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -65,8 +65,8 @@ fun SettingsScreen(
             modifier = Modifier
                 .fillMaxWidth()
                 .padding(innerPadding),
-            contentPadding = PaddingValues(16.dp),
-            verticalArrangement = Arrangement.spacedBy(12.dp),
+            contentPadding = PaddingValues(Spacing.lg),
+            verticalArrangement = Arrangement.spacedBy(Spacing.md),
         ) {
             item {
                 Text(
@@ -76,18 +76,17 @@ fun SettingsScreen(
                 Text(
                     "Escolha para qual conta lançar as transações detectadas em cada app.",
                     style = MaterialTheme.typography.bodySmall,
-                    modifier = Modifier.padding(top = 4.dp, bottom = 8.dp),
+                    modifier = Modifier.padding(top = Spacing.xs, bottom = Spacing.sm),
                 )
             }
             item {
-                Button(
+                AppPrimaryButton(
+                    text = "Permitir acesso a notificações",
                     onClick = {
                         context.startActivity(Intent(Settings.ACTION_NOTIFICATION_LISTENER_SETTINGS))
                     },
                     modifier = Modifier.fillMaxWidth(),
-                ) {
-                    Text("Permitir acesso a notificações")
-                }
+                )
             }
             items(uiState.apps, key = { it.packageName }) { app ->
                 MonitoredAppCard(
@@ -120,45 +119,45 @@ private fun MonitoredAppCard(
     var expanded by remember { mutableStateOf(false) }
     val selectedAccountName = accounts.find { it.id == selectedAccountId }?.name ?: "Nenhuma conta"
 
-    Card(modifier = Modifier.fillMaxWidth()) {
-        Column(modifier = Modifier.padding(16.dp)) {
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.SpaceBetween,
-                verticalAlignment = Alignment.CenterVertically,
-            ) {
-                Text(displayName, style = MaterialTheme.typography.titleSmall)
-                Switch(
-                    checked = enabled && selectedAccountId != null,
-                    onCheckedChange = onEnabledChanged,
-                    enabled = selectedAccountId != null,
-                )
-            }
-            ExposedDropdownMenuBox(
-                expanded = expanded,
-                onExpandedChange = { expanded = it },
-                modifier = Modifier.padding(top = 8.dp),
-            ) {
-                OutlinedTextField(
-                    value = selectedAccountName,
-                    onValueChange = {},
-                    readOnly = true,
-                    label = { Text("Conta") },
-                    trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = expanded) },
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .menuAnchor(ExposedDropdownMenuAnchorType.PrimaryNotEditable, true),
-                )
-                ExposedDropdownMenu(expanded = expanded, onDismissRequest = { expanded = false }) {
-                    accounts.forEach { account ->
-                        DropdownMenuItem(
-                            text = { Text(account.name) },
-                            onClick = {
-                                onAccountSelected(account.id)
-                                expanded = false
-                            },
-                        )
-                    }
+    AppCard(modifier = Modifier.fillMaxWidth()) {
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.SpaceBetween,
+            verticalAlignment = Alignment.CenterVertically,
+        ) {
+            Text(displayName, style = MaterialTheme.typography.titleSmall)
+            Switch(
+                checked = enabled && selectedAccountId != null,
+                onCheckedChange = onEnabledChanged,
+                enabled = selectedAccountId != null,
+            )
+        }
+        ExposedDropdownMenuBox(
+            expanded = expanded,
+            onExpandedChange = { expanded = it },
+            modifier = Modifier.padding(top = Spacing.sm),
+        ) {
+            OutlinedTextField(
+                value = selectedAccountName,
+                onValueChange = {},
+                readOnly = true,
+                label = { Text("Conta") },
+                trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = expanded) },
+                colors = appTextFieldColors(),
+                shape = MaterialTheme.shapes.medium,
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .menuAnchor(ExposedDropdownMenuAnchorType.PrimaryNotEditable, true),
+            )
+            ExposedDropdownMenu(expanded = expanded, onDismissRequest = { expanded = false }) {
+                accounts.forEach { account ->
+                    DropdownMenuItem(
+                        text = { Text(account.name) },
+                        onClick = {
+                            onAccountSelected(account.id)
+                            expanded = false
+                        },
+                    )
                 }
             }
         }

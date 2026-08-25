@@ -20,7 +20,6 @@ import androidx.compose.material.icons.filled.AttachFile
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.Favorite
 import androidx.compose.material.icons.filled.FavoriteBorder
-import androidx.compose.material3.Button
 import androidx.compose.material3.DatePicker
 import androidx.compose.material3.DatePickerDialog
 import androidx.compose.material3.DropdownMenuItem
@@ -32,7 +31,6 @@ import androidx.compose.material3.FilterChip
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.SegmentedButton
@@ -64,6 +62,11 @@ import com.robson.financas.data.local.entity.CategoryEntity
 import com.robson.financas.data.local.entity.TransactionType
 import com.robson.financas.ui.common.CurrencyInputField
 import com.robson.financas.ui.common.label
+import com.robson.financas.ui.designsystem.AppOutlinedButton
+import com.robson.financas.ui.designsystem.AppPrimaryButton
+import com.robson.financas.ui.designsystem.AppTextField
+import com.robson.financas.ui.designsystem.appTextFieldColors
+import com.robson.financas.ui.theme.Spacing
 import com.robson.financas.util.AttachmentStorage
 import com.robson.financas.util.DateFormatter
 import kotlinx.coroutines.Dispatchers
@@ -141,7 +144,7 @@ fun AddEditTransactionScreen(
         Column(
             modifier = Modifier
                 .padding(innerPadding)
-                .padding(16.dp)
+                .padding(Spacing.lg)
                 .verticalScroll(rememberScrollState()),
         ) {
             SingleChoiceSegmentedButtonRow(modifier = Modifier.fillMaxWidth()) {
@@ -162,7 +165,7 @@ fun AddEditTransactionScreen(
                 label = "Valor",
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(top = 16.dp),
+                    .padding(top = Spacing.lg),
             )
 
             AccountDropdown(
@@ -170,7 +173,7 @@ fun AddEditTransactionScreen(
                 options = accounts,
                 selectedId = uiState.accountId,
                 onSelected = viewModel::updateAccount,
-                modifier = Modifier.padding(top = 16.dp),
+                modifier = Modifier.padding(top = Spacing.lg),
             )
 
             if (uiState.type == TransactionType.TRANSFER) {
@@ -179,27 +182,27 @@ fun AddEditTransactionScreen(
                     options = transferAccountOptions,
                     selectedId = uiState.transferToAccountId,
                     onSelected = viewModel::updateTransferToAccount,
-                    modifier = Modifier.padding(top = 16.dp),
+                    modifier = Modifier.padding(top = Spacing.lg),
                 )
             } else {
                 CategoryDropdown(
                     options = categoryOptions,
                     selectedId = uiState.categoryId,
                     onSelected = viewModel::updateCategory,
-                    modifier = Modifier.padding(top = 16.dp),
+                    modifier = Modifier.padding(top = Spacing.lg),
                 )
             }
 
             DateField(
                 date = uiState.date,
                 onDateSelected = viewModel::updateDate,
-                modifier = Modifier.padding(top = 16.dp),
+                modifier = Modifier.padding(top = Spacing.lg),
             )
 
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(top = 16.dp),
+                    .padding(top = Spacing.lg),
                 horizontalArrangement = Arrangement.SpaceBetween,
                 verticalAlignment = Alignment.CenterVertically,
             ) {
@@ -211,7 +214,7 @@ fun AddEditTransactionScreen(
                 Row(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .padding(top = 8.dp),
+                        .padding(top = Spacing.sm),
                     horizontalArrangement = Arrangement.SpaceBetween,
                     verticalAlignment = Alignment.CenterVertically,
                 ) {
@@ -220,26 +223,26 @@ fun AddEditTransactionScreen(
                 }
             }
 
-            OutlinedTextField(
+            AppTextField(
                 value = uiState.description,
                 onValueChange = viewModel::updateDescription,
-                label = { Text("Descrição (opcional)") },
+                label = "Descrição (opcional)",
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(top = 16.dp),
+                    .padding(top = Spacing.lg),
             )
 
             if (allTags.isNotEmpty()) {
                 Text(
                     "Tags",
                     style = MaterialTheme.typography.labelLarge,
-                    modifier = Modifier.padding(top = 16.dp),
+                    modifier = Modifier.padding(top = Spacing.lg),
                 )
                 FlowRow(
-                    horizontalArrangement = Arrangement.spacedBy(8.dp),
+                    horizontalArrangement = Arrangement.spacedBy(Spacing.sm),
                     modifier = Modifier
                         .fillMaxWidth()
-                        .padding(top = 8.dp),
+                        .padding(top = Spacing.sm),
                 ) {
                     allTags.forEach { tag ->
                         FilterChip(
@@ -254,7 +257,7 @@ fun AddEditTransactionScreen(
             Text(
                 "Anexo",
                 style = MaterialTheme.typography.labelLarge,
-                modifier = Modifier.padding(top = 16.dp),
+                modifier = Modifier.padding(top = Spacing.lg),
             )
             if (uiState.attachmentPath != null) {
                 val bitmap = remember(uiState.attachmentPath) {
@@ -263,7 +266,7 @@ fun AddEditTransactionScreen(
                 Row(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .padding(top = 8.dp),
+                        .padding(top = Spacing.sm),
                     verticalAlignment = Alignment.CenterVertically,
                 ) {
                     bitmap?.let {
@@ -281,24 +284,22 @@ fun AddEditTransactionScreen(
                     }
                 }
             } else {
-                OutlinedButton(
+                AppOutlinedButton(
+                    text = "Anexar comprovante",
                     onClick = { pickImageLauncher.launch("image/*") },
-                    modifier = Modifier.padding(top = 8.dp),
-                ) {
-                    Icon(Icons.Filled.AttachFile, contentDescription = null, modifier = Modifier.size(18.dp))
-                    Text("Anexar comprovante", modifier = Modifier.padding(start = 8.dp))
-                }
+                    icon = { Icon(Icons.Filled.AttachFile, contentDescription = null, modifier = Modifier.size(18.dp)) },
+                    modifier = Modifier.padding(top = Spacing.sm),
+                )
             }
 
-            Button(
+            AppPrimaryButton(
+                text = "Salvar",
                 onClick = viewModel::save,
                 enabled = uiState.isValid,
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(top = 24.dp),
-            ) {
-                Text("Salvar")
-            }
+                    .padding(top = Spacing.xl),
+            )
         }
     }
 }
@@ -322,6 +323,8 @@ private fun AccountDropdown(
             readOnly = true,
             label = { Text(label) },
             trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = expanded) },
+            colors = appTextFieldColors(),
+            shape = MaterialTheme.shapes.medium,
             modifier = Modifier
                 .fillMaxWidth()
                 .menuAnchor(ExposedDropdownMenuAnchorType.PrimaryNotEditable, true),
@@ -358,6 +361,8 @@ private fun CategoryDropdown(
             readOnly = true,
             label = { Text("Categoria") },
             trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = expanded) },
+            colors = appTextFieldColors(),
+            shape = MaterialTheme.shapes.medium,
             modifier = Modifier
                 .fillMaxWidth()
                 .menuAnchor(ExposedDropdownMenuAnchorType.PrimaryNotEditable, true),
@@ -393,6 +398,8 @@ private fun DateField(
         trailingIcon = {
             TextButton(onClick = { showDialog = true }) { Text("Alterar") }
         },
+        colors = appTextFieldColors(),
+        shape = MaterialTheme.shapes.medium,
         modifier = modifier.fillMaxWidth(),
     )
 

@@ -1,9 +1,10 @@
 package com.robson.financas.ui.categories
 
 import androidx.compose.foundation.background
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -15,6 +16,7 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Add
+import androidx.compose.material.icons.filled.Category
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.FloatingActionButton
@@ -46,6 +48,11 @@ import com.robson.financas.ui.common.ColorCatalog
 import com.robson.financas.ui.common.ConfirmDeleteDialog
 import com.robson.financas.ui.common.IconCatalog
 import com.robson.financas.ui.common.label
+import com.robson.financas.ui.designsystem.AppCard
+import com.robson.financas.ui.designsystem.EmptyState
+import com.robson.financas.ui.designsystem.SectionHeader
+import com.robson.financas.ui.theme.BorderSubtle
+import com.robson.financas.ui.theme.Spacing
 import kotlinx.coroutines.launch
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -92,12 +99,14 @@ fun CategoriesScreen(
             Box(
                 modifier = Modifier
                     .fillMaxSize()
-                    .padding(innerPadding),
+                    .padding(innerPadding)
+                    .padding(Spacing.lg),
                 contentAlignment = Alignment.Center,
             ) {
-                Text(
-                    "Nenhuma categoria cadastrada.\nToque em + para criar a primeira.",
-                    style = MaterialTheme.typography.bodyLarge,
+                EmptyState(
+                    icon = Icons.Filled.Category,
+                    title = "Nenhuma categoria cadastrada",
+                    subtitle = "Toque em + para criar a primeira.",
                 )
             }
         } else {
@@ -105,34 +114,44 @@ fun CategoriesScreen(
                 modifier = Modifier
                     .fillMaxSize()
                     .padding(innerPadding),
+                contentPadding = PaddingValues(horizontal = Spacing.lg, vertical = Spacing.sm),
+                verticalArrangement = Arrangement.spacedBy(Spacing.xs),
             ) {
                 CategoryType.entries.forEach { type ->
                     val parentGroups = grouped[type].orEmpty()
                     if (parentGroups.isNotEmpty()) {
                         item {
-                            Text(
-                                text = type.label(),
-                                style = MaterialTheme.typography.titleMedium,
-                                modifier = Modifier.padding(start = 16.dp, top = 16.dp, bottom = 4.dp),
-                            )
+                            SectionHeader(type.label())
                         }
                         items(parentGroups, key = { it.first.id }) { (parent, children) ->
-                            CategoryRow(
-                                category = parent,
-                                indented = false,
-                                onClick = { onEditCategory(parent.id) },
-                                onDeleteClick = { pendingDelete = parent },
-                            )
-                            children.forEach { child ->
-                                CategoryRow(
-                                    category = child,
-                                    indented = true,
-                                    onClick = { onEditCategory(child.id) },
-                                    onDeleteClick = { pendingDelete = child },
-                                )
+                            Column(verticalArrangement = Arrangement.spacedBy(Spacing.xs)) {
+                                AppCard(
+                                    modifier = Modifier.fillMaxWidth(),
+                                    contentPadding = PaddingValues(0.dp),
+                                    onClick = { onEditCategory(parent.id) },
+                                ) {
+                                    CategoryRow(
+                                        category = parent,
+                                        indented = false,
+                                        onDeleteClick = { pendingDelete = parent },
+                                    )
+                                }
+                                children.forEach { child ->
+                                    AppCard(
+                                        modifier = Modifier.fillMaxWidth(),
+                                        contentPadding = PaddingValues(0.dp),
+                                        onClick = { onEditCategory(child.id) },
+                                    ) {
+                                        CategoryRow(
+                                            category = child,
+                                            indented = true,
+                                            onDeleteClick = { pendingDelete = child },
+                                        )
+                                    }
+                                }
                             }
                         }
-                        item { HorizontalDivider(modifier = Modifier.padding(vertical = 8.dp)) }
+                        item { HorizontalDivider(color = BorderSubtle, modifier = Modifier.padding(vertical = Spacing.sm)) }
                     }
                 }
             }
@@ -169,16 +188,14 @@ fun CategoriesScreen(
 private fun CategoryRow(
     category: CategoryEntity,
     indented: Boolean,
-    onClick: () -> Unit,
     onDeleteClick: () -> Unit,
 ) {
     Row(
         modifier = Modifier
             .fillMaxWidth()
-            .clickable(onClick = onClick)
             .padding(
-                start = if (indented) 48.dp else 16.dp,
-                end = 16.dp,
+                start = if (indented) 48.dp else Spacing.lg,
+                end = Spacing.lg,
                 top = 10.dp,
                 bottom = 10.dp,
             ),
@@ -200,7 +217,7 @@ private fun CategoryRow(
                     modifier = Modifier.size(18.dp),
                 )
             }
-            Text(category.name, style = MaterialTheme.typography.bodyLarge, modifier = Modifier.padding(start = 12.dp))
+            Text(category.name, style = MaterialTheme.typography.bodyLarge, modifier = Modifier.padding(start = Spacing.md))
         }
         IconButton(onClick = onDeleteClick) {
             Icon(Icons.Filled.Delete, contentDescription = "Excluir")

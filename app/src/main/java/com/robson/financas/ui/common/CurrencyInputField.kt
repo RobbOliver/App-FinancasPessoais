@@ -1,6 +1,7 @@
 package com.robson.financas.ui.common
 
 import androidx.compose.foundation.text.KeyboardOptions
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -10,6 +11,7 @@ import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.input.OffsetMapping
 import androidx.compose.ui.text.input.TransformedText
 import androidx.compose.ui.text.input.VisualTransformation
+import com.robson.financas.ui.designsystem.appTextFieldColors
 import com.robson.financas.util.CurrencyFormatter
 
 /**
@@ -35,6 +37,8 @@ fun CurrencyInputField(
         visualTransformation = CurrencyVisualTransformation,
         keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
         isError = isError,
+        colors = appTextFieldColors(),
+        shape = MaterialTheme.shapes.medium,
         modifier = modifier,
     )
 }

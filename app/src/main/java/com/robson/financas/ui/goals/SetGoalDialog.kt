@@ -10,8 +10,8 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableLongStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
-import androidx.compose.ui.unit.dp
 import com.robson.financas.ui.common.CurrencyInputField
+import com.robson.financas.ui.theme.Spacing
 
 @Composable
 fun SetGoalDialog(
@@ -40,7 +40,7 @@ fun SetGoalDialog(
             }
         },
         dismissButton = {
-            Row(horizontalArrangement = Arrangement.spacedBy(4.dp)) {
+            Row(horizontalArrangement = Arrangement.spacedBy(Spacing.xs)) {
                 if (hasExistingGoal) {
                     TextButton(onClick = onRemove) { Text("Remover") }
                 }

@@ -45,4 +45,21 @@ sealed class Screen(val route: String) {
         const val ARG_OBJECTIVE_ID = "objectiveId"
         fun routeFor(objectiveId: Long) = "objectives/detail/$objectiveId"
     }
+
+    data object CreditCards : Screen("creditcards")
+
+    data object AddEditCreditCard : Screen("creditcards/edit?cardId={cardId}") {
+        const val ARG_CARD_ID = "cardId"
+        fun routeFor(cardId: Long? = null) = "creditcards/edit?cardId=${cardId ?: -1L}"
+    }
+
+    data object CreditCardDetail : Screen("creditcards/detail/{cardId}") {
+        const val ARG_CARD_ID = "cardId"
+        fun routeFor(cardId: Long) = "creditcards/detail/$cardId"
+    }
+
+    data object AddPurchase : Screen("creditcards/{cardId}/purchase") {
+        const val ARG_CARD_ID = "cardId"
+        fun routeFor(cardId: Long) = "creditcards/$cardId/purchase"
+    }
 }

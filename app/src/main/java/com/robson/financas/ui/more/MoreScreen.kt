@@ -1,6 +1,7 @@
 package com.robson.financas.ui.more
 
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
@@ -9,6 +10,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.KeyboardArrowRight
 import androidx.compose.material.icons.filled.AccountBalanceWallet
 import androidx.compose.material.icons.filled.Category
+import androidx.compose.material.icons.filled.CreditCard
 import androidx.compose.material.icons.filled.Label
 import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material.icons.filled.TrackChanges
@@ -24,6 +26,10 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.unit.dp
+import com.robson.financas.ui.designsystem.AppCard
+import com.robson.financas.ui.designsystem.SectionHeader
+import com.robson.financas.ui.theme.BorderSubtle
+import com.robson.financas.ui.theme.Spacing
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -33,39 +39,33 @@ fun MoreScreen(
     onNavigateToSettings: () -> Unit,
     onNavigateToTags: () -> Unit,
     onNavigateToObjectives: () -> Unit,
+    onNavigateToCreditCards: () -> Unit,
 ) {
     Scaffold(
         topBar = { TopAppBar(title = { Text("Mais opções") }) },
     ) { innerPadding ->
         LazyColumn(modifier = Modifier.fillMaxWidth().padding(innerPadding)) {
+            item { SectionHeader("Gerenciar") }
             item {
-                Text(
-                    "GERENCIAR",
-                    style = MaterialTheme.typography.labelMedium,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant,
-                    modifier = Modifier.padding(start = 16.dp, top = 16.dp, bottom = 4.dp),
-                )
+                AppCard(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(horizontal = Spacing.lg),
+                    contentPadding = PaddingValues(0.dp),
+                ) {
+                    MoreListItem(icon = Icons.Filled.AccountBalanceWallet, label = "Contas", onClick = onNavigateToAccounts)
+                    HorizontalDivider(color = BorderSubtle)
+                    MoreListItem(icon = Icons.Filled.CreditCard, label = "Cartão de crédito", onClick = onNavigateToCreditCards)
+                    HorizontalDivider(color = BorderSubtle)
+                    MoreListItem(icon = Icons.Filled.Category, label = "Categorias", onClick = onNavigateToCategories)
+                    HorizontalDivider(color = BorderSubtle)
+                    MoreListItem(icon = Icons.Filled.Label, label = "Tags", onClick = onNavigateToTags)
+                    HorizontalDivider(color = BorderSubtle)
+                    MoreListItem(icon = Icons.Filled.TrackChanges, label = "Objetivos", onClick = onNavigateToObjectives)
+                    HorizontalDivider(color = BorderSubtle)
+                    MoreListItem(icon = Icons.Filled.Settings, label = "Configurações", onClick = onNavigateToSettings)
+                }
             }
-            item {
-                MoreListItem(icon = Icons.Filled.AccountBalanceWallet, label = "Contas", onClick = onNavigateToAccounts)
-            }
-            item { HorizontalDivider() }
-            item {
-                MoreListItem(icon = Icons.Filled.Category, label = "Categorias", onClick = onNavigateToCategories)
-            }
-            item { HorizontalDivider() }
-            item {
-                MoreListItem(icon = Icons.Filled.Label, label = "Tags", onClick = onNavigateToTags)
-            }
-            item { HorizontalDivider() }
-            item {
-                MoreListItem(icon = Icons.Filled.TrackChanges, label = "Objetivos", onClick = onNavigateToObjectives)
-            }
-            item { HorizontalDivider() }
-            item {
-                MoreListItem(icon = Icons.Filled.Settings, label = "Configurações", onClick = onNavigateToSettings)
-            }
-            item { HorizontalDivider() }
         }
     }
 }
@@ -76,10 +76,10 @@ private fun MoreListItem(icon: ImageVector, label: String, onClick: () -> Unit) 
         modifier = Modifier
             .fillMaxWidth()
             .clickable(onClick = onClick)
-            .padding(horizontal = 16.dp, vertical = 14.dp),
+            .padding(horizontal = Spacing.lg, vertical = 14.dp),
         verticalAlignment = Alignment.CenterVertically,
     ) {
-        Icon(icon, contentDescription = null, modifier = Modifier.padding(end = 16.dp))
+        Icon(icon, contentDescription = null, modifier = Modifier.padding(end = Spacing.lg))
         Text(label, style = MaterialTheme.typography.bodyLarge, modifier = Modifier.weight(1f))
         Icon(
             Icons.AutoMirrored.Filled.KeyboardArrowRight,

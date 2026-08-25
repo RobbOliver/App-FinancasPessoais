@@ -7,7 +7,6 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
-import androidx.compose.material3.Button
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.ExposedDropdownMenuAnchorType
@@ -31,12 +30,15 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.unit.dp
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import com.robson.financas.data.local.entity.CategoryType
 import com.robson.financas.ui.common.ColorPicker
 import com.robson.financas.ui.common.IconPicker
 import com.robson.financas.ui.common.label
+import com.robson.financas.ui.designsystem.AppPrimaryButton
+import com.robson.financas.ui.designsystem.AppTextField
+import com.robson.financas.ui.designsystem.appTextFieldColors
+import com.robson.financas.ui.theme.Spacing
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -74,7 +76,7 @@ fun AddEditCategoryScreen(
         Column(
             modifier = Modifier
                 .padding(innerPadding)
-                .padding(16.dp)
+                .padding(Spacing.lg)
                 .verticalScroll(rememberScrollState()),
         ) {
             SingleChoiceSegmentedButtonRow(modifier = Modifier.fillMaxWidth()) {
@@ -89,45 +91,44 @@ fun AddEditCategoryScreen(
                 }
             }
 
-            OutlinedTextField(
+            AppTextField(
                 value = uiState.name,
                 onValueChange = viewModel::updateName,
-                label = { Text("Nome da categoria") },
+                label = "Nome da categoria",
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(top = 16.dp),
+                    .padding(top = Spacing.lg),
             )
 
             ParentCategoryDropdown(
                 options = parentOptions,
                 selectedId = uiState.parentCategoryId,
                 onSelected = viewModel::updateParent,
-                modifier = Modifier.padding(top = 16.dp),
+                modifier = Modifier.padding(top = Spacing.lg),
             )
 
             Text(
                 "Cor",
                 style = MaterialTheme.typography.titleSmall,
-                modifier = Modifier.padding(top = 20.dp, bottom = 8.dp),
+                modifier = Modifier.padding(top = Spacing.xl, bottom = Spacing.sm),
             )
             ColorPicker(selectedHex = uiState.colorHex, onColorSelected = viewModel::updateColor)
 
             Text(
                 "Ícone",
                 style = MaterialTheme.typography.titleSmall,
-                modifier = Modifier.padding(top = 20.dp, bottom = 8.dp),
+                modifier = Modifier.padding(top = Spacing.xl, bottom = Spacing.sm),
             )
             IconPicker(selectedKey = uiState.icon, onIconSelected = viewModel::updateIcon)
 
-            Button(
+            AppPrimaryButton(
+                text = "Salvar",
                 onClick = viewModel::save,
                 enabled = uiState.name.isNotBlank(),
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(top = 24.dp),
-            ) {
-                Text("Salvar")
-            }
+                    .padding(top = Spacing.xl),
+            )
         }
     }
 }
@@ -150,6 +151,8 @@ private fun ParentCategoryDropdown(
             readOnly = true,
             label = { Text("Categoria pai (opcional)") },
             trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = expanded) },
+            colors = appTextFieldColors(),
+            shape = MaterialTheme.shapes.medium,
             modifier = Modifier
                 .fillMaxWidth()
                 .menuAnchor(ExposedDropdownMenuAnchorType.PrimaryNotEditable, true),

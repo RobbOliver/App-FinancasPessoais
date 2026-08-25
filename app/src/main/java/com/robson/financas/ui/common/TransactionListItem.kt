@@ -27,7 +27,8 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
 import com.robson.financas.data.local.entity.TransactionType
 import com.robson.financas.data.local.relation.TransactionWithDetails
-import com.robson.financas.ui.theme.GreenIncome
+import com.robson.financas.ui.designsystem.StatusDot
+import com.robson.financas.ui.theme.Spacing
 
 @Composable
 fun TransactionListItem(
@@ -117,15 +118,10 @@ fun TransactionListItem(
             }
         }
         Row(verticalAlignment = Alignment.CenterVertically) {
-            Box(
-                modifier = Modifier
-                    .padding(end = 8.dp)
-                    .size(10.dp)
-                    .clip(CircleShape)
-                    .background(if (transaction.isPaid) GreenIncome else MaterialTheme.colorScheme.primary)
-                    .let { base ->
-                        if (onTogglePaid != null) base.clickable(onClick = onTogglePaid) else base
-                    },
+            StatusDot(
+                isPaid = transaction.isPaid,
+                modifier = Modifier.padding(end = Spacing.sm),
+                onClick = onTogglePaid,
             )
             AmountText(amountCents = transaction.amountCents, type = transaction.type)
             if (transaction.isFavorite && onUseAsTemplate != null) {

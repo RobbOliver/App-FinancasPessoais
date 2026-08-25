@@ -1,5 +1,10 @@
 package com.robson.financas.ui.navigation
 
+import androidx.compose.animation.core.tween
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.slideInHorizontally
+import androidx.compose.animation.slideOutHorizontally
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.Scaffold
 import androidx.compose.runtime.Composable
@@ -15,6 +20,10 @@ import com.robson.financas.ui.accounts.AccountsScreen
 import com.robson.financas.ui.accounts.AddEditAccountScreen
 import com.robson.financas.ui.categories.AddEditCategoryScreen
 import com.robson.financas.ui.categories.CategoriesScreen
+import com.robson.financas.ui.creditcards.AddEditCreditCardScreen
+import com.robson.financas.ui.creditcards.AddPurchaseScreen
+import com.robson.financas.ui.creditcards.CreditCardDetailScreen
+import com.robson.financas.ui.creditcards.CreditCardsScreen
 import com.robson.financas.ui.dashboard.DashboardScreen
 import com.robson.financas.ui.goals.GoalsScreen
 import com.robson.financas.ui.more.MoreScreen
@@ -42,6 +51,10 @@ fun FinanceNavHost(
             navController = navController,
             startDestination = Screen.Dashboard.route,
             modifier = androidx.compose.ui.Modifier.padding(scaffoldPadding),
+            enterTransition = { fadeIn(tween(220)) + slideInHorizontally(tween(220)) { it / 10 } },
+            exitTransition = { fadeOut(tween(160)) },
+            popEnterTransition = { fadeIn(tween(220)) },
+            popExitTransition = { fadeOut(tween(160)) + slideOutHorizontally(tween(160)) { it / 10 } },
         ) {
             composable(Screen.Dashboard.route) {
                 LaunchedEffect(pendingEditTransactionId) {
@@ -53,6 +66,7 @@ fun FinanceNavHost(
                 DashboardScreen(
                     onAddTransaction = { navController.navigate(Screen.AddEditTransaction.routeFor()) },
                     onEditTransaction = { id -> navController.navigate(Screen.AddEditTransaction.routeFor(id)) },
+                    onOpenCreditCards = { navController.navigate(Screen.CreditCards.route) },
                 )
             }
             composable(Screen.Accounts.route) {
@@ -126,6 +140,7 @@ fun FinanceNavHost(
                     onNavigateToSettings = { navController.navigate(Screen.Settings.route) },
                     onNavigateToTags = { navController.navigate(Screen.Tags.route) },
                     onNavigateToObjectives = { navController.navigate(Screen.Objectives.route) },
+                    onNavigateToCreditCards = { navController.navigate(Screen.CreditCards.route) },
                 )
             }
             composable(Screen.Tags.route) {
@@ -156,6 +171,44 @@ fun FinanceNavHost(
                 ),
             ) {
                 ObjectiveDetailScreen(onBack = { navController.popBackStack() })
+            }
+            composable(Screen.CreditCards.route) {
+                CreditCardsScreen(
+                    onBack = { navController.popBackStack() },
+                    onAddCard = { navController.navigate(Screen.AddEditCreditCard.routeFor()) },
+                    onOpenCard = { id -> navController.navigate(Screen.CreditCardDetail.routeFor(id)) },
+                )
+            }
+            composable(
+                route = Screen.AddEditCreditCard.route,
+                arguments = listOf(
+                    navArgument(Screen.AddEditCreditCard.ARG_CARD_ID) {
+                        type = NavType.LongType
+                        defaultValue = -1L
+                    },
+                ),
+            ) {
+                AddEditCreditCardScreen(onBack = { navController.popBackStack() })
+            }
+            composable(
+                route = Screen.CreditCardDetail.route,
+                arguments = listOf(
+                    navArgument(Screen.CreditCardDetail.ARG_CARD_ID) { type = NavType.LongType },
+                ),
+            ) { backStackEntry ->
+                val cardId = backStackEntry.arguments?.getLong(Screen.CreditCardDetail.ARG_CARD_ID) ?: 0L
+                CreditCardDetailScreen(
+                    onBack = { navController.popBackStack() },
+                    onAddPurchase = { navController.navigate(Screen.AddPurchase.routeFor(cardId)) },
+                )
+            }
+            composable(
+                route = Screen.AddPurchase.route,
+                arguments = listOf(
+                    navArgument(Screen.AddPurchase.ARG_CARD_ID) { type = NavType.LongType },
+                ),
+            ) {
+                AddPurchaseScreen(onBack = { navController.popBackStack() })
             }
         }
     }

@@ -1,10 +1,10 @@
 package com.robson.financas.ui.accounts
 
 import androidx.compose.foundation.background
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -46,8 +46,11 @@ import com.robson.financas.ui.common.ColorCatalog
 import com.robson.financas.ui.common.ConfirmDeleteDialog
 import com.robson.financas.ui.common.IconCatalog
 import com.robson.financas.ui.common.label
+import com.robson.financas.ui.designsystem.AppCard
+import com.robson.financas.ui.designsystem.EmptyState
 import com.robson.financas.ui.theme.GreenIncome
 import com.robson.financas.ui.theme.RedExpense
+import com.robson.financas.ui.theme.Spacing
 import com.robson.financas.util.CurrencyFormatter
 import kotlinx.coroutines.launch
 
@@ -87,12 +90,14 @@ fun AccountsScreen(
             Box(
                 modifier = Modifier
                     .fillMaxSize()
-                    .padding(innerPadding),
+                    .padding(innerPadding)
+                    .padding(Spacing.lg),
                 contentAlignment = Alignment.Center,
             ) {
-                Text(
-                    "Nenhuma conta cadastrada.\nToque em + para criar a primeira.",
-                    style = MaterialTheme.typography.bodyLarge,
+                EmptyState(
+                    icon = Icons.Filled.Add,
+                    title = "Nenhuma conta cadastrada",
+                    subtitle = "Toque em + para criar a primeira.",
                 )
             }
         } else {
@@ -100,13 +105,20 @@ fun AccountsScreen(
                 modifier = Modifier
                     .fillMaxSize()
                     .padding(innerPadding),
+                contentPadding = PaddingValues(horizontal = Spacing.lg, vertical = Spacing.sm),
+                verticalArrangement = Arrangement.spacedBy(Spacing.sm),
             ) {
                 items(accounts, key = { it.account.id }) { item ->
-                    AccountRow(
-                        item = item,
+                    AppCard(
+                        modifier = Modifier.fillMaxWidth(),
+                        contentPadding = PaddingValues(0.dp),
                         onClick = { onEditAccount(item.account.id) },
-                        onDeleteClick = { pendingDelete = item.account },
-                    )
+                    ) {
+                        AccountRow(
+                            item = item,
+                            onDeleteClick = { pendingDelete = item.account },
+                        )
+                    }
                 }
             }
         }
@@ -141,14 +153,12 @@ fun AccountsScreen(
 @Composable
 private fun AccountRow(
     item: AccountWithBalance,
-    onClick: () -> Unit,
     onDeleteClick: () -> Unit,
 ) {
     Row(
         modifier = Modifier
             .fillMaxWidth()
-            .clickable(onClick = onClick)
-            .padding(horizontal = 16.dp, vertical = 12.dp),
+            .padding(horizontal = Spacing.lg, vertical = Spacing.md),
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.SpaceBetween,
     ) {
@@ -166,7 +176,7 @@ private fun AccountRow(
                     tint = androidx.compose.ui.graphics.Color.White,
                 )
             }
-            Column(modifier = Modifier.padding(start = 12.dp)) {
+            Column(modifier = Modifier.padding(start = Spacing.md)) {
                 Text(item.account.name, style = MaterialTheme.typography.bodyLarge, fontWeight = FontWeight.Medium)
                 Text(item.account.type.label(), style = MaterialTheme.typography.bodySmall)
             }

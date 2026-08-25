@@ -1,4 +1,4 @@
-package com.robson.financas.ui.objectives
+package com.robson.financas.ui.creditcards
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
@@ -15,7 +15,7 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Add
-import androidx.compose.material.icons.filled.TrackChanges
+import androidx.compose.material.icons.filled.CreditCard
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.Icon
@@ -43,18 +43,18 @@ import com.robson.financas.util.CurrencyFormatter
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun ObjectivesScreen(
+fun CreditCardsScreen(
     onBack: () -> Unit,
-    onAddObjective: () -> Unit,
-    onOpenObjective: (Long) -> Unit,
-    viewModel: ObjectivesViewModel = hiltViewModel(),
+    onAddCard: () -> Unit,
+    onOpenCard: (Long) -> Unit,
+    viewModel: CreditCardsViewModel = hiltViewModel(),
 ) {
-    val objectives by viewModel.objectives.collectAsState()
+    val cards by viewModel.cards.collectAsState()
 
     Scaffold(
         topBar = {
             TopAppBar(
-                title = { Text("Objetivos") },
+                title = { Text("Cartões de crédito") },
                 navigationIcon = {
                     IconButton(onClick = onBack) {
                         Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Voltar")
@@ -63,12 +63,12 @@ fun ObjectivesScreen(
             )
         },
         floatingActionButton = {
-            FloatingActionButton(onClick = onAddObjective) {
-                Icon(Icons.Filled.Add, contentDescription = "Novo objetivo")
+            FloatingActionButton(onClick = onAddCard) {
+                Icon(Icons.Filled.Add, contentDescription = "Novo cartão")
             }
         },
     ) { innerPadding ->
-        if (objectives.isEmpty()) {
+        if (cards.isEmpty()) {
             Box(
                 modifier = Modifier
                     .fillMaxSize()
@@ -77,9 +77,9 @@ fun ObjectivesScreen(
                 contentAlignment = Alignment.Center,
             ) {
                 EmptyState(
-                    icon = Icons.Filled.TrackChanges,
-                    title = "Nenhum objetivo cadastrado",
-                    subtitle = "Toque em + para criar o primeiro.",
+                    icon = Icons.Filled.CreditCard,
+                    title = "Ops! Você ainda não tem nenhum cartão cadastrado.",
+                    subtitle = "Toque em + para adicionar.",
                 )
             }
         } else {
@@ -90,39 +90,39 @@ fun ObjectivesScreen(
                 contentPadding = PaddingValues(Spacing.lg),
                 verticalArrangement = Arrangement.spacedBy(Spacing.md),
             ) {
-                items(objectives, key = { it.goal.id }) { progress ->
+                items(cards, key = { it.card.id }) { summary ->
                     AppCard(
                         modifier = Modifier.fillMaxWidth(),
-                        onClick = { onOpenObjective(progress.goal.id) },
+                        onClick = { onOpenCard(summary.card.id) },
                     ) {
                         Row(verticalAlignment = Alignment.CenterVertically) {
                             Box(
                                 modifier = Modifier
                                     .size(32.dp)
                                     .clip(CircleShape)
-                                    .background(ColorCatalog.toColor(progress.goal.colorHex)),
+                                    .background(ColorCatalog.toColor(summary.card.colorHex)),
                                 contentAlignment = Alignment.Center,
                             ) {
                                 Icon(
-                                    imageVector = IconCatalog.resolve(progress.goal.icon),
+                                    imageVector = IconCatalog.resolve(summary.card.icon),
                                     contentDescription = null,
                                     tint = Color.White,
                                     modifier = Modifier.size(16.dp),
                                 )
                             }
                             Text(
-                                progress.goal.name,
+                                summary.card.name,
                                 style = MaterialTheme.typography.bodyLarge,
                                 modifier = Modifier.padding(start = Spacing.md),
                             )
                         }
                         GoalProgressBar(
-                            goalCents = progress.goal.targetCents,
-                            spentCents = progress.goal.targetCents - progress.savedCents,
+                            goalCents = summary.card.limitCents,
+                            spentCents = summary.invoiceTotalCents,
                             modifier = Modifier.padding(top = 10.dp),
                         )
                         Text(
-                            "${CurrencyFormatter.formatCents(progress.savedCents)} de ${CurrencyFormatter.formatCents(progress.goal.targetCents)}",
+                            "Fatura: ${CurrencyFormatter.formatCents(summary.invoiceTotalCents)} de ${CurrencyFormatter.formatCents(summary.card.limitCents)}",
                             style = MaterialTheme.typography.bodySmall,
                             color = MaterialTheme.colorScheme.onSurfaceVariant,
                             modifier = Modifier.padding(top = 6.dp),

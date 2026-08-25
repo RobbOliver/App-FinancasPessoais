@@ -4,6 +4,7 @@ import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -42,6 +43,10 @@ import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import com.robson.financas.data.local.entity.TransactionEntity
 import com.robson.financas.ui.common.ConfirmDeleteDialog
 import com.robson.financas.ui.common.TransactionListItem
+import com.robson.financas.ui.designsystem.AppCard
+import com.robson.financas.ui.designsystem.EmptyState
+import com.robson.financas.ui.designsystem.appTextFieldColors
+import com.robson.financas.ui.theme.Spacing
 import com.robson.financas.util.DateFormatter
 import kotlinx.coroutines.launch
 
@@ -140,32 +145,41 @@ fun TransactionsScreen(
 
             if (transactions.isEmpty()) {
                 Box(
-                    modifier = Modifier.fillMaxSize(),
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .padding(Spacing.lg),
                     contentAlignment = Alignment.Center,
                 ) {
-                    Text(
-                        "Nenhuma transação encontrada.",
-                        style = MaterialTheme.typography.bodyLarge,
+                    EmptyState(
+                        icon = Icons.Filled.Add,
+                        title = "Nenhuma transação encontrada",
+                        subtitle = "Ajuste os filtros ou lance uma nova transação.",
                     )
                 }
             } else {
-                LazyColumn(modifier = Modifier.fillMaxSize()) {
+                LazyColumn(
+                    modifier = Modifier.fillMaxSize(),
+                    contentPadding = PaddingValues(horizontal = Spacing.lg, vertical = Spacing.sm),
+                    verticalArrangement = Arrangement.spacedBy(Spacing.sm),
+                ) {
                     grouped.forEach { (date, items) ->
                         item {
                             Text(
                                 text = DateFormatter.formatDayMonth(date),
                                 style = MaterialTheme.typography.titleSmall,
-                                modifier = Modifier.padding(start = 16.dp, top = 12.dp, bottom = 4.dp),
+                                modifier = Modifier.padding(top = Spacing.sm, bottom = Spacing.xs),
                             )
                         }
                         items(items, key = { it.transaction.id }) { item ->
-                            TransactionListItem(
-                                item = item,
-                                onClick = { onEditTransaction(item.transaction.id) },
-                                onDeleteClick = { pendingDelete = item.transaction },
-                                onTogglePaid = { viewModel.togglePaid(item.transaction) },
-                                onUseAsTemplate = { onUseAsTemplate(item.transaction.id) },
-                            )
+                            AppCard(modifier = Modifier.fillMaxWidth(), contentPadding = PaddingValues(0.dp)) {
+                                TransactionListItem(
+                                    item = item,
+                                    onClick = { onEditTransaction(item.transaction.id) },
+                                    onDeleteClick = { pendingDelete = item.transaction },
+                                    onTogglePaid = { viewModel.togglePaid(item.transaction) },
+                                    onUseAsTemplate = { onUseAsTemplate(item.transaction.id) },
+                                )
+                            }
                         }
                     }
                 }
@@ -204,6 +218,7 @@ private fun SimpleFilterDropdown(
             readOnly = true,
             label = { Text(label) },
             trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = expanded) },
+            colors = appTextFieldColors(),
             modifier = Modifier
                 .fillMaxWidth()
                 .menuAnchor(ExposedDropdownMenuAnchorType.PrimaryNotEditable, true),

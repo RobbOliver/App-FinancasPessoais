@@ -37,6 +37,9 @@ class CreditCardRepository @Inject constructor(
 
     suspend fun deletePurchase(purchase: CreditCardPurchaseEntity) = creditCardDao.deletePurchase(purchase)
 
+    suspend fun getInvoice(creditCardId: Long, yearMonth: Int): CreditCardInvoiceEntity? =
+        creditCardDao.getInvoice(creditCardId, yearMonth)
+
     suspend fun addPurchase(
         creditCardId: Long,
         categoryId: Long?,

@@ -1,7 +1,6 @@
 package com.robson.financas.ui.goals
 
 import androidx.compose.foundation.background
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -16,9 +15,6 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.KeyboardArrowLeft
 import androidx.compose.material.icons.automirrored.filled.KeyboardArrowRight
-import androidx.compose.material3.Button
-import androidx.compose.material3.Card
-import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -41,8 +37,11 @@ import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import com.robson.financas.ui.common.ColorCatalog
 import com.robson.financas.ui.common.GoalProgressBar
 import com.robson.financas.ui.common.IconCatalog
+import com.robson.financas.ui.designsystem.AppCard
+import com.robson.financas.ui.designsystem.AppPrimaryButton
 import com.robson.financas.ui.theme.GreenIncome
 import com.robson.financas.ui.theme.RedExpense
+import com.robson.financas.ui.theme.Spacing
 import com.robson.financas.util.CurrencyFormatter
 import com.robson.financas.util.DateFormatter
 
@@ -69,8 +68,8 @@ fun GoalsScreen(viewModel: GoalsViewModel = hiltViewModel()) {
             modifier = Modifier
                 .fillMaxWidth()
                 .padding(innerPadding),
-            contentPadding = PaddingValues(16.dp),
-            verticalArrangement = Arrangement.spacedBy(12.dp),
+            contentPadding = PaddingValues(Spacing.lg),
+            verticalArrangement = Arrangement.spacedBy(Spacing.md),
         ) {
             item {
                 MonthNavigator(
@@ -84,12 +83,11 @@ fun GoalsScreen(viewModel: GoalsViewModel = hiltViewModel()) {
             }
             if (!hasAnyGoalThisMonth && previousMonthHasGoals) {
                 item {
-                    Button(
+                    AppPrimaryButton(
+                        text = "Importar metas de ${DateFormatter.formatMonthYear(yearMonth.minusMonths(1))}",
                         onClick = viewModel::importFromPreviousMonth,
                         modifier = Modifier.fillMaxWidth(),
-                    ) {
-                        Text("Importar metas de ${DateFormatter.formatMonthYear(yearMonth.minusMonths(1))}")
-                    }
+                    )
                 }
             }
             items(parents, key = { it.categoryId }) { parent ->
@@ -145,11 +143,9 @@ private fun MonthNavigator(label: String, onPrevious: () -> Unit, onNext: () -> 
 
 @Composable
 private fun GoalsSummaryCard(plannedCents: Long, spentCents: Long, balanceCents: Long) {
-    Card(modifier = Modifier.fillMaxWidth()) {
+    AppCard(modifier = Modifier.fillMaxWidth()) {
         Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(16.dp),
+            modifier = Modifier.fillMaxWidth(),
             horizontalArrangement = Arrangement.SpaceBetween,
         ) {
             SummaryStat(label = "Planejado", value = CurrencyFormatter.formatCents(plannedCents))
@@ -173,80 +169,77 @@ private fun SummaryStat(label: String, value: String, color: Color = Color.Unspe
 
 @Composable
 private fun GoalRowItem(row: GoalRow, indented: Boolean = false, onClick: () -> Unit) {
-    Card(
+    AppCard(
         modifier = Modifier
             .fillMaxWidth()
-            .padding(start = if (indented) 24.dp else 0.dp, top = 4.dp, bottom = 4.dp)
-            .clickable(onClick = onClick),
-        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant),
+            .padding(start = if (indented) Spacing.xl else 0.dp, top = Spacing.xs, bottom = Spacing.xs),
+        onClick = onClick,
     ) {
-        Column(modifier = Modifier.padding(16.dp)) {
-            Row(verticalAlignment = Alignment.CenterVertically) {
-                Box(
-                    modifier = Modifier
-                        .size(32.dp)
-                        .clip(CircleShape)
-                        .background(
-                            if (row.hasGoal) {
-                                ColorCatalog.toColor(row.categoryColorHex)
-                            } else {
-                                MaterialTheme.colorScheme.outline
-                            },
-                        ),
-                    contentAlignment = Alignment.Center,
-                ) {
-                    Icon(
-                        imageVector = IconCatalog.resolve(row.categoryIcon),
-                        contentDescription = null,
-                        tint = Color.White,
-                        modifier = Modifier.size(16.dp),
-                    )
-                }
-                Text(
-                    row.categoryName,
-                    style = MaterialTheme.typography.bodyLarge,
-                    modifier = Modifier.padding(start = 12.dp),
+        Row(verticalAlignment = Alignment.CenterVertically) {
+            Box(
+                modifier = Modifier
+                    .size(32.dp)
+                    .clip(CircleShape)
+                    .background(
+                        if (row.hasGoal) {
+                            ColorCatalog.toColor(row.categoryColorHex)
+                        } else {
+                            MaterialTheme.colorScheme.outline
+                        },
+                    ),
+                contentAlignment = Alignment.Center,
+            ) {
+                Icon(
+                    imageVector = IconCatalog.resolve(row.categoryIcon),
+                    contentDescription = null,
+                    tint = Color.White,
+                    modifier = Modifier.size(16.dp),
                 )
             }
-            if (row.hasGoal) {
-                GoalProgressBar(
-                    goalCents = row.amountCents ?: 0L,
-                    spentCents = row.spentCents,
-                    modifier = Modifier.padding(top = 10.dp),
-                )
-                Row(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(top = 6.dp),
-                    horizontalArrangement = Arrangement.SpaceBetween,
-                ) {
-                    Text(
-                        "${CurrencyFormatter.formatCents(row.spentCents)} de ${CurrencyFormatter.formatCents(row.amountCents ?: 0L)}",
-                        style = MaterialTheme.typography.bodySmall,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant,
-                    )
-                    if (row.remainingCents < 0) {
-                        Text(
-                            "${CurrencyFormatter.formatCents(-row.remainingCents)} acima da meta",
-                            style = MaterialTheme.typography.bodySmall,
-                            color = RedExpense,
-                        )
-                    } else {
-                        Text(
-                            "${CurrencyFormatter.formatCents(row.remainingCents)} restante",
-                            style = MaterialTheme.typography.bodySmall,
-                            color = GreenIncome,
-                        )
-                    }
-                }
-            } else {
+            Text(
+                row.categoryName,
+                style = MaterialTheme.typography.bodyLarge,
+                modifier = Modifier.padding(start = Spacing.md),
+            )
+        }
+        if (row.hasGoal) {
+            GoalProgressBar(
+                goalCents = row.amountCents ?: 0L,
+                spentCents = row.spentCents,
+                modifier = Modifier.padding(top = 10.dp),
+            )
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(top = 6.dp),
+                horizontalArrangement = Arrangement.SpaceBetween,
+            ) {
                 Text(
-                    "Sem meta definida",
+                    "${CurrencyFormatter.formatCents(row.spentCents)} de ${CurrencyFormatter.formatCents(row.amountCents ?: 0L)}",
                     style = MaterialTheme.typography.bodySmall,
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
-                    modifier = Modifier.padding(top = 4.dp),
                 )
+                if (row.remainingCents < 0) {
+                    Text(
+                        "${CurrencyFormatter.formatCents(-row.remainingCents)} acima da meta",
+                        style = MaterialTheme.typography.bodySmall,
+                        color = RedExpense,
+                    )
+                } else {
+                    Text(
+                        "${CurrencyFormatter.formatCents(row.remainingCents)} restante",
+                        style = MaterialTheme.typography.bodySmall,
+                        color = GreenIncome,
+                    )
+                }
             }
+        } else {
+            Text(
+                "Sem meta definida",
+                style = MaterialTheme.typography.bodySmall,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                modifier = Modifier.padding(top = Spacing.xs),
+            )
         }
     }
 }

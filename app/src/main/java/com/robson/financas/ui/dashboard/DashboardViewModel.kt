@@ -4,9 +4,11 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.robson.financas.data.local.relation.AccountWithBalance
 import com.robson.financas.data.local.relation.CategoryExpenseSlice
+import com.robson.financas.data.local.relation.CreditCardSummary
 import com.robson.financas.data.local.relation.MonthSummary
 import com.robson.financas.data.local.relation.TransactionWithDetails
 import com.robson.financas.data.repository.AccountRepository
+import com.robson.financas.data.repository.CreditCardRepository
 import com.robson.financas.data.repository.TransactionRepository
 import com.robson.financas.ui.common.MonthBarData
 import com.robson.financas.util.DateFormatter
@@ -28,6 +30,7 @@ data class DashboardUiState(
     val monthlyHistory: List<MonthBarData> = emptyList(),
     val pendingIncomeCents: Long = 0L,
     val pendingExpenseCents: Long = 0L,
+    val creditCards: List<CreditCardSummary> = emptyList(),
 ) {
     val totalBalanceCents: Long get() = accounts.sumOf { it.balanceCents }
     val hasPending: Boolean get() = pendingIncomeCents > 0 || pendingExpenseCents > 0
@@ -37,6 +40,7 @@ data class DashboardUiState(
 class DashboardViewModel @Inject constructor(
     accountRepository: AccountRepository,
     transactionRepository: TransactionRepository,
+    creditCardRepository: CreditCardRepository,
 ) : ViewModel() {
 
     val uiState: StateFlow<DashboardUiState> = run {
@@ -69,10 +73,15 @@ class DashboardViewModel @Inject constructor(
             )
         }
 
-        combine(baseFlow, transactionRepository.observePendingSummary(start, end)) { base, pending ->
+        combine(
+            baseFlow,
+            transactionRepository.observePendingSummary(start, end),
+            creditCardRepository.observeCardsWithInvoiceSummary(thisMonth.year * 100 + thisMonth.monthValue),
+        ) { base, pending, creditCards ->
             base.copy(
                 pendingIncomeCents = pending.pendingIncomeCents,
                 pendingExpenseCents = pending.pendingExpenseCents,
+                creditCards = creditCards,
             )
         }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), DashboardUiState())
     }
