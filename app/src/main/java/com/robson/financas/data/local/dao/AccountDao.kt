@@ -32,6 +32,7 @@ interface AccountDao {
         SELECT a.*,
             a.initialBalanceCents + COALESCE(SUM(
                 CASE
+                    WHEN t.isPaid = 0 OR t.isIgnored = 1 THEN 0
                     WHEN t.type = 'INCOME' AND t.accountId = a.id THEN t.amountCents
                     WHEN t.type = 'EXPENSE' AND t.accountId = a.id THEN -t.amountCents
                     WHEN t.type = 'TRANSFER' AND t.accountId = a.id THEN -t.amountCents

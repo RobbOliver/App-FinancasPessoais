@@ -105,6 +105,11 @@ fun TransactionsScreen(
                     onClick = { viewModel.toggleNeedsReview(!filter.onlyNeedsReview) },
                     label = { Text("Pendências") },
                 )
+                FilterChip(
+                    selected = filter.onlyScheduled,
+                    onClick = { viewModel.toggleScheduled(!filter.onlyScheduled) },
+                    label = { Text("Agendadas") },
+                )
             }
 
             if (transactions.isEmpty()) {
@@ -132,6 +137,7 @@ fun TransactionsScreen(
                                 item = item,
                                 onClick = { onEditTransaction(item.transaction.id) },
                                 onDeleteClick = { pendingDelete = item.transaction },
+                                onTogglePaid = { viewModel.togglePaid(item.transaction) },
                             )
                         }
                     }

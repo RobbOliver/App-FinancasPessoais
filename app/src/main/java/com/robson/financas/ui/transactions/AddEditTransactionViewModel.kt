@@ -31,6 +31,7 @@ data class AddEditTransactionUiState(
     val categoryId: Long? = null,
     val date: LocalDate = LocalDate.now(),
     val description: String = "",
+    val isPaid: Boolean = true,
     val existingTransaction: TransactionEntity? = null,
     val isSaved: Boolean = false,
 ) {
@@ -78,6 +79,7 @@ class AddEditTransactionViewModel @Inject constructor(
                             categoryId = transaction.categoryId,
                             date = transaction.date,
                             description = transaction.description,
+                            isPaid = transaction.isPaid,
                             existingTransaction = transaction,
                         )
                     }
@@ -96,6 +98,7 @@ class AddEditTransactionViewModel @Inject constructor(
     fun updateCategory(categoryId: Long?) = _uiState.update { it.copy(categoryId = categoryId) }
     fun updateDate(date: LocalDate) = _uiState.update { it.copy(date = date) }
     fun updateDescription(description: String) = _uiState.update { it.copy(description = description) }
+    fun updateIsPaid(isPaid: Boolean) = _uiState.update { it.copy(isPaid = isPaid) }
 
     fun categoryTypeFor(type: TransactionType): CategoryType? = when (type) {
         TransactionType.INCOME -> CategoryType.INCOME
@@ -121,6 +124,10 @@ class AddEditTransactionViewModel @Inject constructor(
                 needsReview = false,
                 counterpartyName = state.existingTransaction?.counterpartyName,
                 rawNotificationText = state.existingTransaction?.rawNotificationText,
+                isPaid = state.isPaid,
+                isIgnored = state.existingTransaction?.isIgnored ?: false,
+                isFavorite = state.existingTransaction?.isFavorite ?: false,
+                attachmentPath = state.existingTransaction?.attachmentPath,
             )
             if (state.existingTransaction != null) {
                 transactionRepository.update(entity)

@@ -49,4 +49,8 @@ data class TransactionEntity(
     val needsReview: Boolean = false,
     val counterpartyName: String? = null,
     val rawNotificationText: String? = null,
+    val isPaid: Boolean = true,
+    val isIgnored: Boolean = false,
+    val isFavorite: Boolean = false,
+    val attachmentPath: String? = null,
 )

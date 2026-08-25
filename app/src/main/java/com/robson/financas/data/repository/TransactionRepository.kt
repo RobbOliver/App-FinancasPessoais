@@ -4,6 +4,7 @@ import com.robson.financas.data.local.dao.TransactionDao
 import com.robson.financas.data.local.entity.TransactionEntity
 import com.robson.financas.data.local.relation.CategoryExpenseSlice
 import com.robson.financas.data.local.relation.MonthSummary
+import com.robson.financas.data.local.relation.PendingSummary
 import com.robson.financas.data.local.relation.TransactionWithDetails
 import kotlinx.coroutines.flow.Flow
 import java.time.LocalDate
@@ -28,8 +29,9 @@ class TransactionRepository @Inject constructor(
         startDate: LocalDate? = null,
         endDate: LocalDate? = null,
         onlyNeedsReview: Boolean = false,
+        onlyScheduled: Boolean = false,
     ): Flow<List<TransactionWithDetails>> =
-        transactionDao.observeFiltered(accountId, categoryId, startDate, endDate, onlyNeedsReview)
+        transactionDao.observeFiltered(accountId, categoryId, startDate, endDate, onlyNeedsReview, onlyScheduled)
 
     fun observeRecent(limit: Int): Flow<List<TransactionWithDetails>> = transactionDao.observeRecent(limit)
 
@@ -38,4 +40,7 @@ class TransactionRepository @Inject constructor(
 
     fun observeExpenseByCategoryForMonth(start: LocalDate, end: LocalDate): Flow<List<CategoryExpenseSlice>> =
         transactionDao.observeExpenseByCategoryForMonth(start, end)
+
+    fun observePendingSummary(start: LocalDate, end: LocalDate): Flow<PendingSummary> =
+        transactionDao.observePendingSummary(start, end)
 }

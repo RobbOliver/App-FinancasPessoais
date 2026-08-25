@@ -8,6 +8,7 @@ import androidx.room.Update
 import com.robson.financas.data.local.entity.TransactionEntity
 import com.robson.financas.data.local.relation.CategoryExpenseSlice
 import com.robson.financas.data.local.relation.MonthSummary
+import com.robson.financas.data.local.relation.PendingSummary
 import com.robson.financas.data.local.relation.TransactionWithDetails
 import kotlinx.coroutines.flow.Flow
 import java.time.LocalDate
@@ -56,6 +57,7 @@ interface TransactionDao {
           AND (:startDate IS NULL OR t.date >= :startDate)
           AND (:endDate IS NULL OR t.date <= :endDate)
           AND (:onlyNeedsReview = 0 OR t.needsReview = 1)
+          AND (:onlyScheduled = 0 OR t.isPaid = 0)
         ORDER BY t.date DESC, t.createdAt DESC
         """,
     )
@@ -65,6 +67,7 @@ interface TransactionDao {
         startDate: LocalDate?,
         endDate: LocalDate?,
         onlyNeedsReview: Boolean = false,
+        onlyScheduled: Boolean = false,
     ): Flow<List<TransactionWithDetails>>
 
     @Query(
@@ -91,7 +94,7 @@ interface TransactionDao {
             COALESCE(SUM(CASE WHEN type = 'INCOME' THEN amountCents ELSE 0 END), 0) AS incomeCents,
             COALESCE(SUM(CASE WHEN type = 'EXPENSE' THEN amountCents ELSE 0 END), 0) AS expenseCents
         FROM transactions
-        WHERE date >= :start AND date <= :end
+        WHERE date >= :start AND date <= :end AND isPaid = 1 AND isIgnored = 0
         """,
     )
     fun observeMonthSummary(start: LocalDate, end: LocalDate): Flow<MonthSummary>
@@ -103,9 +106,21 @@ interface TransactionDao {
         FROM transactions t
         JOIN categories c ON c.id = t.categoryId
         WHERE t.type = 'EXPENSE' AND t.date >= :start AND t.date <= :end
+          AND t.isPaid = 1 AND t.isIgnored = 0
         GROUP BY c.id
         ORDER BY totalCents DESC
         """,
     )
     fun observeExpenseByCategoryForMonth(start: LocalDate, end: LocalDate): Flow<List<CategoryExpenseSlice>>
+
+    @Query(
+        """
+        SELECT
+            COALESCE(SUM(CASE WHEN type = 'INCOME' THEN amountCents ELSE 0 END), 0) AS pendingIncomeCents,
+            COALESCE(SUM(CASE WHEN type = 'EXPENSE' THEN amountCents ELSE 0 END), 0) AS pendingExpenseCents
+        FROM transactions
+        WHERE date >= :start AND date <= :end AND isPaid = 0 AND isIgnored = 0
+        """,
+    )
+    fun observePendingSummary(start: LocalDate, end: LocalDate): Flow<PendingSummary>
 }

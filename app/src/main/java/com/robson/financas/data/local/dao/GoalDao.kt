@@ -25,7 +25,8 @@ interface GoalDao {
             c.name AS categoryName, c.icon AS categoryIcon, c.colorHex AS categoryColorHex, c.parentCategoryId,
             COALESCE((SELECT SUM(t.amountCents) FROM transactions t
                       WHERE t.categoryId = g.categoryId AND t.type = 'EXPENSE'
-                        AND t.date >= :startDate AND t.date <= :endDate), 0) AS spentCents
+                        AND t.date >= :startDate AND t.date <= :endDate
+                        AND t.isPaid = 1 AND t.isIgnored = 0), 0) AS spentCents
         FROM goals g
         JOIN categories c ON c.id = g.categoryId
         WHERE g.yearMonth = :yearMonth

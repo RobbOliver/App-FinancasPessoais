@@ -26,6 +26,7 @@ data class TransactionsFilterState(
     val categoryId: Long? = null,
     val onlyCurrentMonth: Boolean = false,
     val onlyNeedsReview: Boolean = false,
+    val onlyScheduled: Boolean = false,
 )
 
 @OptIn(kotlinx.coroutines.ExperimentalCoroutinesApi::class)
@@ -53,7 +54,7 @@ class TransactionsViewModel @Inject constructor(
             val today = LocalDate.now()
             val start = if (f.onlyCurrentMonth) today.withDayOfMonth(1) else null
             val end = if (f.onlyCurrentMonth) today.withDayOfMonth(today.lengthOfMonth()) else null
-            transactionRepository.observeFiltered(f.accountId, f.categoryId, start, end, f.onlyNeedsReview)
+            transactionRepository.observeFiltered(f.accountId, f.categoryId, start, end, f.onlyNeedsReview, f.onlyScheduled)
         }
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
 
@@ -61,8 +62,13 @@ class TransactionsViewModel @Inject constructor(
     fun updateCategoryFilter(id: Long?) = _filter.update { it.copy(categoryId = id) }
     fun toggleCurrentMonth(only: Boolean) = _filter.update { it.copy(onlyCurrentMonth = only) }
     fun toggleNeedsReview(only: Boolean) = _filter.update { it.copy(onlyNeedsReview = only) }
+    fun toggleScheduled(only: Boolean) = _filter.update { it.copy(onlyScheduled = only) }
 
     fun deleteTransaction(transaction: TransactionEntity) {
         viewModelScope.launch { transactionRepository.delete(transaction) }
+    }
+
+    fun togglePaid(transaction: TransactionEntity) {
+        viewModelScope.launch { transactionRepository.update(transaction.copy(isPaid = !transaction.isPaid)) }
     }
 }

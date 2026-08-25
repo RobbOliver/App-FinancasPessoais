@@ -17,6 +17,7 @@ import com.robson.financas.ui.categories.AddEditCategoryScreen
 import com.robson.financas.ui.categories.CategoriesScreen
 import com.robson.financas.ui.dashboard.DashboardScreen
 import com.robson.financas.ui.goals.GoalsScreen
+import com.robson.financas.ui.more.MoreScreen
 import com.robson.financas.ui.settings.SettingsScreen
 import com.robson.financas.ui.transactions.AddEditTransactionScreen
 import com.robson.financas.ui.transactions.TransactionsScreen
@@ -52,6 +53,7 @@ fun FinanceNavHost(
             }
             composable(Screen.Accounts.route) {
                 AccountsScreen(
+                    onBack = { navController.popBackStack() },
                     onAddAccount = { navController.navigate(Screen.AddEditAccount.routeFor()) },
                     onEditAccount = { id -> navController.navigate(Screen.AddEditAccount.routeFor(id)) },
                 )
@@ -69,6 +71,7 @@ fun FinanceNavHost(
             }
             composable(Screen.Categories.route) {
                 CategoriesScreen(
+                    onBack = { navController.popBackStack() },
                     onAddCategory = { navController.navigate(Screen.AddEditCategory.routeFor()) },
                     onEditCategory = { id -> navController.navigate(Screen.AddEditCategory.routeFor(id)) },
                 )
@@ -102,10 +105,17 @@ fun FinanceNavHost(
                 AddEditTransactionScreen(onBack = { navController.popBackStack() })
             }
             composable(Screen.Settings.route) {
-                SettingsScreen()
+                SettingsScreen(onBack = { navController.popBackStack() })
             }
             composable(Screen.Goals.route) {
                 GoalsScreen()
+            }
+            composable(Screen.More.route) {
+                MoreScreen(
+                    onNavigateToAccounts = { navController.navigate(Screen.Accounts.route) },
+                    onNavigateToCategories = { navController.navigate(Screen.Categories.route) },
+                    onNavigateToSettings = { navController.navigate(Screen.Settings.route) },
+                )
             }
         }
     }

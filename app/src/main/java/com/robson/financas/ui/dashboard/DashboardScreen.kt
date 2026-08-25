@@ -77,6 +77,14 @@ fun DashboardScreen(
             verticalArrangement = Arrangement.spacedBy(16.dp),
         ) {
             item { TotalBalanceCard(totalCents = uiState.totalBalanceCents) }
+            if (uiState.hasPending) {
+                item {
+                    PendingSummaryCard(
+                        pendingIncomeCents = uiState.pendingIncomeCents,
+                        pendingExpenseCents = uiState.pendingExpenseCents,
+                    )
+                }
+            }
             item {
                 Row(
                     modifier = Modifier.fillMaxWidth(),
@@ -152,6 +160,39 @@ fun DashboardScreen(
                             onClick = { onEditTransaction(item.transaction.id) },
                         )
                     }
+                }
+            }
+        }
+    }
+}
+
+@Composable
+private fun PendingSummaryCard(pendingIncomeCents: Long, pendingExpenseCents: Long) {
+    Card(
+        modifier = Modifier.fillMaxWidth(),
+        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.primaryContainer),
+    ) {
+        Column(modifier = Modifier.padding(16.dp)) {
+            Text("Pendência e alertas", style = MaterialTheme.typography.titleSmall)
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(top = 8.dp),
+                horizontalArrangement = Arrangement.SpaceBetween,
+            ) {
+                if (pendingIncomeCents > 0) {
+                    Text(
+                        "A receber: ${CurrencyFormatter.formatCents(pendingIncomeCents)}",
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = GreenIncome,
+                    )
+                }
+                if (pendingExpenseCents > 0) {
+                    Text(
+                        "A pagar: ${CurrencyFormatter.formatCents(pendingExpenseCents)}",
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = RedExpense,
+                    )
                 }
             }
         }

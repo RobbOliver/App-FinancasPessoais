@@ -7,8 +7,11 @@ import androidx.sqlite.db.SupportSQLiteDatabase
 import com.robson.financas.data.local.AppDatabase
 import com.robson.financas.data.local.dao.AccountDao
 import com.robson.financas.data.local.dao.CategoryDao
+import com.robson.financas.data.local.dao.CreditCardDao
 import com.robson.financas.data.local.dao.GoalDao
 import com.robson.financas.data.local.dao.NotificationAppMappingDao
+import com.robson.financas.data.local.dao.SavingsGoalDao
+import com.robson.financas.data.local.dao.TagDao
 import com.robson.financas.data.local.dao.TransactionDao
 import com.robson.financas.data.local.seed.DefaultCategorySeeder
 import dagger.Module
@@ -62,4 +65,13 @@ object DatabaseModule {
 
     @Provides
     fun provideGoalDao(database: AppDatabase): GoalDao = database.goalDao()
+
+    @Provides
+    fun provideCreditCardDao(database: AppDatabase): CreditCardDao = database.creditCardDao()
+
+    @Provides
+    fun provideTagDao(database: AppDatabase): TagDao = database.tagDao()
+
+    @Provides
+    fun provideSavingsGoalDao(database: AppDatabase): SavingsGoalDao = database.savingsGoalDao()
 }

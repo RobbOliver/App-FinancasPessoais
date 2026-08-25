@@ -26,8 +26,11 @@ data class DashboardUiState(
     val recentTransactions: List<TransactionWithDetails> = emptyList(),
     val expenseByCategory: List<CategoryExpenseSlice> = emptyList(),
     val monthlyHistory: List<MonthBarData> = emptyList(),
+    val pendingIncomeCents: Long = 0L,
+    val pendingExpenseCents: Long = 0L,
 ) {
     val totalBalanceCents: Long get() = accounts.sumOf { it.balanceCents }
+    val hasPending: Boolean get() = pendingIncomeCents > 0 || pendingExpenseCents > 0
 }
 
 @HiltViewModel
@@ -50,7 +53,7 @@ class DashboardViewModel @Inject constructor(
             },
         ) { it.toList() }
 
-        combine(
+        val baseFlow = combine(
             accountRepository.observeActiveAccountsWithBalance(),
             transactionRepository.observeMonthSummary(start, end),
             transactionRepository.observeRecent(5),
@@ -63,6 +66,13 @@ class DashboardViewModel @Inject constructor(
                 recentTransactions = recent,
                 expenseByCategory = expenseByCategory,
                 monthlyHistory = monthlyHistory,
+            )
+        }
+
+        combine(baseFlow, transactionRepository.observePendingSummary(start, end)) { base, pending ->
+            base.copy(
+                pendingIncomeCents = pending.pendingIncomeCents,
+                pendingExpenseCents = pending.pendingExpenseCents,
             )
         }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), DashboardUiState())
     }
