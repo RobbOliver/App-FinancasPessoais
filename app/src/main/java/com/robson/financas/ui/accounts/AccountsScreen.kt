@@ -22,6 +22,8 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
+import androidx.compose.material3.SnackbarHost
+import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
@@ -29,6 +31,7 @@ import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -45,6 +48,7 @@ import com.robson.financas.ui.common.label
 import com.robson.financas.ui.theme.GreenIncome
 import com.robson.financas.ui.theme.RedExpense
 import com.robson.financas.util.CurrencyFormatter
+import kotlinx.coroutines.launch
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -56,9 +60,12 @@ fun AccountsScreen(
     val accounts by viewModel.accounts.collectAsState()
     val deletionError by viewModel.deletionError.collectAsState()
     var pendingDelete by remember { mutableStateOf<AccountEntity?>(null) }
+    val snackbarHostState = remember { SnackbarHostState() }
+    val coroutineScope = rememberCoroutineScope()
 
     Scaffold(
         topBar = { TopAppBar(title = { Text("Contas") }) },
+        snackbarHost = { SnackbarHost(snackbarHostState) },
         floatingActionButton = {
             FloatingActionButton(onClick = onAddAccount) {
                 Icon(Icons.Filled.Add, contentDescription = "Nova conta")
@@ -99,7 +106,11 @@ fun AccountsScreen(
             title = "Excluir conta",
             message = "Tem certeza que deseja excluir \"${account.name}\"?",
             onConfirm = {
-                viewModel.deleteAccount(account)
+                viewModel.deleteAccount(account) { success ->
+                    if (success) {
+                        coroutineScope.launch { snackbarHostState.showSnackbar("Conta excluída") }
+                    }
+                }
                 pendingDelete = null
             },
             onDismiss = { pendingDelete = null },

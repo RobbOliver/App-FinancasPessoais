@@ -26,12 +26,14 @@ class AccountsViewModel @Inject constructor(
     private val _deletionError = MutableStateFlow<String?>(null)
     val deletionError: StateFlow<String?> = _deletionError
 
-    fun deleteAccount(account: AccountEntity) {
+    fun deleteAccount(account: AccountEntity, onResult: (Boolean) -> Unit = {}) {
         viewModelScope.launch {
             try {
                 accountRepository.delete(account)
+                onResult(true)
             } catch (e: DeletionBlockedException) {
                 _deletionError.value = e.message
+                onResult(false)
             }
         }
     }

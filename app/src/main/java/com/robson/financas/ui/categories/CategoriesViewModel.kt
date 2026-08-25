@@ -25,12 +25,14 @@ class CategoriesViewModel @Inject constructor(
     private val _deletionError = MutableStateFlow<String?>(null)
     val deletionError: StateFlow<String?> = _deletionError
 
-    fun deleteCategory(category: CategoryEntity) {
+    fun deleteCategory(category: CategoryEntity, onResult: (Boolean) -> Unit = {}) {
         viewModelScope.launch {
             try {
                 categoryRepository.delete(category)
+                onResult(true)
             } catch (e: DeletionBlockedException) {
                 _deletionError.value = e.message
+                onResult(false)
             }
         }
     }

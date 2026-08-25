@@ -22,6 +22,8 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Scaffold
+import androidx.compose.material3.SnackbarHost
+import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
@@ -29,6 +31,7 @@ import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -38,6 +41,7 @@ import com.robson.financas.data.local.entity.TransactionEntity
 import com.robson.financas.ui.common.ConfirmDeleteDialog
 import com.robson.financas.ui.common.TransactionListItem
 import com.robson.financas.util.DateFormatter
+import kotlinx.coroutines.launch
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -51,11 +55,14 @@ fun TransactionsScreen(
     val categories by viewModel.categories.collectAsState()
     val transactions by viewModel.transactions.collectAsState()
     var pendingDelete by remember { mutableStateOf<TransactionEntity?>(null) }
+    val snackbarHostState = remember { SnackbarHostState() }
+    val coroutineScope = rememberCoroutineScope()
 
     val grouped = remember(transactions) { transactions.groupBy { it.transaction.date } }
 
     Scaffold(
         topBar = { TopAppBar(title = { Text("Transações") }) },
+        snackbarHost = { SnackbarHost(snackbarHostState) },
         floatingActionButton = {
             FloatingActionButton(onClick = onAddTransaction) {
                 Icon(Icons.Filled.Add, contentDescription = "Nova transação")
@@ -140,6 +147,7 @@ fun TransactionsScreen(
             onConfirm = {
                 viewModel.deleteTransaction(transaction)
                 pendingDelete = null
+                coroutineScope.launch { snackbarHostState.showSnackbar("Transação excluída") }
             },
             onDismiss = { pendingDelete = null },
         )

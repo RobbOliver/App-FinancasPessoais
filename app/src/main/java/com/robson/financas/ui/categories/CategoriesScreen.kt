@@ -22,6 +22,8 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
+import androidx.compose.material3.SnackbarHost
+import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
@@ -29,6 +31,7 @@ import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -42,6 +45,7 @@ import com.robson.financas.ui.common.ColorCatalog
 import com.robson.financas.ui.common.ConfirmDeleteDialog
 import com.robson.financas.ui.common.IconCatalog
 import com.robson.financas.ui.common.label
+import kotlinx.coroutines.launch
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -53,6 +57,8 @@ fun CategoriesScreen(
     val categories by viewModel.categories.collectAsState()
     val deletionError by viewModel.deletionError.collectAsState()
     var pendingDelete by remember { mutableStateOf<CategoryEntity?>(null) }
+    val snackbarHostState = remember { SnackbarHostState() }
+    val coroutineScope = rememberCoroutineScope()
 
     val grouped = remember(categories) {
         CategoryType.entries.associateWith { type ->
@@ -64,44 +70,59 @@ fun CategoriesScreen(
 
     Scaffold(
         topBar = { TopAppBar(title = { Text("Categorias") }) },
+        snackbarHost = { SnackbarHost(snackbarHostState) },
         floatingActionButton = {
             FloatingActionButton(onClick = onAddCategory) {
                 Icon(Icons.Filled.Add, contentDescription = "Nova categoria")
             }
         },
     ) { innerPadding ->
-        LazyColumn(
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(innerPadding),
-        ) {
-            CategoryType.entries.forEach { type ->
-                val parentGroups = grouped[type].orEmpty()
-                if (parentGroups.isNotEmpty()) {
-                    item {
-                        Text(
-                            text = type.label(),
-                            style = MaterialTheme.typography.titleMedium,
-                            modifier = Modifier.padding(start = 16.dp, top = 16.dp, bottom = 4.dp),
-                        )
-                    }
-                    items(parentGroups, key = { it.first.id }) { (parent, children) ->
-                        CategoryRow(
-                            category = parent,
-                            indented = false,
-                            onClick = { onEditCategory(parent.id) },
-                            onDeleteClick = { pendingDelete = parent },
-                        )
-                        children.forEach { child ->
-                            CategoryRow(
-                                category = child,
-                                indented = true,
-                                onClick = { onEditCategory(child.id) },
-                                onDeleteClick = { pendingDelete = child },
+        if (categories.isEmpty()) {
+            Box(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .padding(innerPadding),
+                contentAlignment = Alignment.Center,
+            ) {
+                Text(
+                    "Nenhuma categoria cadastrada.\nToque em + para criar a primeira.",
+                    style = MaterialTheme.typography.bodyLarge,
+                )
+            }
+        } else {
+            LazyColumn(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .padding(innerPadding),
+            ) {
+                CategoryType.entries.forEach { type ->
+                    val parentGroups = grouped[type].orEmpty()
+                    if (parentGroups.isNotEmpty()) {
+                        item {
+                            Text(
+                                text = type.label(),
+                                style = MaterialTheme.typography.titleMedium,
+                                modifier = Modifier.padding(start = 16.dp, top = 16.dp, bottom = 4.dp),
                             )
                         }
+                        items(parentGroups, key = { it.first.id }) { (parent, children) ->
+                            CategoryRow(
+                                category = parent,
+                                indented = false,
+                                onClick = { onEditCategory(parent.id) },
+                                onDeleteClick = { pendingDelete = parent },
+                            )
+                            children.forEach { child ->
+                                CategoryRow(
+                                    category = child,
+                                    indented = true,
+                                    onClick = { onEditCategory(child.id) },
+                                    onDeleteClick = { pendingDelete = child },
+                                )
+                            }
+                        }
+                        item { HorizontalDivider(modifier = Modifier.padding(vertical = 8.dp)) }
                     }
-                    item { HorizontalDivider(modifier = Modifier.padding(vertical = 8.dp)) }
                 }
             }
         }
@@ -112,7 +133,11 @@ fun CategoriesScreen(
             title = "Excluir categoria",
             message = "Tem certeza que deseja excluir \"${category.name}\"?",
             onConfirm = {
-                viewModel.deleteCategory(category)
+                viewModel.deleteCategory(category) { success ->
+                    if (success) {
+                        coroutineScope.launch { snackbarHostState.showSnackbar("Categoria excluída") }
+                    }
+                }
                 pendingDelete = null
             },
             onDismiss = { pendingDelete = null },
