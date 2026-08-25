@@ -7,6 +7,7 @@ import androidx.sqlite.db.SupportSQLiteDatabase
 import com.robson.financas.data.local.AppDatabase
 import com.robson.financas.data.local.dao.AccountDao
 import com.robson.financas.data.local.dao.CategoryDao
+import com.robson.financas.data.local.dao.NotificationAppMappingDao
 import com.robson.financas.data.local.dao.TransactionDao
 import com.robson.financas.data.local.seed.DefaultCategorySeeder
 import dagger.Module
@@ -50,4 +51,8 @@ object DatabaseModule {
 
     @Provides
     fun provideTransactionDao(database: AppDatabase): TransactionDao = database.transactionDao()
+
+    @Provides
+    fun provideNotificationAppMappingDao(database: AppDatabase): NotificationAppMappingDao =
+        database.notificationAppMappingDao()
 }

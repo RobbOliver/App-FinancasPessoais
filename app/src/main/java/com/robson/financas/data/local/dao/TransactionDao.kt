@@ -27,6 +27,19 @@ interface TransactionDao {
 
     @Query(
         """
+        SELECT categoryId FROM transactions
+        WHERE categoryId IS NOT NULL
+          AND needsReview = 0
+          AND counterpartyName IS NOT NULL
+          AND LOWER(counterpartyName) = LOWER(:counterpartyName)
+        ORDER BY date DESC, createdAt DESC
+        LIMIT 1
+        """,
+    )
+    suspend fun findRecentCategoryIdForCounterparty(counterpartyName: String): Long?
+
+    @Query(
+        """
         SELECT t.*,
             a.name AS accountName,
             a2.name AS transferToAccountName,

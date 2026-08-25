@@ -5,6 +5,7 @@ import androidx.compose.material.icons.filled.AccountBalanceWallet
 import androidx.compose.material.icons.filled.Category
 import androidx.compose.material.icons.filled.Home
 import androidx.compose.material.icons.filled.Receipt
+import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material3.Icon
 import androidx.compose.material3.NavigationBar
 import androidx.compose.material3.NavigationBarItem
@@ -23,6 +24,7 @@ private val bottomTabs = listOf(
     BottomTab(Screen.Accounts, "Contas", Icons.Filled.AccountBalanceWallet),
     BottomTab(Screen.Transactions, "Transações", Icons.Filled.Receipt),
     BottomTab(Screen.Categories, "Categorias", Icons.Filled.Category),
+    BottomTab(Screen.Settings, "Config", Icons.Filled.Settings),
 )
 
 val bottomTabRoutes: Set<String> = bottomTabs.map { it.screen.route }.toSet()
