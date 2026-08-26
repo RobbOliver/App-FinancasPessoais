@@ -8,7 +8,6 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.ColumnScope
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.LocalContentColor
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.ripple
@@ -20,6 +19,7 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Shape
 import androidx.compose.ui.unit.dp
 import com.robson.financas.ui.theme.BorderSubtle
+import com.robson.financas.ui.theme.HudCyanLight
 import com.robson.financas.ui.theme.OnSurfaceGray
 import com.robson.financas.ui.theme.SurfaceElevated
 import com.robson.financas.ui.theme.SurfaceElevatedHigh
@@ -31,8 +31,10 @@ enum class SurfaceLevel { Base, Elevated, ElevatedHigh }
 
 /**
  * Substitui o `Card` cru do Material3 em todo o app: camada de superfície com o tom certo
- * para o nível pedido, borda fina de baixa opacidade em vez de elevação pesada, e a
- * microinteração de leve encolhimento no toque quando `onClick` é passado.
+ * para o nível pedido, borda fina de baixa opacidade em vez de elevação pesada, o "tick"
+ * técnico de canto do HUD (`hudTick`, ligado por padrão — é a marca registrada do design
+ * aprovado, presente em todo painel do mockup) e a microinteração de leve encolhimento no
+ * toque quando `onClick` é passado.
  */
 @Composable
 fun AppCard(
@@ -40,6 +42,7 @@ fun AppCard(
     level: SurfaceLevel = SurfaceLevel.Base,
     shape: Shape = MaterialTheme.shapes.medium,
     contentPadding: PaddingValues = PaddingValues(Spacing.lg),
+    hudTick: Boolean = true,
     onClick: (() -> Unit)? = null,
     content: @Composable ColumnScope.() -> Unit,
 ) {
@@ -54,6 +57,9 @@ fun AppCard(
         .clip(shape)
         .background(containerColor, shape)
         .border(1.dp, BorderSubtle, shape)
+    if (hudTick) {
+        base = base.hudCornerTick(color = HudCyanLight)
+    }
 
     if (onClick != null) {
         base = base
@@ -79,7 +85,7 @@ fun AppCard(
 @Composable
 fun HeroCard(
     modifier: Modifier = Modifier,
-    shape: Shape = RoundedCornerShape(24.dp),
+    shape: Shape = MaterialTheme.shapes.large,
     content: @Composable ColumnScope.() -> Unit,
 ) = AppCard(
     modifier = modifier,

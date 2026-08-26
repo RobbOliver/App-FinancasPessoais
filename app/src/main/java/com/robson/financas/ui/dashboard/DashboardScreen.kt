@@ -36,14 +36,14 @@ import com.robson.financas.ui.common.MonthlyBarChart
 import com.robson.financas.ui.common.TransactionListItem
 import com.robson.financas.ui.designsystem.AppCard
 import com.robson.financas.ui.designsystem.AppFab
+import com.robson.financas.ui.designsystem.CardLabel
 import com.robson.financas.ui.designsystem.EmptyState
 import com.robson.financas.ui.designsystem.HeroCard
 import com.robson.financas.ui.designsystem.SurfaceLevel
-import com.robson.financas.ui.designsystem.hudCornerTick
 import com.robson.financas.ui.designsystem.scanlineOverlay
 import com.robson.financas.ui.theme.DataTextStyle
+import com.robson.financas.ui.theme.EyebrowStyle
 import com.robson.financas.ui.theme.GreenIncome
-import com.robson.financas.ui.theme.HudCyanLight
 import com.robson.financas.ui.theme.RedExpense
 import com.robson.financas.ui.theme.Spacing
 import com.robson.financas.util.CurrencyFormatter
@@ -129,7 +129,7 @@ fun DashboardScreen(
                     )
                 } else {
                     AppCard(modifier = Modifier.fillMaxWidth(), onClick = onOpenCreditCards) {
-                        Text("Cartões de crédito", style = MaterialTheme.typography.titleMedium)
+                        CardLabel("Cartões de crédito")
                         uiState.creditCards.forEach { summary ->
                             Column(modifier = Modifier.padding(top = Spacing.md)) {
                                 Row(
@@ -154,7 +154,7 @@ fun DashboardScreen(
             }
             item {
                 AppCard(modifier = Modifier.fillMaxWidth()) {
-                    Text("Despesas por categoria", style = MaterialTheme.typography.titleMedium)
+                    CardLabel("Despesas por categoria")
                     if (uiState.expenseByCategory.isEmpty()) {
                         Text(
                             "Sem despesas este mês.",
@@ -174,7 +174,7 @@ fun DashboardScreen(
             }
             item {
                 AppCard(modifier = Modifier.fillMaxWidth()) {
-                    Text("Receita x despesa", style = MaterialTheme.typography.titleMedium)
+                    CardLabel("Receita x despesa")
                     MonthlyBarChart(
                         data = uiState.monthlyHistory,
                         modifier = Modifier.padding(top = Spacing.md),
@@ -182,10 +182,7 @@ fun DashboardScreen(
                 }
             }
             item {
-                Text(
-                    "Últimas transações",
-                    style = MaterialTheme.typography.titleMedium,
-                )
+                CardLabel("Últimas transações", modifier = Modifier.padding(horizontal = Spacing.xs))
             }
             if (uiState.recentTransactions.isEmpty()) {
                 item {
@@ -218,7 +215,7 @@ private fun PendingSummaryCard(pendingIncomeCents: Long, pendingExpenseCents: Lo
         modifier = Modifier.fillMaxWidth(),
         level = SurfaceLevel.Elevated,
     ) {
-        Text("Pendência e alertas", style = MaterialTheme.typography.titleSmall)
+        CardLabel("Pendência e alertas")
         Row(
             modifier = Modifier
                 .fillMaxWidth()
@@ -248,14 +245,9 @@ private fun TotalBalanceCard(totalCents: Long) {
     HeroCard(
         modifier = Modifier
             .fillMaxWidth()
-            .scanlineOverlay()
-            .hudCornerTick(color = HudCyanLight),
+            .scanlineOverlay(),
     ) {
-        Text(
-            "Saldo total",
-            style = MaterialTheme.typography.bodyMedium,
-            color = MaterialTheme.colorScheme.onSurfaceVariant,
-        )
+        CardLabel("Saldo total")
         Text(
             CurrencyFormatter.formatCents(totalCents),
             style = MaterialTheme.typography.displaySmall.merge(DataTextStyle),
@@ -275,7 +267,7 @@ private fun SummaryCard(
     AppCard(modifier = modifier, level = SurfaceLevel.Elevated) {
         Row(verticalAlignment = Alignment.CenterVertically) {
             Icon(icon, contentDescription = null, tint = color, modifier = Modifier.padding(end = Spacing.xs))
-            Text(label, style = MaterialTheme.typography.bodySmall)
+            Text(label.uppercase(), style = MaterialTheme.typography.labelSmall.merge(EyebrowStyle))
         }
         Text(
             CurrencyFormatter.formatCents(amountCents),

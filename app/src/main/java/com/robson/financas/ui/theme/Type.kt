@@ -40,6 +40,18 @@ val DataTextStyle = TextStyle(
 )
 
 /**
+ * Rótulo "eyebrow" do HUD — caixa alta, monoespaçada, tracking largo, ciano. É o rótulo que
+ * antecede todo dado/título de painel no design aprovado (`// SALDO TOTAL`, `// CARTÃO`...);
+ * ficava restrito ao hero do Dashboard antes — agora é o padrão em `SectionHeader`/`CardLabel`.
+ */
+val EyebrowStyle = TextStyle(
+    fontFamily = JetBrainsMonoFamily,
+    fontWeight = FontWeight.SemiBold,
+    letterSpacing = 1.2.sp,
+    color = HudCyanLight,
+)
+
+/**
  * Escala tipográfica "Neon HUD": display/headline/title em Chakra Petch (fonte técnica
  * angular, empacotada como recurso local — `app/src/main/res/font/`, licença OFL), body/label
  * seguem a fonte de sistema (Roboto) para manter legibilidade em texto denso. Hierarquia
