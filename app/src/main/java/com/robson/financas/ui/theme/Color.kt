@@ -40,3 +40,4 @@ val GreenIncome = Color(0xFF30D158)
 // deliberadamente muito baixos, nunca sobre texto de leitura densa.
 const val GrainOverlayAlpha = 0.035f
 const val DotGridOverlayAlpha = 0.05f
+const val ScanlineOverlayAlpha = 0.05f

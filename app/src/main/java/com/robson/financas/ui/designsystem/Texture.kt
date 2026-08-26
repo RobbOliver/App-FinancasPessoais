@@ -9,6 +9,7 @@ import androidx.compose.ui.unit.dp
 import com.robson.financas.ui.theme.DotGridOverlayAlpha
 import com.robson.financas.ui.theme.GrainOverlayAlpha
 import com.robson.financas.ui.theme.HudCyanLight
+import com.robson.financas.ui.theme.ScanlineOverlayAlpha
 import kotlin.math.hypot
 import kotlin.random.Random
 
@@ -48,6 +49,33 @@ fun Modifier.dotGridOverlay(
                 color = dotColor.copy(alpha = maxAlpha * falloff),
                 radius = (maxRadiusPx * falloff).coerceAtLeast(0.6f),
                 center = Offset(x, y),
+            )
+        }
+    }
+}
+
+/**
+ * Linhas horizontais finas repetidas — leitura "scanline" de painel técnico. Mesmo padrão de
+ * cache dos outros overlays desta família: pré-calculado uma vez por tamanho, sem custo por
+ * frame. Uso: só em hero sections e estados vazios — nunca atrás de texto de leitura densa.
+ */
+fun Modifier.scanlineOverlay(
+    color: Color = HudCyanLight,
+    alpha: Float = ScanlineOverlayAlpha,
+    lineSpacing: Dp = 3.dp,
+    lineThickness: Dp = 1.dp,
+): Modifier = this.drawWithCache {
+    val spacingPx = lineSpacing.toPx()
+    val thicknessPx = lineThickness.toPx()
+    val rows = (size.height / spacingPx).toInt() + 1
+    onDrawBehind {
+        for (r in 0..rows) {
+            val y = r * spacingPx
+            drawLine(
+                color = color.copy(alpha = alpha),
+                start = Offset(0f, y),
+                end = Offset(size.width, y),
+                strokeWidth = thicknessPx,
             )
         }
     }

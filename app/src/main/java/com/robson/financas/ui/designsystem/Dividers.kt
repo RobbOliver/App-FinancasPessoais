@@ -17,3 +17,25 @@ fun Modifier.drawTopDivider(color: Color, thickness: Dp = 1.dp): Modifier = this
         strokeWidth = thickness.toPx(),
     )
 }
+
+/**
+ * "Tick" técnico no canto superior esquerdo — o traço curto que identifica um painel como
+ * HUD (mesma leitura do `::before` usado no mockup aprovado). Uso pontual: cards de destaque,
+ * nunca em toda superfície com borda.
+ */
+fun Modifier.hudCornerTick(
+    color: Color,
+    inset: Dp = 16.dp,
+    length: Dp = 22.dp,
+    thickness: Dp = 1.dp,
+): Modifier = this.drawWithContent {
+    drawContent()
+    val insetPx = inset.toPx()
+    val lengthPx = length.toPx()
+    drawLine(
+        color = color,
+        start = Offset(insetPx, 0f),
+        end = Offset(insetPx + lengthPx, 0f),
+        strokeWidth = thickness.toPx(),
+    )
+}
