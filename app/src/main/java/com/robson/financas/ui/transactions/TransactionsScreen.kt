@@ -168,7 +168,10 @@ fun TransactionsScreen(
                             )
                         }
                         items(items, key = { it.transaction.id }) { item ->
-                            AppCard(modifier = Modifier.fillMaxWidth(), contentPadding = PaddingValues(0.dp)) {
+                            AppCard(
+                                modifier = Modifier.fillMaxWidth().animateItem(),
+                                contentPadding = PaddingValues(0.dp),
+                            ) {
                                 TransactionListItem(
                                     item = item,
                                     onClick = { onEditTransaction(item.transaction.id) },

@@ -7,6 +7,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.TextStyle
 import com.robson.financas.data.local.entity.TransactionType
+import com.robson.financas.ui.theme.DataTextStyle
 import com.robson.financas.ui.theme.GreenIncome
 import com.robson.financas.ui.theme.RedExpense
 import com.robson.financas.util.CurrencyFormatter
@@ -16,7 +17,7 @@ fun AmountText(
     amountCents: Long,
     type: TransactionType,
     modifier: Modifier = Modifier,
-    style: TextStyle = MaterialTheme.typography.bodyLarge,
+    style: TextStyle = MaterialTheme.typography.bodyLarge.merge(DataTextStyle),
 ) {
     val color = when (type) {
         TransactionType.INCOME -> GreenIncome

@@ -39,8 +39,11 @@ import com.robson.financas.ui.designsystem.AppFab
 import com.robson.financas.ui.designsystem.EmptyState
 import com.robson.financas.ui.designsystem.HeroCard
 import com.robson.financas.ui.designsystem.SurfaceLevel
-import com.robson.financas.ui.designsystem.dotGridOverlay
+import com.robson.financas.ui.designsystem.hudCornerTick
+import com.robson.financas.ui.designsystem.scanlineOverlay
+import com.robson.financas.ui.theme.DataTextStyle
 import com.robson.financas.ui.theme.GreenIncome
+import com.robson.financas.ui.theme.HudCyanLight
 import com.robson.financas.ui.theme.RedExpense
 import com.robson.financas.ui.theme.Spacing
 import com.robson.financas.util.CurrencyFormatter
@@ -134,7 +137,10 @@ fun DashboardScreen(
                                     horizontalArrangement = Arrangement.SpaceBetween,
                                 ) {
                                     Text(summary.card.name, style = MaterialTheme.typography.bodyLarge)
-                                    Text(CurrencyFormatter.formatCents(summary.invoiceTotalCents))
+                                    Text(
+                                        CurrencyFormatter.formatCents(summary.invoiceTotalCents),
+                                        style = MaterialTheme.typography.bodyLarge.merge(DataTextStyle),
+                                    )
                                 }
                                 GoalProgressBar(
                                     goalCents = summary.card.limitCents,
@@ -191,7 +197,10 @@ fun DashboardScreen(
                 }
             } else {
                 items(uiState.recentTransactions, key = { it.transaction.id }) { item ->
-                    AppCard(modifier = Modifier.fillMaxWidth(), contentPadding = PaddingValues(0.dp)) {
+                    AppCard(
+                        modifier = Modifier.fillMaxWidth().animateItem(),
+                        contentPadding = PaddingValues(0.dp),
+                    ) {
                         TransactionListItem(
                             item = item,
                             onClick = { onEditTransaction(item.transaction.id) },
@@ -219,14 +228,14 @@ private fun PendingSummaryCard(pendingIncomeCents: Long, pendingExpenseCents: Lo
             if (pendingIncomeCents > 0) {
                 Text(
                     "A receber: ${CurrencyFormatter.formatCents(pendingIncomeCents)}",
-                    style = MaterialTheme.typography.bodyMedium,
+                    style = MaterialTheme.typography.bodyMedium.merge(DataTextStyle),
                     color = GreenIncome,
                 )
             }
             if (pendingExpenseCents > 0) {
                 Text(
                     "A pagar: ${CurrencyFormatter.formatCents(pendingExpenseCents)}",
-                    style = MaterialTheme.typography.bodyMedium,
+                    style = MaterialTheme.typography.bodyMedium.merge(DataTextStyle),
                     color = RedExpense,
                 )
             }
@@ -236,7 +245,12 @@ private fun PendingSummaryCard(pendingIncomeCents: Long, pendingExpenseCents: Lo
 
 @Composable
 private fun TotalBalanceCard(totalCents: Long) {
-    HeroCard(modifier = Modifier.fillMaxWidth().dotGridOverlay()) {
+    HeroCard(
+        modifier = Modifier
+            .fillMaxWidth()
+            .scanlineOverlay()
+            .hudCornerTick(color = HudCyanLight),
+    ) {
         Text(
             "Saldo total",
             style = MaterialTheme.typography.bodyMedium,
@@ -244,7 +258,7 @@ private fun TotalBalanceCard(totalCents: Long) {
         )
         Text(
             CurrencyFormatter.formatCents(totalCents),
-            style = MaterialTheme.typography.displaySmall,
+            style = MaterialTheme.typography.displaySmall.merge(DataTextStyle),
             modifier = Modifier.padding(top = Spacing.xs),
         )
     }
@@ -265,7 +279,7 @@ private fun SummaryCard(
         }
         Text(
             CurrencyFormatter.formatCents(amountCents),
-            style = MaterialTheme.typography.titleMedium,
+            style = MaterialTheme.typography.titleMedium.merge(DataTextStyle),
             color = color,
             modifier = Modifier.padding(top = Spacing.xs),
         )
