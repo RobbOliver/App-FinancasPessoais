@@ -8,7 +8,7 @@ import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import com.robson.financas.ui.theme.DotGridOverlayAlpha
 import com.robson.financas.ui.theme.GrainOverlayAlpha
-import com.robson.financas.ui.theme.NeonBlueLight
+import com.robson.financas.ui.theme.HudCyanLight
 import kotlin.math.hypot
 import kotlin.random.Random
 
@@ -19,7 +19,7 @@ import kotlin.random.Random
  * Uso: só em hero sections e estados vazios — nunca atrás de texto de leitura densa.
  */
 fun Modifier.dotGridOverlay(
-    dotColor: Color = NeonBlueLight,
+    dotColor: Color = HudCyanLight,
     maxAlpha: Float = DotGridOverlayAlpha,
     spacing: Dp = 18.dp,
     maxRadius: Dp = 1.8.dp,

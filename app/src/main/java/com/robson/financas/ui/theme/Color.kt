@@ -2,13 +2,16 @@ package com.robson.financas.ui.theme
 
 import androidx.compose.ui.graphics.Color
 
-// Accent — azul escuro sofisticado, sem virar neon/cyberpunk.
-val NeonBlue = Color(0xFF0A84FF)
-val NeonBlueLight = Color(0xFF64D2FF)
+// Accent — ciano técnico "Neon HUD", acento principal do app.
+val HudCyan = Color(0xFF26F5D8)
+val HudCyanLight = Color(0xFF6FFCE8)
 
-/** Fundo de superfícies tingidas de azul (chips ativos, containers de destaque). */
-val AccentMutedSurface = Color(0xFF13233A)
-val AccentBorder = Color(0xFF2C4A6E)
+// Acento secundário — usado com moderação (donuts, destaques pontuais), nunca como cor de CTA.
+val HudMagenta = Color(0xFFFF3EC9)
+
+/** Fundo de superfícies tingidas de ciano (chips ativos, containers de destaque). */
+val AccentMutedSurface = Color(0xFF0C2622)
+val AccentBorder = Color(0xFF1E4F47)
 
 // Escala de profundidade — cada nível um degrau mais claro que o de baixo,
 // para que a hierarquia venha do contraste de superfície, não de sombra pesada.
@@ -22,8 +25,8 @@ val SurfaceElevatedHighest = Color(0xFF313136)
 val SurfaceVariantGray = Color(0xFF232326)
 
 val OutlineGray = Color(0xFF3A3A3C)
-val BorderSubtle = Color(0x1FFFFFFF)
-val BorderSubtleStrong = Color(0x33FFFFFF)
+val BorderSubtle = Color(0x2926F5D8)
+val BorderSubtleStrong = Color(0x4526F5D8)
 
 val OnSurfaceGray = Color(0xFFF2F2F5)
 val TextSecondary = Color(0xFFA8A8B0)

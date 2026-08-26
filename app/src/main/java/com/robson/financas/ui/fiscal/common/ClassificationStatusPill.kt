@@ -13,8 +13,8 @@ import androidx.compose.ui.unit.dp
 import com.robson.financas.data.local.entity.fiscal.ClassificationStatus
 import com.robson.financas.ui.theme.AccentMutedSurface
 import com.robson.financas.ui.theme.GreenIncome
-import com.robson.financas.ui.theme.NeonBlue
-import com.robson.financas.ui.theme.NeonBlueLight
+import com.robson.financas.ui.theme.HudCyan
+import com.robson.financas.ui.theme.HudCyanLight
 import com.robson.financas.ui.theme.RedExpense
 
 /** "automático" / "sugerido" / "confirmar" / "a revisar" — nunca inferido, sempre o status gravado. */
@@ -23,8 +23,8 @@ fun ClassificationStatusPill(status: ClassificationStatus, modifier: Modifier = 
     val (label, color) = when (status) {
         ClassificationStatus.AUTOMATIC -> "Automático" to GreenIncome
         ClassificationStatus.CONFIRMED -> "Confirmado" to GreenIncome
-        ClassificationStatus.SUGGESTED -> "Sugerido" to NeonBlueLight
-        ClassificationStatus.NEEDS_CONFIRMATION -> "Confirmar" to NeonBlue
+        ClassificationStatus.SUGGESTED -> "Sugerido" to HudCyanLight
+        ClassificationStatus.NEEDS_CONFIRMATION -> "Confirmar" to HudCyan
         ClassificationStatus.NEEDS_REVIEW -> "A revisar" to RedExpense
     }
     Row(

@@ -21,7 +21,7 @@ import androidx.navigation.compose.currentBackStackEntryAsState
 import com.robson.financas.ui.designsystem.drawTopDivider
 import com.robson.financas.ui.theme.AccentMutedSurface
 import com.robson.financas.ui.theme.BorderSubtle
-import com.robson.financas.ui.theme.NeonBlueLight
+import com.robson.financas.ui.theme.HudCyanLight
 import com.robson.financas.ui.theme.SurfaceElevated
 import com.robson.financas.ui.theme.TextTertiary
 
@@ -60,8 +60,8 @@ fun FinanceBottomNavBar(navController: NavHostController) {
                 icon = { Icon(tab.icon, contentDescription = tab.label) },
                 label = { Text(tab.label) },
                 colors = NavigationBarItemDefaults.colors(
-                    selectedIconColor = NeonBlueLight,
-                    selectedTextColor = NeonBlueLight,
+                    selectedIconColor = HudCyanLight,
+                    selectedTextColor = HudCyanLight,
                     indicatorColor = AccentMutedSurface,
                     unselectedIconColor = TextTertiary,
                     unselectedTextColor = TextTertiary,

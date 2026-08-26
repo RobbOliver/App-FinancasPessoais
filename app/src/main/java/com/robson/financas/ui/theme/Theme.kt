@@ -1,20 +1,22 @@
 package com.robson.financas.ui.theme
 
 /*
- * Design system: "premium escuro sóbrio".
+ * Design system: "Neon HUD" — painel de cockpit/sci-fi.
  *
- * Conceito: superfícies escuras em camadas — cada nível de card é um degrau de cinza
- * mais claro que o de baixo (profundidade por CONTRASTE, não por elevação/sombra pesada),
- * com bordas finas de baixa opacidade e brilho de destaque concentrado no azul da marca.
+ * Conceito: fundo quase preto, bordas finas ciano (com "tick" técnico de canto em
+ * `Dividers.kt#hudCornerTick`), texto de dado em monoespaçada, glow ciano controlado nos
+ * elementos interativos, scanline sutil em hero sections (`Texture.kt#scanlineOverlay`).
+ * Profundidade ainda vem de CONTRASTE entre níveis de cinza, não de elevação/sombra pesada
+ * — essa base do redesign anterior foi mantida; o que muda é o acento (ciano/magenta no
+ * lugar do azul) e a forma (cantos quase retos no lugar de arredondados).
  *
  * Paleta: preto profundo (background) → grafite (background secundário) → 3 níveis de
- * cinza elevado (superfícies) → azul escuro sofisticado (accent/CTA/foco) com uma variante
- * "luminosa" usada com moderação (gráficos, glow discreto). Sem roxo, magenta, ciano neon
- * ou gradiente colorido — ver `Color.kt` para os tokens nomeados.
+ * cinza elevado (superfícies) → ciano técnico (accent/CTA/foco/dados) com magenta como
+ * acento secundário raro (nunca em CTA) — ver `Color.kt` para os tokens nomeados.
  *
- * Regra de aplicação: textura (grão/grade de pontos, `Texture.kt`) só em hero sections e
- * estados vazios, nunca sobre texto de leitura densa ou formulários. Componentes de base
- * ficam em `ui/designsystem/`; as telas não usam `Card`/`OutlinedTextField` crus.
+ * Regra de aplicação: textura (grão/grade de pontos/scanline, `Texture.kt`) só em hero
+ * sections e estados vazios, nunca sobre texto de leitura densa ou formulários. Componentes
+ * de base ficam em `ui/designsystem/`; as telas não usam `Card`/`OutlinedTextField` crus.
  */
 
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -26,26 +28,26 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
 
 private val AppDarkColors = darkColorScheme(
-    primary = NeonBlue,
+    primary = HudCyan,
     onPrimary = Color.White,
     primaryContainer = AccentMutedSurface,
-    onPrimaryContainer = NeonBlueLight,
-    inversePrimary = NeonBlue,
-    secondary = NeonBlueLight,
+    onPrimaryContainer = HudCyanLight,
+    inversePrimary = HudCyan,
+    secondary = HudCyanLight,
     onSecondary = PureBlack,
     secondaryContainer = SurfaceElevated,
     onSecondaryContainer = OnSurfaceGray,
-    tertiary = NeonBlueLight,
+    tertiary = HudCyanLight,
     onTertiary = PureBlack,
     tertiaryContainer = SurfaceElevated,
-    onTertiaryContainer = NeonBlueLight,
+    onTertiaryContainer = HudCyanLight,
     background = BgDeep,
     onBackground = OnSurfaceGray,
     surface = SurfaceGray,
     onSurface = OnSurfaceGray,
     surfaceVariant = SurfaceVariantGray,
     onSurfaceVariant = TextSecondary,
-    surfaceTint = NeonBlue,
+    surfaceTint = HudCyan,
     surfaceDim = BgDeep,
     surfaceBright = SurfaceElevatedHighest,
     surfaceContainerLowest = BgDeep,
@@ -65,11 +67,11 @@ private val AppDarkColors = darkColorScheme(
 )
 
 private val AppShapes = Shapes(
-    extraSmall = RoundedCornerShape(8.dp),
-    small = RoundedCornerShape(12.dp),
-    medium = RoundedCornerShape(16.dp),
-    large = RoundedCornerShape(20.dp),
-    extraLarge = RoundedCornerShape(28.dp),
+    extraSmall = RoundedCornerShape(2.dp),
+    small = RoundedCornerShape(4.dp),
+    medium = RoundedCornerShape(6.dp),
+    large = RoundedCornerShape(8.dp),
+    extraLarge = RoundedCornerShape(12.dp),
 )
 
 @Composable

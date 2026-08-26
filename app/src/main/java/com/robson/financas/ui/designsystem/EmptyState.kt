@@ -20,7 +20,7 @@ import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import com.robson.financas.ui.theme.AccentMutedSurface
-import com.robson.financas.ui.theme.NeonBlueLight
+import com.robson.financas.ui.theme.HudCyanLight
 import com.robson.financas.ui.theme.Spacing
 
 /**
@@ -57,7 +57,7 @@ fun EmptyState(
                         .background(AccentMutedSurface),
                     contentAlignment = Alignment.Center,
                 ) {
-                    Icon(icon, contentDescription = null, tint = NeonBlueLight, modifier = Modifier.size(28.dp))
+                    Icon(icon, contentDescription = null, tint = HudCyanLight, modifier = Modifier.size(28.dp))
                 }
                 Spacer(Modifier.height(Spacing.lg))
                 Text(

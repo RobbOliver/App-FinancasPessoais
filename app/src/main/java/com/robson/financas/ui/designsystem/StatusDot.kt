@@ -10,7 +10,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.unit.dp
 import com.robson.financas.ui.theme.GreenIncome
-import com.robson.financas.ui.theme.NeonBlueLight
+import com.robson.financas.ui.theme.HudCyanLight
 
 /** Pago (verde) vs. agendado (azul) — toque opcional alterna o status sem abrir a edição. */
 @Composable
@@ -22,7 +22,7 @@ fun StatusDot(
     var dot = modifier
         .size(10.dp)
         .clip(CircleShape)
-        .background(if (isPaid) GreenIncome else NeonBlueLight)
+        .background(if (isPaid) GreenIncome else HudCyanLight)
     if (onClick != null) {
         dot = dot.clickable(onClick = onClick)
     }
