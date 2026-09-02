@@ -102,19 +102,19 @@ fun MonthlyBarChart(data: List<MonthBarData>, modifier: Modifier = Modifier) {
                         )
                     }
                     clipPath(clipPath) {
-                        // Expense on top (red)
+                        // Expense at bottom (red)
                         if (expenseH > 0f) {
                             drawRect(
                                 color = RedExpense,
-                                topLeft = Offset(left, barTopY),
+                                topLeft = Offset(left, barTopY + incomeH),
                                 size = Size(barW, expenseH),
                             )
                         }
-                        // Income at bottom (green)
+                        // Income on top (green) — mais alto quando receita > despesa
                         if (incomeH > 0f) {
                             drawRect(
                                 color = GreenIncome,
-                                topLeft = Offset(left, barTopY + expenseH),
+                                topLeft = Offset(left, barTopY),
                                 size = Size(barW, incomeH),
                             )
                         }
