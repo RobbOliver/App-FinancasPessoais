@@ -7,6 +7,7 @@ import com.robson.financas.data.local.relation.CategoryExpenseSlice
 import com.robson.financas.data.local.relation.CreditCardSummary
 import com.robson.financas.data.local.relation.MonthSummary
 import com.robson.financas.data.local.relation.TransactionWithDetails
+import com.robson.financas.data.preferences.UiPreferencesRepository
 import com.robson.financas.data.repository.AccountRepository
 import com.robson.financas.data.repository.CreditCardRepository
 import com.robson.financas.data.repository.TransactionRepository
@@ -31,8 +32,10 @@ data class DashboardUiState(
     val pendingIncomeCents: Long = 0L,
     val pendingExpenseCents: Long = 0L,
     val creditCards: List<CreditCardSummary> = emptyList(),
+    val hideBalances: Boolean = false,
 ) {
     val totalBalanceCents: Long get() = accounts.sumOf { it.balanceCents }
+    val dashboardAccounts: List<AccountWithBalance> get() = accounts.filter { it.account.showOnDashboard }
     val hasPending: Boolean get() = pendingIncomeCents > 0 || pendingExpenseCents > 0
 }
 
@@ -41,7 +44,10 @@ class DashboardViewModel @Inject constructor(
     accountRepository: AccountRepository,
     transactionRepository: TransactionRepository,
     creditCardRepository: CreditCardRepository,
+    private val uiPreferencesRepository: UiPreferencesRepository,
 ) : ViewModel() {
+
+    fun toggleHideBalances() = uiPreferencesRepository.toggleHideBalances()
 
     val uiState: StateFlow<DashboardUiState> = run {
         val today = LocalDate.now()
@@ -77,11 +83,13 @@ class DashboardViewModel @Inject constructor(
             baseFlow,
             transactionRepository.observePendingSummary(start, end),
             creditCardRepository.observeCardsWithInvoiceSummary(thisMonth.year * 100 + thisMonth.monthValue),
-        ) { base, pending, creditCards ->
+            uiPreferencesRepository.hideBalances,
+        ) { base, pending, creditCards, hideBalances ->
             base.copy(
                 pendingIncomeCents = pending.pendingIncomeCents,
                 pendingExpenseCents = pending.pendingExpenseCents,
                 creditCards = creditCards,
+                hideBalances = hideBalances,
             )
         }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), DashboardUiState())
     }

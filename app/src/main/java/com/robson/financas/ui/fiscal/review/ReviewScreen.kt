@@ -19,6 +19,7 @@ import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
@@ -83,6 +84,7 @@ fun ReviewScreen(
                         onConfirm = { viewModel.confirm(item.item.id) },
                         onCorrect = { viewModel.openPicker(item.item.id) },
                         onIgnore = { viewModel.ignore(item.item.id) },
+                        onEditProduct = { viewModel.openProductDialog(item.item.id) },
                     )
                 }
             }
@@ -91,11 +93,21 @@ fun ReviewScreen(
 
     if (uiState.pickerForItemId != null) {
         MicrocategoryPickerSheet(
-            options = uiState.microcategoryOptions,
+            options = uiState.classificationOptions,
             onDismiss = viewModel::dismissPicker,
-            onPick = { microcategoryId, createRule ->
-                viewModel.correct(uiState.pickerForItemId!!, microcategoryId, createRule)
+            onPick = { option, scope ->
+                viewModel.correct(uiState.pickerForItemId!!, option, scope)
             },
+        )
+    }
+
+    val productDialogItem = uiState.items.find { it.item.id == uiState.productDialogForItemId }
+    if (productDialogItem != null) {
+        ProductIdentityDialog(
+            brand = productDialogItem.productBrand,
+            genericName = productDialogItem.productGenericName ?: productDialogItem.item.originalDescription,
+            onDismiss = viewModel::dismissProductDialog,
+            onSave = { brand, genericName -> viewModel.updateProductIdentity(productDialogItem.item.id, brand, genericName) },
         )
     }
 }
@@ -106,6 +118,7 @@ private fun ReviewItemCard(
     onConfirm: () -> Unit,
     onCorrect: () -> Unit,
     onIgnore: () -> Unit,
+    onEditProduct: () -> Unit,
 ) {
     AppCard(modifier = Modifier.fillMaxWidth()) {
         Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
@@ -114,12 +127,30 @@ private fun ReviewItemCard(
                 Text(
                     listOfNotNull(item.categoryName, item.subcategoryName, item.microcategoryName)
                         .joinToString(" › ")
-                        .ifBlank { "Sem sugestão de categoria" },
+                        .ifBlank { "Sem sugestão de departamento" },
                     style = MaterialTheme.typography.bodySmall,
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                 )
             }
             Text(CurrencyFormatter.formatCents(item.item.totalPriceCents), style = MaterialTheme.typography.bodyLarge)
+        }
+
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(top = Spacing.xs),
+            horizontalArrangement = Arrangement.SpaceBetween,
+            verticalAlignment = Alignment.CenterVertically,
+        ) {
+            Text(
+                "Marca: ${item.productBrand ?: "—"} · Produto: ${item.productGenericName ?: "—"}",
+                style = MaterialTheme.typography.bodySmall,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                modifier = Modifier.weight(1f),
+            )
+            TextButton(onClick = onEditProduct) {
+                Text("Editar", style = MaterialTheme.typography.labelSmall)
+            }
         }
 
         Row(

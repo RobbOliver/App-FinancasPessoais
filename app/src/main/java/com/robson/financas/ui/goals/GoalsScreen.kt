@@ -1,20 +1,20 @@
 package com.robson.financas.ui.goals
 
-import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
-import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.KeyboardArrowLeft
 import androidx.compose.material.icons.automirrored.filled.KeyboardArrowRight
+import androidx.compose.material.icons.filled.Add
+import androidx.compose.material.icons.filled.Flag
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -25,20 +25,18 @@ import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
-import com.robson.financas.ui.common.ColorCatalog
+import com.robson.financas.data.local.relation.GoalProgress
 import com.robson.financas.ui.common.GoalProgressBar
-import com.robson.financas.ui.common.IconCatalog
 import com.robson.financas.ui.designsystem.AppCard
+import com.robson.financas.ui.designsystem.AppFab
 import com.robson.financas.ui.designsystem.AppPrimaryButton
+import com.robson.financas.ui.designsystem.EmptyState
+import com.robson.financas.ui.designsystem.FabClearance
 import com.robson.financas.ui.theme.GreenIncome
 import com.robson.financas.ui.theme.RedExpense
 import com.robson.financas.ui.theme.Spacing
@@ -47,79 +45,89 @@ import com.robson.financas.util.DateFormatter
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun GoalsScreen(viewModel: GoalsViewModel = hiltViewModel()) {
+fun GoalsScreen(onOpenGoal: (Long) -> Unit, viewModel: GoalsViewModel = hiltViewModel()) {
     val yearMonth by viewModel.yearMonth.collectAsState()
     val rows by viewModel.rows.collectAsState()
+    val expenseCategories by viewModel.expenseCategories.collectAsState()
     val hasAnyGoalThisMonth by viewModel.hasAnyGoalThisMonth.collectAsState()
     val previousMonthHasGoals by viewModel.previousMonthHasGoals.collectAsState()
-    var editingCategoryId by remember { mutableStateOf<Long?>(null) }
+    val editingGoal by viewModel.editingGoal.collectAsState()
 
-    val parents = rows.filter { it.parentCategoryId == null }
-    val childrenByParent = rows.filter { it.parentCategoryId != null }.groupBy { it.parentCategoryId }
-
-    val plannedCents = rows.filter { it.hasGoal }.sumOf { it.amountCents ?: 0L }
-    val spentCents = rows.filter { it.hasGoal }.sumOf { it.spentCents }
+    val plannedCents = rows.sumOf { it.amountCents }
+    val spentCents = rows.sumOf { it.spentCents }
     val balanceCents = plannedCents - spentCents
 
     Scaffold(
         topBar = { TopAppBar(title = { Text("Metas") }) },
+        floatingActionButton = {
+            AppFab(onClick = viewModel::openNewGoal, contentDescription = "Nova meta", icon = Icons.Filled.Add)
+        },
     ) { innerPadding ->
-        LazyColumn(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(innerPadding),
-            contentPadding = PaddingValues(Spacing.lg),
-            verticalArrangement = Arrangement.spacedBy(Spacing.md),
-        ) {
-            item {
-                MonthNavigator(
-                    label = DateFormatter.formatMonthYear(yearMonth),
-                    onPrevious = viewModel::prevMonth,
-                    onNext = viewModel::nextMonth,
+        if (rows.isEmpty()) {
+            Box(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .padding(innerPadding)
+                    .padding(Spacing.lg),
+                contentAlignment = Alignment.Center,
+            ) {
+                EmptyState(
+                    icon = Icons.Filled.Flag,
+                    title = "Nenhuma meta criada ainda",
+                    subtitle = "Toque em + e escolha quais categorias fazem parte de cada meta.",
+                    actionLabel = "Criar meta",
+                    onAction = viewModel::openNewGoal,
                 )
             }
-            item {
-                GoalsSummaryCard(plannedCents = plannedCents, spentCents = spentCents, balanceCents = balanceCents)
-            }
-            if (!hasAnyGoalThisMonth && previousMonthHasGoals) {
+        } else {
+            LazyColumn(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(innerPadding),
+                contentPadding = PaddingValues(
+                    start = Spacing.lg,
+                    top = Spacing.lg,
+                    end = Spacing.lg,
+                    bottom = Spacing.lg + FabClearance,
+                ),
+                verticalArrangement = Arrangement.spacedBy(Spacing.md),
+            ) {
                 item {
-                    AppPrimaryButton(
-                        text = "Importar metas de ${DateFormatter.formatMonthYear(yearMonth.minusMonths(1))}",
-                        onClick = viewModel::importFromPreviousMonth,
-                        modifier = Modifier.fillMaxWidth(),
+                    MonthNavigator(
+                        label = DateFormatter.formatMonthYear(yearMonth),
+                        onPrevious = viewModel::prevMonth,
+                        onNext = viewModel::nextMonth,
                     )
                 }
-            }
-            items(parents, key = { it.categoryId }) { parent ->
-                Column {
-                    GoalRowItem(row = parent, onClick = { editingCategoryId = parent.categoryId })
-                    childrenByParent[parent.categoryId].orEmpty().forEach { child ->
-                        GoalRowItem(
-                            row = child,
-                            indented = true,
-                            onClick = { editingCategoryId = child.categoryId },
+                item {
+                    GoalsSummaryCard(plannedCents = plannedCents, spentCents = spentCents, balanceCents = balanceCents)
+                }
+                if (!hasAnyGoalThisMonth && previousMonthHasGoals) {
+                    item {
+                        AppPrimaryButton(
+                            text = "Importar metas de ${DateFormatter.formatMonthYear(yearMonth.minusMonths(1))}",
+                            onClick = viewModel::importFromPreviousMonth,
+                            modifier = Modifier.fillMaxWidth(),
                         )
                     }
+                }
+                items(rows, key = { it.goalId }) { row ->
+                    GoalRowItem(row = row, onClick = { onOpenGoal(row.goalId) })
                 }
             }
         }
     }
 
-    val editingRow = rows.find { it.categoryId == editingCategoryId }
-    if (editingRow != null) {
+    if (editingGoal != null) {
         SetGoalDialog(
-            categoryName = editingRow.categoryName,
-            initialAmountCents = editingRow.amountCents ?: 0L,
-            hasExistingGoal = editingRow.hasGoal,
-            onDismiss = { editingCategoryId = null },
-            onSave = { amount ->
-                viewModel.setGoal(editingRow.categoryId, amount)
-                editingCategoryId = null
-            },
-            onRemove = {
-                viewModel.removeGoal(editingRow.categoryId)
-                editingCategoryId = null
-            },
+            goal = editingGoal!!,
+            categories = expenseCategories,
+            onDismiss = viewModel::closeEditingGoal,
+            onNameChange = viewModel::updateEditingName,
+            onAmountChange = viewModel::updateEditingAmount,
+            onToggleCategory = viewModel::toggleEditingCategory,
+            onCategoryAllocationChange = viewModel::updateEditingCategoryAllocation,
+            onSave = viewModel::saveEditingGoal,
         )
     }
 }
@@ -168,78 +176,48 @@ private fun SummaryStat(label: String, value: String, color: Color = Color.Unspe
 }
 
 @Composable
-private fun GoalRowItem(row: GoalRow, indented: Boolean = false, onClick: () -> Unit) {
+private fun GoalRowItem(row: GoalProgress, onClick: () -> Unit) {
     AppCard(
         modifier = Modifier
             .fillMaxWidth()
-            .padding(start = if (indented) Spacing.xl else 0.dp, top = Spacing.xs, bottom = Spacing.xs),
+            .padding(top = Spacing.xs, bottom = Spacing.xs),
         onClick = onClick,
     ) {
-        Row(verticalAlignment = Alignment.CenterVertically) {
-            Box(
-                modifier = Modifier
-                    .size(32.dp)
-                    .clip(CircleShape)
-                    .background(
-                        if (row.hasGoal) {
-                            ColorCatalog.toColor(row.categoryColorHex)
-                        } else {
-                            MaterialTheme.colorScheme.outline
-                        },
-                    ),
-                contentAlignment = Alignment.Center,
-            ) {
-                Icon(
-                    imageVector = IconCatalog.resolve(row.categoryIcon),
-                    contentDescription = null,
-                    tint = Color.White,
-                    modifier = Modifier.size(16.dp),
-                )
-            }
+        Text(row.name, style = MaterialTheme.typography.bodyLarge)
+        Text(
+            row.categoryNames.orEmpty(),
+            style = MaterialTheme.typography.bodySmall,
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
+        )
+        GoalProgressBar(
+            goalCents = row.amountCents,
+            spentCents = row.spentCents,
+            modifier = Modifier.padding(top = 10.dp),
+        )
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(top = 6.dp),
+            horizontalArrangement = Arrangement.SpaceBetween,
+        ) {
             Text(
-                row.categoryName,
-                style = MaterialTheme.typography.bodyLarge,
-                modifier = Modifier.padding(start = Spacing.md),
-            )
-        }
-        if (row.hasGoal) {
-            GoalProgressBar(
-                goalCents = row.amountCents ?: 0L,
-                spentCents = row.spentCents,
-                modifier = Modifier.padding(top = 10.dp),
-            )
-            Row(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(top = 6.dp),
-                horizontalArrangement = Arrangement.SpaceBetween,
-            ) {
-                Text(
-                    "${CurrencyFormatter.formatCents(row.spentCents)} de ${CurrencyFormatter.formatCents(row.amountCents ?: 0L)}",
-                    style = MaterialTheme.typography.bodySmall,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant,
-                )
-                if (row.remainingCents < 0) {
-                    Text(
-                        "${CurrencyFormatter.formatCents(-row.remainingCents)} acima da meta",
-                        style = MaterialTheme.typography.bodySmall,
-                        color = RedExpense,
-                    )
-                } else {
-                    Text(
-                        "${CurrencyFormatter.formatCents(row.remainingCents)} restante",
-                        style = MaterialTheme.typography.bodySmall,
-                        color = GreenIncome,
-                    )
-                }
-            }
-        } else {
-            Text(
-                "Sem meta definida",
+                "${CurrencyFormatter.formatCents(row.spentCents)} de ${CurrencyFormatter.formatCents(row.amountCents)}",
                 style = MaterialTheme.typography.bodySmall,
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
-                modifier = Modifier.padding(top = Spacing.xs),
             )
+            if (row.remainingCents < 0) {
+                Text(
+                    "${CurrencyFormatter.formatCents(-row.remainingCents)} acima da meta",
+                    style = MaterialTheme.typography.bodySmall,
+                    color = RedExpense,
+                )
+            } else {
+                Text(
+                    "${CurrencyFormatter.formatCents(row.remainingCents)} restante",
+                    style = MaterialTheme.typography.bodySmall,
+                    color = GreenIncome,
+                )
+            }
         }
     }
 }

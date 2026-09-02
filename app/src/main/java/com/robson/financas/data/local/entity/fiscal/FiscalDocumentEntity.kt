@@ -8,7 +8,7 @@ import com.robson.financas.data.local.entity.TransactionEntity
 import java.time.Instant
 import java.time.LocalDate
 
-enum class FiscalDocumentSource { QR_NFCE, XML_NFE, XML_NFCE, PHOTO_OCR, MANUAL }
+enum class FiscalDocumentSource { QR_NFCE, XML_NFE, XML_NFCE, PHOTO_OCR, MANUAL, AI_QRCODE }
 
 enum class DocumentStatus { AUTHORIZED, CANCELLED, CONTINGENCY, UNKNOWN }
 

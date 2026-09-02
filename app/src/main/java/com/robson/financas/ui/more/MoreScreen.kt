@@ -13,6 +13,7 @@ import androidx.compose.material.icons.filled.Category
 import androidx.compose.material.icons.filled.CreditCard
 import androidx.compose.material.icons.filled.Description
 import androidx.compose.material.icons.filled.Label
+import androidx.compose.material.icons.filled.Sell
 import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material.icons.filled.TrackChanges
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -42,6 +43,7 @@ fun MoreScreen(
     onNavigateToObjectives: () -> Unit,
     onNavigateToCreditCards: () -> Unit,
     onNavigateToFiscalDocuments: () -> Unit,
+    onNavigateToBrands: () -> Unit,
 ) {
     Scaffold(
         topBar = { TopAppBar(title = { Text("Mais opções") }) },
@@ -60,6 +62,8 @@ fun MoreScreen(
                     MoreListItem(icon = Icons.Filled.CreditCard, label = "Cartão de crédito", onClick = onNavigateToCreditCards)
                     HorizontalDivider(color = BorderSubtle)
                     MoreListItem(icon = Icons.Filled.Description, label = "Notas fiscais", onClick = onNavigateToFiscalDocuments)
+                    HorizontalDivider(color = BorderSubtle)
+                    MoreListItem(icon = Icons.Filled.Sell, label = "Marcas", onClick = onNavigateToBrands)
                     HorizontalDivider(color = BorderSubtle)
                     MoreListItem(icon = Icons.Filled.Category, label = "Categorias", onClick = onNavigateToCategories)
                     HorizontalDivider(color = BorderSubtle)

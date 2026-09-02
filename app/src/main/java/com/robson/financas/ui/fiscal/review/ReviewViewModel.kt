@@ -5,7 +5,8 @@ import androidx.lifecycle.viewModelScope
 import com.robson.financas.data.local.relation.fiscal.PurchaseItemWithDetails
 import com.robson.financas.data.repository.fiscal.FiscalDocumentRepository
 import com.robson.financas.data.repository.fiscal.FiscalTaxonomyRepository
-import com.robson.financas.domain.fiscal.model.MicrocategoryOption
+import com.robson.financas.domain.fiscal.model.ClassificationOption
+import com.robson.financas.domain.fiscal.model.RuleScope
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
@@ -18,8 +19,9 @@ import javax.inject.Inject
 
 data class ReviewUiState(
     val items: List<PurchaseItemWithDetails> = emptyList(),
-    val microcategoryOptions: List<MicrocategoryOption> = emptyList(),
+    val classificationOptions: List<ClassificationOption> = emptyList(),
     val pickerForItemId: Long? = null,
+    val productDialogForItemId: Long? = null,
 )
 
 @HiltViewModel
@@ -28,20 +30,22 @@ class ReviewViewModel @Inject constructor(
     private val taxonomyRepository: FiscalTaxonomyRepository,
 ) : ViewModel() {
 
-    private val microcategoryOptions = MutableStateFlow<List<MicrocategoryOption>>(emptyList())
+    private val classificationOptions = MutableStateFlow<List<ClassificationOption>>(emptyList())
     private val pickerForItemId = MutableStateFlow<Long?>(null)
+    private val productDialogForItemId = MutableStateFlow<Long?>(null)
 
     val uiState: StateFlow<ReviewUiState> = combine(
         repository.observeItemsNeedingReview(),
-        microcategoryOptions,
+        classificationOptions,
         pickerForItemId,
-    ) { items, options, pickerId ->
-        ReviewUiState(items = items, microcategoryOptions = options, pickerForItemId = pickerId)
+        productDialogForItemId,
+    ) { items, options, pickerId, productDialogId ->
+        ReviewUiState(items = items, classificationOptions = options, pickerForItemId = pickerId, productDialogForItemId = productDialogId)
     }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), ReviewUiState())
 
     init {
         viewModelScope.launch {
-            microcategoryOptions.value = taxonomyRepository.getMicrocategoryOptions()
+            classificationOptions.value = taxonomyRepository.getClassificationOptions()
         }
     }
 
@@ -61,10 +65,30 @@ class ReviewViewModel @Inject constructor(
         pickerForItemId.update { null }
     }
 
-    fun correct(itemId: Long, microcategoryId: Long, createRule: Boolean) {
+    fun correct(itemId: Long, option: ClassificationOption, scope: RuleScope) {
         viewModelScope.launch {
-            repository.correctClassification(itemId, microcategoryId, createRule)
+            when (option) {
+                is ClassificationOption.Microcategory ->
+                    repository.correctClassification(itemId, microcategoryId = option.microcategoryId, plainCategoryId = null, scope = scope)
+                is ClassificationOption.PlainCategory ->
+                    repository.correctClassification(itemId, microcategoryId = null, plainCategoryId = option.categoryId, scope = scope)
+            }
             pickerForItemId.update { null }
+        }
+    }
+
+    fun openProductDialog(itemId: Long) {
+        productDialogForItemId.update { itemId }
+    }
+
+    fun dismissProductDialog() {
+        productDialogForItemId.update { null }
+    }
+
+    fun updateProductIdentity(itemId: Long, brand: String?, genericName: String) {
+        viewModelScope.launch {
+            repository.updateProductIdentity(itemId, brand, genericName)
+            productDialogForItemId.update { null }
         }
     }
 }

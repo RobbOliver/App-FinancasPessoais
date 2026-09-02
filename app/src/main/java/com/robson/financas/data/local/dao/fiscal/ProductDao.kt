@@ -4,6 +4,7 @@ import androidx.room.Dao
 import androidx.room.Insert
 import androidx.room.OnConflictStrategy
 import androidx.room.Query
+import androidx.room.Update
 import com.robson.financas.data.local.entity.fiscal.ProductEntity
 import kotlinx.coroutines.flow.Flow
 
@@ -11,6 +12,9 @@ import kotlinx.coroutines.flow.Flow
 interface ProductDao {
     @Insert(onConflict = OnConflictStrategy.ABORT)
     suspend fun insert(product: ProductEntity): Long
+
+    @Update
+    suspend fun update(product: ProductEntity)
 
     @Query("SELECT * FROM products WHERE gtin = :gtin LIMIT 1")
     suspend fun findByGtin(gtin: String): ProductEntity?

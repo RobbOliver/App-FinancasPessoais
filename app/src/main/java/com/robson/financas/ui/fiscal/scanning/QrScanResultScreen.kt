@@ -24,6 +24,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
+import com.robson.financas.ui.designsystem.AppOutlinedButton
 import com.robson.financas.ui.designsystem.AppPrimaryButton
 import com.robson.financas.ui.theme.GreenIncome
 import com.robson.financas.ui.theme.RedExpense
@@ -41,6 +42,7 @@ fun QrScanResultScreen(
     onBack: () -> Unit,
     onGoToXmlImport: () -> Unit,
     onOpenDocument: (Long) -> Unit,
+    onExtractWithAi: (String) -> Unit,
     viewModel: QrScanResultViewModel = hiltViewModel(),
 ) {
     val uiState by viewModel.uiState.collectAsState()
@@ -82,15 +84,29 @@ fun QrScanResultScreen(
                     actionLabel = "Ver nota",
                     onAction = { onOpenDocument(state.documentId) },
                 )
-                is QrScanResultUiState.ValidNotYetImported -> ResultBody(
-                    icon = Icons.Filled.CheckCircle,
-                    iconTint = GreenIncome,
-                    title = "Chave validada",
-                    subtitle = "O QR Code não traz os itens da compra — importe o XML desta nota " +
-                        "para extrair estabelecimento, itens e valores automaticamente.",
-                    actionLabel = "Importar XML",
-                    onAction = onGoToXmlImport,
-                )
+                is QrScanResultUiState.ValidNotYetImported -> if (state.canUseAi) {
+                    ResultBody(
+                        icon = Icons.Filled.CheckCircle,
+                        iconTint = GreenIncome,
+                        title = "Chave validada",
+                        subtitle = "Podemos buscar a nota completa e extrair os itens automaticamente " +
+                            "com IA, ou você pode importar o XML manualmente.",
+                        actionLabel = "Extrair itens automaticamente",
+                        onAction = { onExtractWithAi(state.rawQr) },
+                        secondaryActionLabel = "Importar XML manualmente",
+                        onSecondaryAction = onGoToXmlImport,
+                    )
+                } else {
+                    ResultBody(
+                        icon = Icons.Filled.CheckCircle,
+                        iconTint = GreenIncome,
+                        title = "Chave validada",
+                        subtitle = "O QR Code não traz os itens da compra — importe o XML desta nota " +
+                            "para extrair estabelecimento, itens e valores automaticamente.",
+                        actionLabel = "Importar XML",
+                        onAction = onGoToXmlImport,
+                    )
+                }
             }
         }
     }
@@ -104,6 +120,8 @@ private fun ResultBody(
     subtitle: String,
     actionLabel: String,
     onAction: () -> Unit,
+    secondaryActionLabel: String? = null,
+    onSecondaryAction: (() -> Unit)? = null,
 ) {
     Column(horizontalAlignment = Alignment.CenterHorizontally) {
         Icon(icon, contentDescription = null, tint = iconTint, modifier = Modifier.size(48.dp))
@@ -125,5 +143,14 @@ private fun ResultBody(
                 .fillMaxWidth()
                 .padding(top = Spacing.xl),
         )
+        if (secondaryActionLabel != null && onSecondaryAction != null) {
+            AppOutlinedButton(
+                text = secondaryActionLabel,
+                onClick = onSecondaryAction,
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(top = Spacing.sm),
+            )
+        }
     }
 }

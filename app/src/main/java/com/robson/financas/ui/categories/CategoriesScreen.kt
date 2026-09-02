@@ -1,6 +1,7 @@
 package com.robson.financas.ui.categories
 
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -26,6 +27,8 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
+import androidx.compose.material3.Tab
+import androidx.compose.material3.TabRow
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
@@ -42,7 +45,6 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import com.robson.financas.data.local.entity.CategoryEntity
-import com.robson.financas.data.local.entity.CategoryType
 import com.robson.financas.ui.common.ColorCatalog
 import com.robson.financas.ui.common.ConfirmDeleteDialog
 import com.robson.financas.ui.common.IconCatalog
@@ -50,7 +52,6 @@ import com.robson.financas.ui.common.label
 import com.robson.financas.ui.designsystem.AppCard
 import com.robson.financas.ui.designsystem.AppFab
 import com.robson.financas.ui.designsystem.EmptyState
-import com.robson.financas.ui.designsystem.SectionHeader
 import com.robson.financas.ui.theme.BorderSubtle
 import com.robson.financas.ui.theme.Spacing
 import kotlinx.coroutines.launch
@@ -64,17 +65,24 @@ fun CategoriesScreen(
     viewModel: CategoriesViewModel = hiltViewModel(),
 ) {
     val categories by viewModel.categories.collectAsState()
+    val allCategories by viewModel.allCategories.collectAsState()
+    val selectedTab by viewModel.selectedTab.collectAsState()
     val deletionError by viewModel.deletionError.collectAsState()
     var pendingDelete by remember { mutableStateOf<CategoryEntity?>(null) }
     val snackbarHostState = remember { SnackbarHostState() }
     val coroutineScope = rememberCoroutineScope()
 
-    val grouped = remember(categories) {
-        CategoryType.entries.associateWith { type ->
-            val ofType = categories.filter { it.type == type }
-            val parents = ofType.filter { it.parentCategoryId == null }
-            parents.map { parent -> parent to ofType.filter { it.parentCategoryId == parent.id } }
-        }
+    // Agrupa por pai "de verdade" (via allCategories) em vez de só pelos itens já filtrados pela aba:
+    // uma subcategoria criada pelo usuário pode ficar visível nesta aba mesmo que o pai dela tenha
+    // migrado pra outra aba (ex.: virou categoria IA por coincidência de nome) — sem isso ela some da tela.
+    val parentGroups = remember(categories, allCategories) {
+        val byId = allCategories.associateBy { it.id }
+        val childrenByParentId = categories.filter { it.parentCategoryId != null }.groupBy { it.parentCategoryId }
+        val topLevelIds = categories.filter { it.parentCategoryId == null }.map { it.id }
+        val parentIds = (topLevelIds + childrenByParentId.keys.filterNotNull()).distinct()
+        parentIds.mapNotNull { byId[it] }
+            .sortedBy { it.name }
+            .map { parent -> parent to childrenByParentId[parent.id].orEmpty().sortedBy { it.name } }
     }
 
     Scaffold(
@@ -90,66 +98,75 @@ fun CategoriesScreen(
         },
         snackbarHost = { SnackbarHost(snackbarHostState) },
         floatingActionButton = {
-            AppFab(onClick = onAddCategory, contentDescription = "Nova categoria", icon = Icons.Filled.Add)
+            if (selectedTab != CategoryTab.IA) {
+                AppFab(onClick = onAddCategory, contentDescription = "Nova categoria", icon = Icons.Filled.Add)
+            }
         },
     ) { innerPadding ->
-        if (categories.isEmpty()) {
-            Box(
-                modifier = Modifier
-                    .fillMaxSize()
-                    .padding(innerPadding)
-                    .padding(Spacing.lg),
-                contentAlignment = Alignment.Center,
-            ) {
-                EmptyState(
-                    icon = Icons.Filled.Category,
-                    title = "Nenhuma categoria cadastrada",
-                    subtitle = "Toque em + para criar a primeira.",
-                )
+        Column(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(innerPadding),
+        ) {
+            TabRow(selectedTabIndex = selectedTab.ordinal) {
+                CategoryTab.entries.forEach { tab ->
+                    Tab(
+                        selected = selectedTab == tab,
+                        onClick = { viewModel.selectTab(tab) },
+                        text = { Text(tab.label()) },
+                    )
+                }
             }
-        } else {
-            LazyColumn(
-                modifier = Modifier
-                    .fillMaxSize()
-                    .padding(innerPadding),
-                contentPadding = PaddingValues(horizontal = Spacing.lg, vertical = Spacing.sm),
-                verticalArrangement = Arrangement.spacedBy(Spacing.xs),
-            ) {
-                CategoryType.entries.forEach { type ->
-                    val parentGroups = grouped[type].orEmpty()
-                    if (parentGroups.isNotEmpty()) {
-                        item {
-                            SectionHeader(type.label())
-                        }
-                        items(parentGroups, key = { it.first.id }) { (parent, children) ->
-                            Column(verticalArrangement = Arrangement.spacedBy(Spacing.xs)) {
-                                AppCard(
-                                    modifier = Modifier.fillMaxWidth(),
-                                    contentPadding = PaddingValues(0.dp),
-                                    onClick = { onEditCategory(parent.id) },
-                                ) {
+
+            if (categories.isEmpty()) {
+                Box(
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .padding(Spacing.lg),
+                    contentAlignment = Alignment.Center,
+                ) {
+                    EmptyState(
+                        icon = Icons.Filled.Category,
+                        title = "Nenhuma categoria nesta aba",
+                        subtitle = if (selectedTab == CategoryTab.IA) {
+                            "As categorias de classificação por IA aparecem aqui conforme suas notas fiscais são importadas."
+                        } else {
+                            "Toque em + para criar a primeira."
+                        },
+                    )
+                }
+            } else {
+                LazyColumn(
+                    modifier = Modifier.fillMaxSize(),
+                    contentPadding = PaddingValues(horizontal = Spacing.lg, vertical = Spacing.sm),
+                    verticalArrangement = Arrangement.spacedBy(Spacing.sm),
+                ) {
+                    items(parentGroups, key = { it.first.id }) { (parent, children) ->
+                        AppCard(
+                            modifier = Modifier.fillMaxWidth(),
+                            contentPadding = PaddingValues(0.dp),
+                        ) {
+                            CategoryRow(
+                                category = parent,
+                                isParent = true,
+                                onClick = { onEditCategory(parent.id) },
+                                onDeleteClick = if (parent.isAiTaxonomy) null else { { pendingDelete = parent } },
+                            )
+                            if (children.isNotEmpty()) {
+                                HorizontalDivider(color = BorderSubtle, modifier = Modifier.padding(start = Spacing.lg))
+                                children.forEachIndexed { index, child ->
                                     CategoryRow(
-                                        category = parent,
-                                        indented = false,
-                                        onDeleteClick = { pendingDelete = parent },
-                                    )
-                                }
-                                children.forEach { child ->
-                                    AppCard(
-                                        modifier = Modifier.fillMaxWidth(),
-                                        contentPadding = PaddingValues(0.dp),
+                                        category = child,
+                                        isParent = false,
                                         onClick = { onEditCategory(child.id) },
-                                    ) {
-                                        CategoryRow(
-                                            category = child,
-                                            indented = true,
-                                            onDeleteClick = { pendingDelete = child },
-                                        )
+                                        onDeleteClick = if (child.isAiTaxonomy) null else { { pendingDelete = child } },
+                                    )
+                                    if (index < children.lastIndex) {
+                                        HorizontalDivider(color = BorderSubtle, modifier = Modifier.padding(start = 64.dp))
                                     }
                                 }
                             }
                         }
-                        item { HorizontalDivider(color = BorderSubtle, modifier = Modifier.padding(vertical = Spacing.sm)) }
                     }
                 }
             }
@@ -185,25 +202,39 @@ fun CategoriesScreen(
 @Composable
 private fun CategoryRow(
     category: CategoryEntity,
-    indented: Boolean,
-    onDeleteClick: () -> Unit,
+    isParent: Boolean,
+    onClick: () -> Unit,
+    onDeleteClick: (() -> Unit)?,
 ) {
+    val iconSize = if (isParent) 32.dp else 24.dp
+    val iconInnerSize = if (isParent) 18.dp else 14.dp
+
     Row(
         modifier = Modifier
             .fillMaxWidth()
+            .clickable(onClick = onClick)
             .padding(
-                start = if (indented) 48.dp else Spacing.lg,
+                start = if (isParent) Spacing.lg else 64.dp,
                 end = Spacing.lg,
-                top = 10.dp,
-                bottom = 10.dp,
+                top = if (isParent) 12.dp else 8.dp,
+                bottom = if (isParent) 12.dp else 8.dp,
             ),
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.SpaceBetween,
     ) {
-        Row(verticalAlignment = Alignment.CenterVertically) {
+        Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier.weight(1f)) {
+            if (!isParent) {
+                // Guia visual em L ligando esta linha ao card do pai, pra deixar clara a relação hierárquica.
+                Box(
+                    modifier = Modifier
+                        .padding(end = Spacing.sm)
+                        .size(width = 16.dp, height = 1.dp)
+                        .background(BorderSubtle),
+                )
+            }
             Box(
                 modifier = Modifier
-                    .size(32.dp)
+                    .size(iconSize)
                     .clip(CircleShape)
                     .background(ColorCatalog.toColor(category.colorHex)),
                 contentAlignment = Alignment.Center,
@@ -212,13 +243,20 @@ private fun CategoryRow(
                     imageVector = IconCatalog.resolve(category.icon),
                     contentDescription = null,
                     tint = Color.White,
-                    modifier = Modifier.size(18.dp),
+                    modifier = Modifier.size(iconInnerSize),
                 )
             }
-            Text(category.name, style = MaterialTheme.typography.bodyLarge, modifier = Modifier.padding(start = Spacing.md))
+            Text(
+                category.name,
+                style = if (isParent) MaterialTheme.typography.titleMedium else MaterialTheme.typography.bodyMedium,
+                color = if (isParent) MaterialTheme.colorScheme.onSurface else MaterialTheme.colorScheme.onSurfaceVariant,
+                modifier = Modifier.padding(start = Spacing.md),
+            )
         }
-        IconButton(onClick = onDeleteClick) {
-            Icon(Icons.Filled.Delete, contentDescription = "Excluir")
+        if (onDeleteClick != null) {
+            IconButton(onClick = onDeleteClick) {
+                Icon(Icons.Filled.Delete, contentDescription = "Excluir")
+            }
         }
     }
 }

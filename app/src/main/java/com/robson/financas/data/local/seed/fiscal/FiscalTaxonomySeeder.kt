@@ -70,6 +70,43 @@ object FiscalTaxonomySeeder {
                         MicroSeed("delivery", "Delivery", listOf("DELIVERY", "IFOOD", "RAPPI")),
                     ),
                 ),
+                SubSeed(
+                    "Hortifruti", "eco", "#2E7D32",
+                    listOf(
+                        MicroSeed("frutas", "Frutas", listOf("BANANA", "MACA", "MAÇÃ", "LARANJA", "MAMAO", "UVA", "FRUTA")),
+                        MicroSeed("verduras_legumes", "Verduras e legumes", listOf("ALFACE", "TOMATE", "CEBOLA", "BATATA", "CENOURA", "VERDURA", "LEGUME")),
+                    ),
+                ),
+                SubSeed(
+                    "Padaria", "bakery_dining", "#8D6E63",
+                    listOf(
+                        MicroSeed("pao", "Pão", listOf("PAO FRANCES", "PÃO FRANCÊS", "PAO DE ", "PÃO DE ")),
+                        MicroSeed("bolos_salgados", "Bolos e salgados", listOf("BOLO", "SALGADO", "ESFIHA", "COXINHA")),
+                    ),
+                ),
+                SubSeed(
+                    "Congelados e prontos", "kitchen", "#0097A7",
+                    listOf(
+                        MicroSeed("congelados", "Congelados", listOf("CONGELADO", "PRE PRONTO", "LASANHA CONG")),
+                        MicroSeed("pratos_prontos", "Pratos prontos", listOf("PRATO PRONTO", "MARMITA")),
+                    ),
+                ),
+                SubSeed(
+                    "Doces e snacks", "cake", "#D81B60",
+                    listOf(
+                        MicroSeed("chocolates_doces", "Chocolates e doces", listOf("CHOCOLATE", "BOMBOM", "DOCE ", "BALA")),
+                        MicroSeed("salgadinhos", "Salgadinhos e snacks", listOf("SALGADINHO", "BATATA CHIPS", "SNACK")),
+                        MicroSeed("biscoitos", "Biscoitos", listOf("BISCOITO", "BOLACHA")),
+                    ),
+                ),
+                SubSeed(
+                    "Bebidas alcoólicas", "sports_bar", "#6A1B9A",
+                    listOf(
+                        MicroSeed("cerveja", "Cerveja", listOf("CERVEJA", "CHOPP")),
+                        MicroSeed("vinho", "Vinho", listOf("VINHO", "ESPUMANTE")),
+                        MicroSeed("destilados", "Destilados", listOf("VODKA", "WHISKY", "CACHACA", "CACHAÇA", "GIN ")),
+                    ),
+                ),
             ),
         ),
         CategorySeed(
@@ -83,6 +120,28 @@ object FiscalTaxonomySeeder {
                         MicroSeed("amaciante", "Amaciante", listOf("AMACIANTE")),
                         MicroSeed("detergente", "Detergente", listOf("DETERGENTE", "DETERG")),
                         MicroSeed("desinfetante", "Desinfetante", listOf("DESINFETANTE", "AGUA SANITARIA")),
+                    ),
+                ),
+                SubSeed(
+                    "Manutenção e reparos", "handyman", "#5D4037",
+                    listOf(
+                        MicroSeed("ferramentas", "Ferramentas", listOf("FERRAMENTA", "FURADEIRA", "CHAVE DE FENDA", "ALICATE")),
+                        MicroSeed("material_construcao", "Material de construção", listOf("TINTA ", "CIMENTO", "PARAFUSO", "ELETRICO MATERIAL")),
+                    ),
+                ),
+                SubSeed(
+                    "Decoração", "chair", "#795548",
+                    listOf(MicroSeed("decoracao", "Decoração", listOf("DECORACAO", "QUADRO DECOR", "ENFEITE", "VASO DECOR"))),
+                ),
+                SubSeed(
+                    "Utensílios domésticos", "kitchen", "#546E7A",
+                    listOf(MicroSeed("utensilios", "Utensílios domésticos", listOf("PANELA", "UTENSILIO", "TALHER", "LOUCA", "LOUÇA"))),
+                ),
+                SubSeed(
+                    "Jardinagem", "yard", "#33691E",
+                    listOf(
+                        MicroSeed("plantas_mudas", "Plantas e mudas", listOf("MUDA ", "PLANTA ", "VASO PLANTA")),
+                        MicroSeed("ferramentas_jardim", "Ferramentas de jardim", listOf("MANGUEIRA", "ADUBO", "FERTILIZANTE", "TESOURA JARDIM")),
                     ),
                 ),
             ),
@@ -99,6 +158,18 @@ object FiscalTaxonomySeeder {
                         MicroSeed("desodorante", "Desodorante", listOf("DESODORANTE", "ANTITRANSPIRANTE")),
                     ),
                 ),
+                SubSeed(
+                    "Cuidados com o cabelo", "content_cut", "#AB47BC",
+                    listOf(MicroSeed("cuidados_cabelo", "Cuidados com o cabelo", listOf("CONDICIONADOR", "CREME CABELO", "TINTA CABELO", "GEL CABELO"))),
+                ),
+                SubSeed(
+                    "Papel higiênico e descartáveis", "shopping_bag", "#7B1FA2",
+                    listOf(
+                        MicroSeed("papel_higienico", "Papel higiênico", listOf("PAPEL HIGIENICO", "PAPEL HIGIÊNICO")),
+                        MicroSeed("absorvente_fraldas", "Absorventes e fraldas", listOf("ABSORVENTE", "FRALDA")),
+                        MicroSeed("descartaveis", "Descartáveis", listOf("GUARDANAPO", "PAPEL TOALHA", "COPO DESCART")),
+                    ),
+                ),
             ),
         ),
         CategorySeed(
@@ -107,6 +178,14 @@ object FiscalTaxonomySeeder {
                 SubSeed(
                     "Medicamentos", "local_hospital", "#C62828",
                     listOf(MicroSeed("medicamentos", "Medicamentos", listOf("DIPIRONA", "PARACETAMOL", "IBUPROFENO", "AMOXICILINA", "MG COMP", "CAPS "))),
+                ),
+                SubSeed(
+                    "Primeiros socorros", "medical_services", "#B71C1C",
+                    listOf(MicroSeed("primeiros_socorros", "Primeiros socorros", listOf("CURATIVO", "BAND AID", "ALCOOL 70", "GAZE", "ATADURA"))),
+                ),
+                SubSeed(
+                    "Suplementos e vitaminas", "medication", "#D32F2F",
+                    listOf(MicroSeed("suplementos_vitaminas", "Suplementos e vitaminas", listOf("VITAMINA", "SUPLEMENTO", "WHEY", "OMEGA 3", "COLAGENO"))),
                 ),
             ),
         ),
@@ -128,6 +207,20 @@ object FiscalTaxonomySeeder {
                         MicroSeed("app_transporte", "Aplicativo de transporte", listOf("UBER", "99 ", "TAXI")),
                     ),
                 ),
+                SubSeed(
+                    "Manutenção veicular", "build", "#0D47A1",
+                    listOf(
+                        MicroSeed("pecas_servicos", "Peças e serviços", listOf("OFICINA", "TROCA OLEO", "PNEU", "ALINHAMENTO", "REVISAO VEIC")),
+                        MicroSeed("lavagem", "Lavagem", listOf("LAVA RAPIDO", "LAVAGEM CARRO")),
+                    ),
+                ),
+                SubSeed(
+                    "Pedágio e multas", "toll", "#283593",
+                    listOf(
+                        MicroSeed("pedagio", "Pedágio", listOf("PEDAGIO", "PEDÁGIO", "SEM PARAR")),
+                        MicroSeed("multas", "Multas", listOf("MULTA TRANSITO", "INFRACAO")),
+                    ),
+                ),
             ),
         ),
         CategorySeed(
@@ -139,6 +232,21 @@ object FiscalTaxonomySeeder {
                         MicroSeed("cinema", "Cinema", listOf("CINEMA", "INGRESSO FILME")),
                         MicroSeed("streaming", "Streaming", listOf("NETFLIX", "SPOTIFY", "DISNEY", "STREAMING")),
                         MicroSeed("jogos", "Jogos", listOf("STEAM", "PLAYSTATION", "XBOX", "JOGO ")),
+                    ),
+                ),
+                SubSeed(
+                    "Livros e revistas", "menu_book", "#6A1B9A",
+                    listOf(MicroSeed("livros_revistas", "Livros e revistas", listOf("LIVRO ", "REVISTA "))),
+                ),
+                SubSeed(
+                    "Hobbies", "sports_esports", "#7B1FA2",
+                    listOf(MicroSeed("hobbies", "Hobbies", listOf("ARTESANATO", "COLECIONAVEL", "MODELISMO"))),
+                ),
+                SubSeed(
+                    "Viagens", "flight", "#4527A0",
+                    listOf(
+                        MicroSeed("hospedagem", "Hospedagem", listOf("HOTEL", "POUSADA", "HOSPEDAGEM")),
+                        MicroSeed("passagens", "Passagens", listOf("PASSAGEM AEREA", "PASSAGEM ONIBUS")),
                     ),
                 ),
             ),
@@ -153,6 +261,44 @@ object FiscalTaxonomySeeder {
                         MicroSeed("racao_gatos", "Ração para gatos", listOf("RACAO GATO", "RAÇÃO GATO")),
                     ),
                 ),
+                SubSeed(
+                    "Higiene e cuidados pet", "pets", "#33691E",
+                    listOf(MicroSeed("higiene_pet", "Higiene e cuidados pet", listOf("AREIA GATO", "SHAMPOO PET", "TAPETE HIGIENICO"))),
+                ),
+                SubSeed(
+                    "Veterinário", "pets", "#1B5E20",
+                    listOf(MicroSeed("veterinario", "Veterinário", listOf("VETERINARIO", "VETERINÁRIO", "PET SHOP CONSULTA"))),
+                ),
+            ),
+        ),
+        CategorySeed(
+            name = "Vestuário", icon = "checkroom", colorHex = "#AD1457",
+            subs = listOf(
+                SubSeed("Roupas", "checkroom", "#AD1457", listOf(MicroSeed("roupas", "Roupas", listOf("CAMISA", "CALCA", "CALÇA", "VESTIDO", "BLUSA", "SHORT")))),
+                SubSeed("Calçados", "checkroom", "#C2185B", listOf(MicroSeed("calcados", "Calçados", listOf("TENIS", "TÊNIS", "SAPATO", "SANDALIA", "CHINELO")))),
+                SubSeed("Acessórios", "checkroom", "#D81B60", listOf(MicroSeed("acessorios_vestuario", "Acessórios", listOf("BONE", "BOLSA", "CINTO", "OCULOS")))),
+            ),
+        ),
+        CategorySeed(
+            name = "Eletrônicos e Informática", icon = "devices", colorHex = "#37474F",
+            subs = listOf(
+                SubSeed("Celulares e acessórios", "smartphone", "#37474F", listOf(MicroSeed("celulares", "Celulares e acessórios", listOf("CAPA CELULAR", "CARREGADOR", "FONE DE OUVIDO", "PELICULA")))),
+                SubSeed("Informática", "computer", "#455A64", listOf(MicroSeed("informatica", "Informática", listOf("MOUSE", "TECLADO", "PENDRIVE", "HD EXTERNO", "NOTEBOOK")))),
+                SubSeed("Eletrodomésticos", "kitchen", "#546E7A", listOf(MicroSeed("eletrodomesticos", "Eletrodomésticos", listOf("LIQUIDIFICADOR", "MICROONDAS", "GELADEIRA", "FERRO DE PASSAR")))),
+            ),
+        ),
+        CategorySeed(
+            name = "Papelaria e Escritório", icon = "edit", colorHex = "#F57F17",
+            subs = listOf(
+                SubSeed("Material escolar", "edit", "#F57F17", listOf(MicroSeed("material_escolar", "Material escolar", listOf("CADERNO", "CANETA", "LAPIS", "LÁPIS", "MOCHILA")))),
+                SubSeed("Material de escritório", "edit", "#F9A825", listOf(MicroSeed("material_escritorio", "Material de escritório", listOf("PAPEL SULFITE", "TONER", "CARTUCHO IMPRESSORA", "GRAMPEADOR")))),
+            ),
+        ),
+        CategorySeed(
+            name = "Presentes e Festas", icon = "card_giftcard", colorHex = "#EC407A",
+            subs = listOf(
+                SubSeed("Presentes", "card_giftcard", "#EC407A", listOf(MicroSeed("presentes", "Presentes", listOf("PRESENTE", "EMBALAGEM PRESENTE")))),
+                SubSeed("Artigos de festa", "celebration", "#F06292", listOf(MicroSeed("artigos_festa", "Artigos de festa", listOf("BALAO", "BALÃO", "ARTIGO FESTA", "VELA ANIVERSARIO")))),
             ),
         ),
     )
@@ -160,8 +306,12 @@ object FiscalTaxonomySeeder {
     /** Idempotente — chame sempre que o app abrir; só grava o que ainda não existe. */
     suspend fun seed(categoryDao: CategoryDao, microcategoryDao: MicrocategoryDao) {
         for (categorySeed in taxonomy) {
-            val category = categoryDao.findByNameAndType(categorySeed.name, CategoryType.EXPENSE)
-                ?: categoryDao.getById(
+            val existingCategory = categoryDao.findByNameAndType(categorySeed.name, CategoryType.EXPENSE)
+            val category = if (existingCategory != null) {
+                if (!existingCategory.isAiTaxonomy) categoryDao.update(existingCategory.copy(isAiTaxonomy = true))
+                existingCategory
+            } else {
+                categoryDao.getById(
                     categoryDao.insert(
                         CategoryEntity(
                             name = categorySeed.name,
@@ -169,14 +319,20 @@ object FiscalTaxonomySeeder {
                             icon = categorySeed.icon,
                             colorHex = categorySeed.colorHex,
                             isDefault = true,
+                            isAiTaxonomy = true,
                         ),
                     ),
                 )
+            }
             val categoryId = category?.id ?: continue
 
             for (subSeed in categorySeed.subs) {
-                val subcategoryId = categoryDao.findByNameAndParent(subSeed.name, categoryId)?.id
-                    ?: categoryDao.insert(
+                val existingSubcategory = categoryDao.findByNameAndParent(subSeed.name, categoryId)
+                val subcategoryId = if (existingSubcategory != null) {
+                    if (!existingSubcategory.isAiTaxonomy) categoryDao.update(existingSubcategory.copy(isAiTaxonomy = true))
+                    existingSubcategory.id
+                } else {
+                    categoryDao.insert(
                         CategoryEntity(
                             name = subSeed.name,
                             type = CategoryType.EXPENSE,
@@ -184,8 +340,10 @@ object FiscalTaxonomySeeder {
                             icon = subSeed.icon,
                             colorHex = subSeed.colorHex,
                             isDefault = true,
+                            isAiTaxonomy = true,
                         ),
                     )
+                }
 
                 for (microSeed in subSeed.micros) {
                     if (microcategoryDao.findByKey(microSeed.key) != null) continue

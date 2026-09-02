@@ -44,6 +44,7 @@ import com.robson.financas.ui.common.TransactionListItem
 import com.robson.financas.ui.designsystem.AppCard
 import com.robson.financas.ui.designsystem.AppFab
 import com.robson.financas.ui.designsystem.EmptyState
+import com.robson.financas.ui.designsystem.FabClearance
 import com.robson.financas.ui.designsystem.appTextFieldColors
 import com.robson.financas.ui.theme.Spacing
 import com.robson.financas.util.DateFormatter
@@ -156,7 +157,12 @@ fun TransactionsScreen(
             } else {
                 LazyColumn(
                     modifier = Modifier.fillMaxSize(),
-                    contentPadding = PaddingValues(horizontal = Spacing.lg, vertical = Spacing.sm),
+                    contentPadding = PaddingValues(
+                        start = Spacing.lg,
+                        top = Spacing.sm,
+                        end = Spacing.lg,
+                        bottom = Spacing.sm + FabClearance,
+                    ),
                     verticalArrangement = Arrangement.spacedBy(Spacing.sm),
                 ) {
                     grouped.forEach { (date, items) ->

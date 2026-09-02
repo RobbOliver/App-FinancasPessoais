@@ -11,6 +11,7 @@ import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.stateIn
+import kotlinx.coroutines.launch
 import javax.inject.Inject
 
 data class FiscalDocumentDetailUiState(
@@ -21,7 +22,7 @@ data class FiscalDocumentDetailUiState(
 @HiltViewModel
 class FiscalDocumentDetailViewModel @Inject constructor(
     savedStateHandle: SavedStateHandle,
-    repository: FiscalDocumentRepository,
+    private val repository: FiscalDocumentRepository,
 ) : ViewModel() {
 
     private val documentId: Long = checkNotNull(savedStateHandle[Screen.FiscalDocumentDetail.ARG_DOCUMENT_ID])
@@ -32,4 +33,9 @@ class FiscalDocumentDetailViewModel @Inject constructor(
     ) { document, items ->
         FiscalDocumentDetailUiState(document, items)
     }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), FiscalDocumentDetailUiState())
+
+    fun deleteDocument() {
+        val document = uiState.value.document ?: return
+        viewModelScope.launch { repository.deleteDocument(document) }
+    }
 }

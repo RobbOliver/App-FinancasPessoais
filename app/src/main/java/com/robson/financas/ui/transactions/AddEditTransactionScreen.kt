@@ -4,7 +4,9 @@ import android.graphics.BitmapFactory
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.Image
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.Row
@@ -12,6 +14,7 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
@@ -60,12 +63,14 @@ import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import com.robson.financas.data.local.entity.AccountEntity
 import com.robson.financas.data.local.entity.CategoryEntity
 import com.robson.financas.data.local.entity.TransactionType
+import com.robson.financas.ui.common.ColorCatalog
 import com.robson.financas.ui.common.CurrencyInputField
 import com.robson.financas.ui.common.label
 import com.robson.financas.ui.designsystem.AppOutlinedButton
 import com.robson.financas.ui.designsystem.AppPrimaryButton
 import com.robson.financas.ui.designsystem.AppTextField
 import com.robson.financas.ui.designsystem.appTextFieldColors
+import com.robson.financas.ui.theme.HudCyan
 import com.robson.financas.ui.theme.Spacing
 import com.robson.financas.util.AttachmentStorage
 import com.robson.financas.util.DateFormatter
@@ -352,7 +357,19 @@ private fun CategoryDropdown(
     modifier: Modifier = Modifier,
 ) {
     var expanded by remember { mutableStateOf(false) }
-    val selectedLabel = options.find { it.id == selectedId }?.name ?: "Selecione uma categoria"
+    val byId = remember(options) { options.associateBy { it.id } }
+    val selected = byId[selectedId]
+    val selectedLabel = selected?.let { category ->
+        val parentName = category.parentCategoryId?.let { byId[it]?.name }
+        if (parentName != null) "$parentName › ${category.name}" else category.name
+    } ?: "Selecione uma categoria"
+
+    val groups = remember(options) {
+        val childrenByParentId = options.filter { it.parentCategoryId != null }.groupBy { it.parentCategoryId }
+        options.filter { it.parentCategoryId == null }
+            .sortedBy { it.name }
+            .map { parent -> parent to childrenByParentId[parent.id].orEmpty().sortedBy { it.name } }
+    }
 
     ExposedDropdownMenuBox(expanded = expanded, onExpandedChange = { expanded = it }, modifier = modifier) {
         OutlinedTextField(
@@ -368,17 +385,66 @@ private fun CategoryDropdown(
                 .menuAnchor(ExposedDropdownMenuAnchorType.PrimaryNotEditable, true),
         )
         ExposedDropdownMenu(expanded = expanded, onDismissRequest = { expanded = false }) {
-            options.forEach { category ->
-                DropdownMenuItem(
-                    text = { Text(category.name) },
+            groups.forEach { (parent, children) ->
+                CategoryDropdownItem(
+                    category = parent,
+                    indented = false,
                     onClick = {
-                        onSelected(category.id)
+                        onSelected(parent.id)
                         expanded = false
                     },
                 )
+                children.forEach { child ->
+                    CategoryDropdownItem(
+                        category = child,
+                        indented = true,
+                        onClick = {
+                            onSelected(child.id)
+                            expanded = false
+                        },
+                    )
+                }
             }
         }
     }
+}
+
+@Composable
+private fun CategoryDropdownItem(
+    category: CategoryEntity,
+    indented: Boolean,
+    onClick: () -> Unit,
+) {
+    DropdownMenuItem(
+        text = {
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                Box(
+                    modifier = Modifier
+                        .size(10.dp)
+                        .clip(CircleShape)
+                        .background(ColorCatalog.toColor(category.colorHex)),
+                )
+                Text(
+                    category.name,
+                    style = if (indented) MaterialTheme.typography.bodyMedium else MaterialTheme.typography.bodyLarge,
+                    modifier = Modifier.padding(start = Spacing.sm),
+                )
+                if (category.isAiTaxonomy) {
+                    Box(
+                        modifier = Modifier
+                            .padding(start = Spacing.sm)
+                            .clip(RoundedCornerShape(4.dp))
+                            .background(HudCyan.copy(alpha = 0.15f))
+                            .padding(horizontal = 6.dp, vertical = 1.dp),
+                    ) {
+                        Text("IA", style = MaterialTheme.typography.labelSmall, color = HudCyan)
+                    }
+                }
+            }
+        },
+        onClick = onClick,
+        modifier = Modifier.padding(start = if (indented) 24.dp else 0.dp),
+    )
 }
 
 @OptIn(ExperimentalMaterial3Api::class)

@@ -15,6 +15,7 @@ import androidx.compose.material.icons.automirrored.filled.CompareArrows
 import androidx.compose.material.icons.filled.ContentCopy
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.Favorite
+import androidx.compose.material.icons.filled.ReceiptLong
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
@@ -24,6 +25,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import com.robson.financas.data.local.entity.TransactionType
 import com.robson.financas.data.local.relation.TransactionWithDetails
@@ -57,7 +59,10 @@ fun TransactionListItem(
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.SpaceBetween,
     ) {
-        Row(verticalAlignment = Alignment.CenterVertically) {
+        Row(
+            modifier = Modifier.weight(1f),
+            verticalAlignment = Alignment.CenterVertically,
+        ) {
             Box(
                 modifier = Modifier
                     .size(36.dp)
@@ -86,9 +91,29 @@ fun TransactionListItem(
                     )
                 }
             }
-            Column(modifier = Modifier.padding(start = 12.dp)) {
+            Column(
+                modifier = Modifier
+                    .weight(1f)
+                    .padding(start = 12.dp),
+            ) {
                 Row(verticalAlignment = Alignment.CenterVertically) {
-                    Text(title, style = MaterialTheme.typography.bodyLarge)
+                    Text(
+                        title,
+                        style = MaterialTheme.typography.bodyLarge,
+                        maxLines = 1,
+                        overflow = TextOverflow.Ellipsis,
+                        modifier = Modifier.weight(1f, fill = false),
+                    )
+                    if (item.fiscalDocumentId != null) {
+                        Icon(
+                            Icons.Filled.ReceiptLong,
+                            contentDescription = "Gerada a partir de nota fiscal",
+                            tint = MaterialTheme.colorScheme.onSurfaceVariant,
+                            modifier = Modifier
+                                .padding(start = 6.dp)
+                                .size(14.dp),
+                        )
+                    }
                     if (transaction.isFavorite) {
                         Icon(
                             Icons.Filled.Favorite,
@@ -100,7 +125,12 @@ fun TransactionListItem(
                         )
                     }
                 }
-                Text(subtitle, style = MaterialTheme.typography.bodySmall)
+                Text(
+                    subtitle,
+                    style = MaterialTheme.typography.bodySmall,
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis,
+                )
                 if (transaction.needsReview) {
                     Text(
                         "Pendente de revisão",

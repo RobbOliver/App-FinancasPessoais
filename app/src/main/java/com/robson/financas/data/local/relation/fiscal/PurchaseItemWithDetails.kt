@@ -9,4 +9,6 @@ data class PurchaseItemWithDetails(
     val categoryName: String?,
     val subcategoryName: String?,
     val microcategoryName: String?,
+    val productBrand: String?,
+    val productGenericName: String?,
 )

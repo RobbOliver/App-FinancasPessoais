@@ -33,11 +33,17 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import com.robson.financas.data.local.entity.AccountEntity
+import com.robson.financas.data.preferences.DEFAULT_OPENROUTER_MODEL
 import com.robson.financas.ui.designsystem.AppCard
+import com.robson.financas.ui.designsystem.AppOutlinedButton
 import com.robson.financas.ui.designsystem.AppPrimaryButton
+import com.robson.financas.ui.designsystem.AppTextField
 import com.robson.financas.ui.designsystem.appTextFieldColors
+import com.robson.financas.ui.theme.GreenIncome
+import com.robson.financas.ui.theme.RedExpense
 import com.robson.financas.ui.theme.Spacing
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -70,8 +76,26 @@ fun SettingsScreen(
         ) {
             item {
                 Text(
+                    "Contas no Resumo",
+                    style = MaterialTheme.typography.titleMedium,
+                )
+                Text(
+                    "Escolha quais contas aparecem no card de saldo do Resumo — o saldo total continua somando todas.",
+                    style = MaterialTheme.typography.bodySmall,
+                    modifier = Modifier.padding(top = Spacing.xs, bottom = Spacing.sm),
+                )
+            }
+            items(uiState.accounts, key = { it.id }) { account ->
+                AccountVisibilityCard(
+                    account = account,
+                    onShowOnDashboardChanged = { show -> viewModel.setAccountDashboardVisibility(account.id, show) },
+                )
+            }
+            item {
+                Text(
                     "Captura automática de Pix e pagamentos",
                     style = MaterialTheme.typography.titleMedium,
+                    modifier = Modifier.padding(top = Spacing.lg),
                 )
                 Text(
                     "Escolha para qual conta lançar as transações detectadas em cada app.",
@@ -102,6 +126,100 @@ fun SettingsScreen(
                     },
                 )
             }
+            item {
+                Text(
+                    "Leitura de notas por IA (OpenRouter)",
+                    style = MaterialTheme.typography.titleMedium,
+                    modifier = Modifier.padding(top = Spacing.lg),
+                )
+                Text(
+                    "Ao escanear o QR Code de uma nota, o app busca a página pública da Sefaz e " +
+                        "envia esse conteúdo para o modelo de IA escolhido, que devolve os itens já " +
+                        "estruturados. Isso é a única etapa do app que sai do aparelho — o restante " +
+                        "continua 100% local.",
+                    style = MaterialTheme.typography.bodySmall,
+                    modifier = Modifier.padding(top = Spacing.xs, bottom = Spacing.sm),
+                )
+            }
+            item {
+                AiSettingsCard(
+                    apiKey = uiState.aiApiKey,
+                    model = uiState.aiModel,
+                    testState = uiState.apiKeyTestState,
+                    onApiKeyChange = viewModel::updateApiKey,
+                    onModelChange = viewModel::updateModel,
+                    onTestApiKey = viewModel::testApiKey,
+                )
+            }
+        }
+    }
+}
+
+@Composable
+private fun AccountVisibilityCard(
+    account: AccountEntity,
+    onShowOnDashboardChanged: (Boolean) -> Unit,
+) {
+    AppCard(modifier = Modifier.fillMaxWidth()) {
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.SpaceBetween,
+            verticalAlignment = Alignment.CenterVertically,
+        ) {
+            Text(account.name, style = MaterialTheme.typography.bodyLarge)
+            Switch(checked = account.showOnDashboard, onCheckedChange = onShowOnDashboardChanged)
+        }
+    }
+}
+
+@Composable
+private fun AiSettingsCard(
+    apiKey: String,
+    model: String,
+    testState: ApiKeyTestState,
+    onApiKeyChange: (String) -> Unit,
+    onModelChange: (String) -> Unit,
+    onTestApiKey: () -> Unit,
+) {
+    AppCard(modifier = Modifier.fillMaxWidth()) {
+        AppTextField(
+            value = apiKey,
+            onValueChange = onApiKeyChange,
+            label = "Chave de API da OpenRouter",
+            placeholder = "sk-or-...",
+            visualTransformation = PasswordVisualTransformation(),
+            modifier = Modifier.fillMaxWidth(),
+        )
+        AppTextField(
+            value = model,
+            onValueChange = onModelChange,
+            label = "Modelo",
+            placeholder = DEFAULT_OPENROUTER_MODEL,
+            modifier = Modifier.fillMaxWidth().padding(top = Spacing.sm),
+        )
+        AppOutlinedButton(
+            text = when (testState) {
+                ApiKeyTestState.TESTING -> "Testando..."
+                else -> "Testar chave"
+            },
+            onClick = onTestApiKey,
+            enabled = testState != ApiKeyTestState.TESTING && apiKey.isNotBlank(),
+            modifier = Modifier.fillMaxWidth().padding(top = Spacing.sm),
+        )
+        when (testState) {
+            ApiKeyTestState.VALID -> Text(
+                "Chave válida.",
+                style = MaterialTheme.typography.bodySmall,
+                color = GreenIncome,
+                modifier = Modifier.padding(top = Spacing.xs),
+            )
+            ApiKeyTestState.INVALID -> Text(
+                "Não conseguimos validar essa chave.",
+                style = MaterialTheme.typography.bodySmall,
+                color = RedExpense,
+                modifier = Modifier.padding(top = Spacing.xs),
+            )
+            else -> Unit
         }
     }
 }

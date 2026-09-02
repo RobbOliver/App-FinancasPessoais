@@ -69,5 +69,9 @@ dependencies {
     implementation(libs.mlkit.barcode.scanning)
     implementation(libs.mlkit.text.recognition)
 
+    implementation(libs.okhttp)
+    implementation(libs.androidx.security.crypto)
+
     testImplementation(libs.junit)
+    testImplementation(libs.org.json)
 }

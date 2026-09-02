@@ -25,4 +25,6 @@ data class CategoryEntity(
     val icon: String,
     val colorHex: String,
     val isDefault: Boolean = false,
+    /** Gerida por [com.robson.financas.data.local.seed.fiscal.FiscalTaxonomySeeder] — não editável/excluível pelo usuário. */
+    val isAiTaxonomy: Boolean = false,
 )

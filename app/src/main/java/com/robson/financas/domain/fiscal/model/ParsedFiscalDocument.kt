@@ -31,4 +31,7 @@ data class ParsedItem(
     val unitPriceCents: Long,
     val totalPriceCents: Long,
     val discountCents: Long = 0,
+    /** Nome/marca canônicos já resolvidos (cache local ou IA) — só preenchido no caminho QR/IA. */
+    val canonicalName: String? = null,
+    val canonicalBrand: String? = null,
 )

@@ -1,6 +1,7 @@
 package com.robson.financas.data.local.dao.fiscal
 
 import androidx.room.Dao
+import androidx.room.Delete
 import androidx.room.Insert
 import androidx.room.OnConflictStrategy
 import androidx.room.Query
@@ -16,6 +17,9 @@ interface FiscalDocumentDao {
     @Update
     suspend fun update(document: FiscalDocumentEntity)
 
+    @Delete
+    suspend fun delete(document: FiscalDocumentEntity)
+
     @Query("SELECT * FROM fiscal_documents WHERE id = :id")
     suspend fun getById(id: Long): FiscalDocumentEntity?
 
@@ -30,4 +34,10 @@ interface FiscalDocumentDao {
 
     @Query("SELECT * FROM fiscal_documents ORDER BY issuedAt DESC")
     fun observeAll(): Flow<List<FiscalDocumentEntity>>
+
+    @Query("SELECT * FROM fiscal_documents WHERE linkedTransactionId = :transactionId LIMIT 1")
+    suspend fun getByLinkedTransactionId(transactionId: Long): FiscalDocumentEntity?
+
+    @Query("SELECT * FROM fiscal_documents WHERE linkedTransactionId = :transactionId LIMIT 1")
+    fun observeByLinkedTransactionId(transactionId: Long): Flow<FiscalDocumentEntity?>
 }

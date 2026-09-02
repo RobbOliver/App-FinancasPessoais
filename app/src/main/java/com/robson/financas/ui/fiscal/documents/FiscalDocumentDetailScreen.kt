@@ -11,6 +11,7 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -21,9 +22,13 @@ import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import com.robson.financas.data.local.relation.fiscal.PurchaseItemWithDetails
+import com.robson.financas.ui.common.ConfirmDeleteDialog
 import com.robson.financas.ui.designsystem.AppCard
 import com.robson.financas.ui.fiscal.common.ClassificationStatusPill
 import com.robson.financas.ui.theme.RedExpense
@@ -40,6 +45,7 @@ fun FiscalDocumentDetailScreen(
 ) {
     val uiState by viewModel.uiState.collectAsState()
     val document = uiState.document
+    var showDeleteDialog by remember { mutableStateOf(false) }
 
     Scaffold(
         topBar = {
@@ -48,6 +54,13 @@ fun FiscalDocumentDetailScreen(
                 navigationIcon = {
                     IconButton(onClick = onBack) {
                         Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Voltar")
+                    }
+                },
+                actions = {
+                    if (document != null) {
+                        IconButton(onClick = { showDeleteDialog = true }) {
+                            Icon(Icons.Filled.Delete, contentDescription = "Excluir nota")
+                        }
                     }
                 },
             )
@@ -93,6 +106,19 @@ fun FiscalDocumentDetailScreen(
             }
         }
     }
+
+    if (showDeleteDialog) {
+        ConfirmDeleteDialog(
+            title = "Excluir nota fiscal",
+            message = "Os itens e o histórico de preço dessa nota serão apagados. Um lançamento vinculado a ela não é afetado.",
+            onConfirm = {
+                viewModel.deleteDocument()
+                showDeleteDialog = false
+                onBack()
+            },
+            onDismiss = { showDeleteDialog = false },
+        )
+    }
 }
 
 @Composable
@@ -103,10 +129,17 @@ private fun ItemRow(item: PurchaseItemWithDetails, onClick: (() -> Unit)?) {
                 Text(item.item.originalDescription, style = MaterialTheme.typography.bodyLarge)
                 Text(
                     listOfNotNull(item.categoryName, item.subcategoryName, item.microcategoryName).joinToString(" › ")
-                        .ifBlank { "Sem categoria" },
+                        .ifBlank { "Sem departamento" },
                     style = MaterialTheme.typography.bodySmall,
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                 )
+                if (item.productBrand != null || item.productGenericName != null) {
+                    Text(
+                        "Marca: ${item.productBrand ?: "—"} · Produto: ${item.productGenericName ?: "—"}",
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    )
+                }
                 ClassificationStatusPill(item.item.classificationStatus, modifier = Modifier.padding(top = Spacing.xs))
             }
             Text(CurrencyFormatter.formatCents(item.item.totalPriceCents), style = MaterialTheme.typography.bodyLarge)

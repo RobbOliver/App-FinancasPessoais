@@ -28,12 +28,15 @@ import com.robson.financas.ui.dashboard.DashboardScreen
 import com.robson.financas.ui.fiscal.documents.FiscalDocumentDetailScreen
 import com.robson.financas.ui.fiscal.documents.FiscalDocumentsScreen
 import com.robson.financas.ui.fiscal.importing.ImportScreen
+import com.robson.financas.ui.fiscal.brands.BrandsScreen
 import com.robson.financas.ui.fiscal.budget.FiscalBudgetScreen
 import com.robson.financas.ui.fiscal.products.ProductPriceHistoryScreen
 import com.robson.financas.domain.fiscal.qrcode.NfceQrCodeParser
 import com.robson.financas.ui.fiscal.review.ReviewScreen
+import com.robson.financas.ui.fiscal.scanning.AiExtractionScreen
 import com.robson.financas.ui.fiscal.scanning.QrScanResultScreen
 import com.robson.financas.ui.fiscal.scanning.QrScannerScreen
+import com.robson.financas.ui.goals.GoalDetailScreen
 import com.robson.financas.ui.goals.GoalsScreen
 import com.robson.financas.ui.more.MoreScreen
 import com.robson.financas.ui.objectives.AddEditObjectiveScreen
@@ -42,6 +45,7 @@ import com.robson.financas.ui.objectives.ObjectivesScreen
 import com.robson.financas.ui.settings.SettingsScreen
 import com.robson.financas.ui.tags.TagsScreen
 import com.robson.financas.ui.transactions.AddEditTransactionScreen
+import com.robson.financas.ui.transactions.TransactionDetailScreen
 import com.robson.financas.ui.transactions.TransactionsScreen
 
 @Composable
@@ -74,8 +78,9 @@ fun FinanceNavHost(
                 }
                 DashboardScreen(
                     onAddTransaction = { navController.navigate(Screen.AddEditTransaction.routeFor()) },
-                    onEditTransaction = { id -> navController.navigate(Screen.AddEditTransaction.routeFor(id)) },
-                    onOpenCreditCards = { navController.navigate(Screen.CreditCards.route) },
+                    onEditTransaction = { id -> navController.navigate(Screen.TransactionDetail.routeFor(id)) },
+                    onOpenAccounts = { navController.navigate(Screen.Accounts.route) },
+                    onScanQrCode = { navController.navigate(Screen.QrScanner.route) },
                 )
             }
             composable(Screen.Accounts.route) {
@@ -117,8 +122,20 @@ fun FinanceNavHost(
             composable(Screen.Transactions.route) {
                 TransactionsScreen(
                     onAddTransaction = { navController.navigate(Screen.AddEditTransaction.routeFor()) },
-                    onEditTransaction = { id -> navController.navigate(Screen.AddEditTransaction.routeFor(id)) },
+                    onEditTransaction = { id -> navController.navigate(Screen.TransactionDetail.routeFor(id)) },
                     onUseAsTemplate = { id -> navController.navigate(Screen.AddEditTransaction.routeFor(templateId = id)) },
+                )
+            }
+            composable(
+                route = Screen.TransactionDetail.route,
+                arguments = listOf(
+                    navArgument(Screen.TransactionDetail.ARG_TRANSACTION_ID) { type = NavType.LongType },
+                ),
+            ) {
+                TransactionDetailScreen(
+                    onBack = { navController.popBackStack() },
+                    onEdit = { id -> navController.navigate(Screen.AddEditTransaction.routeFor(id)) },
+                    onOpenFiscalDocument = { id -> navController.navigate(Screen.FiscalDocumentDetail.routeFor(id)) },
                 )
             }
             composable(
@@ -132,6 +149,10 @@ fun FinanceNavHost(
                         type = NavType.LongType
                         defaultValue = -1L
                     },
+                    navArgument(Screen.AddEditTransaction.ARG_FISCAL_DOCUMENT_ID) {
+                        type = NavType.LongType
+                        defaultValue = -1L
+                    },
                 ),
             ) {
                 AddEditTransactionScreen(onBack = { navController.popBackStack() })
@@ -140,7 +161,15 @@ fun FinanceNavHost(
                 SettingsScreen(onBack = { navController.popBackStack() })
             }
             composable(Screen.Goals.route) {
-                GoalsScreen()
+                GoalsScreen(onOpenGoal = { id -> navController.navigate(Screen.GoalDetail.routeFor(id)) })
+            }
+            composable(
+                route = Screen.GoalDetail.route,
+                arguments = listOf(
+                    navArgument(Screen.GoalDetail.ARG_GOAL_ID) { type = NavType.LongType },
+                ),
+            ) {
+                GoalDetailScreen(onBack = { navController.popBackStack() })
             }
             composable(Screen.More.route) {
                 MoreScreen(
@@ -151,6 +180,7 @@ fun FinanceNavHost(
                     onNavigateToObjectives = { navController.navigate(Screen.Objectives.route) },
                     onNavigateToCreditCards = { navController.navigate(Screen.CreditCards.route) },
                     onNavigateToFiscalDocuments = { navController.navigate(Screen.FiscalDocuments.route) },
+                    onNavigateToBrands = { navController.navigate(Screen.Brands.route) },
                 )
             }
             composable(Screen.Tags.route) {
@@ -229,6 +259,12 @@ fun FinanceNavHost(
                     onOpenBudget = { navController.navigate(Screen.FiscalBudget.route) },
                 )
             }
+            composable(Screen.Brands.route) {
+                BrandsScreen(
+                    onBack = { navController.popBackStack() },
+                    onOpenProduct = { id -> navController.navigate(Screen.ProductPriceHistory.routeFor(id)) },
+                )
+            }
             composable(Screen.FiscalReview.route) {
                 ReviewScreen(onBack = { navController.popBackStack() })
             }
@@ -252,7 +288,7 @@ fun FinanceNavHost(
                     onScanned = { rawQr ->
                         val accessKey = NfceQrCodeParser.extractAccessKey(rawQr)
                         if (accessKey != null) {
-                            navController.navigate(Screen.QrScanResult.routeFor(accessKey)) {
+                            navController.navigate(Screen.QrScanResult.routeFor(accessKey, rawQr)) {
                                 popUpTo(Screen.FiscalImport.route)
                             }
                         }
@@ -261,7 +297,10 @@ fun FinanceNavHost(
             }
             composable(
                 route = Screen.QrScanResult.route,
-                arguments = listOf(navArgument(Screen.QrScanResult.ARG_ACCESS_KEY) { type = NavType.StringType }),
+                arguments = listOf(
+                    navArgument(Screen.QrScanResult.ARG_ACCESS_KEY) { type = NavType.StringType },
+                    navArgument(Screen.QrScanResult.ARG_RAW_QR) { type = NavType.StringType; defaultValue = "" },
+                ),
             ) {
                 QrScanResultScreen(
                     onBack = { navController.popBackStack() },
@@ -273,6 +312,27 @@ fun FinanceNavHost(
                     onOpenDocument = { id ->
                         navController.navigate(Screen.FiscalDocumentDetail.routeFor(id)) {
                             popUpTo(Screen.FiscalDocuments.route)
+                        }
+                    },
+                    onExtractWithAi = { rawQr ->
+                        navController.navigate(Screen.AiExtraction.routeFor(rawQr))
+                    },
+                )
+            }
+            composable(
+                route = Screen.AiExtraction.route,
+                arguments = listOf(navArgument(Screen.AiExtraction.ARG_RAW_QR) { type = NavType.StringType }),
+            ) {
+                AiExtractionScreen(
+                    onBack = { navController.popBackStack() },
+                    onGoToXmlImport = {
+                        navController.navigate(Screen.FiscalImport.route) {
+                            popUpTo(Screen.FiscalDocuments.route)
+                        }
+                    },
+                    onSaved = { id ->
+                        navController.navigate(Screen.AddEditTransaction.routeFor(fiscalDocumentId = id)) {
+                            popUpTo(Screen.QrScanner.route) { inclusive = true }
                         }
                     },
                 )

@@ -13,6 +13,7 @@ import com.robson.financas.data.repository.AccountRepository
 import com.robson.financas.data.repository.CategoryRepository
 import com.robson.financas.data.repository.TagRepository
 import com.robson.financas.data.repository.TransactionRepository
+import com.robson.financas.data.repository.fiscal.FiscalDocumentRepository
 import com.robson.financas.ui.navigation.Screen
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -57,12 +58,15 @@ class AddEditTransactionViewModel @Inject constructor(
     private val accountRepository: AccountRepository,
     private val categoryRepository: CategoryRepository,
     private val tagRepository: TagRepository,
+    private val fiscalDocumentRepository: FiscalDocumentRepository,
 ) : ViewModel() {
 
     private val transactionId: Long? =
         savedStateHandle.get<Long>(Screen.AddEditTransaction.ARG_TRANSACTION_ID)?.takeIf { it >= 0 }
     private val templateId: Long? =
         savedStateHandle.get<Long>(Screen.AddEditTransaction.ARG_TEMPLATE_ID)?.takeIf { it >= 0 }
+    private val fiscalDocumentId: Long? =
+        savedStateHandle.get<Long>(Screen.AddEditTransaction.ARG_FISCAL_DOCUMENT_ID)?.takeIf { it >= 0 }
 
     private val _uiState = MutableStateFlow(AddEditTransactionUiState())
     val uiState: StateFlow<AddEditTransactionUiState> = _uiState
@@ -122,6 +126,19 @@ class AddEditTransactionViewModel @Inject constructor(
                     }
                     val tagIds = tagRepository.observeTagsForTransaction(id).first().map { it.id }.toSet()
                     _uiState.update { it.copy(selectedTagIds = tagIds) }
+                }
+            } ?: fiscalDocumentId?.let { id ->
+                viewModelScope.launch {
+                    val document = fiscalDocumentRepository.getById(id) ?: return@launch
+                    val establishmentName = document.establishmentId?.let { fiscalDocumentRepository.getEstablishmentName(it) }
+                    _uiState.update {
+                        it.copy(
+                            type = TransactionType.EXPENSE,
+                            amountCents = document.totalCents,
+                            date = document.issuedAt,
+                            description = establishmentName ?: "Nota fiscal",
+                        )
+                    }
                 }
             }
         }
@@ -183,6 +200,7 @@ class AddEditTransactionViewModel @Inject constructor(
                 transactionRepository.create(entity)
             }
             tagRepository.setTagsForTransaction(savedId, state.selectedTagIds.toList())
+            fiscalDocumentId?.let { fiscalDocumentRepository.linkTransaction(it, savedId) }
             _uiState.update { it.copy(isSaved = true) }
         }
     }

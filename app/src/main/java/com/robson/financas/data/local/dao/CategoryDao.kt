@@ -47,4 +47,7 @@ interface CategoryDao {
 
     @Query("SELECT COUNT(*) FROM categories WHERE parentCategoryId = :categoryId")
     suspend fun countChildren(categoryId: Long): Int
+
+    @Query("SELECT * FROM categories WHERE type = :type AND isAiTaxonomy = 0 ORDER BY name ASC")
+    suspend fun getPlainCategories(type: CategoryType): List<CategoryEntity>
 }

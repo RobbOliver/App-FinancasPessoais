@@ -63,6 +63,7 @@ fun AccountsScreen(
     viewModel: AccountsViewModel = hiltViewModel(),
 ) {
     val accounts by viewModel.accounts.collectAsState()
+    val hideBalances by viewModel.hideBalances.collectAsState()
     val deletionError by viewModel.deletionError.collectAsState()
     var pendingDelete by remember { mutableStateOf<AccountEntity?>(null) }
     val snackbarHostState = remember { SnackbarHostState() }
@@ -114,6 +115,7 @@ fun AccountsScreen(
                     ) {
                         AccountRow(
                             item = item,
+                            hideBalances = hideBalances,
                             onDeleteClick = { pendingDelete = item.account },
                         )
                     }
@@ -151,6 +153,7 @@ fun AccountsScreen(
 @Composable
 private fun AccountRow(
     item: AccountWithBalance,
+    hideBalances: Boolean,
     onDeleteClick: () -> Unit,
 ) {
     Row(
@@ -181,7 +184,7 @@ private fun AccountRow(
         }
         Row(verticalAlignment = Alignment.CenterVertically) {
             Text(
-                text = CurrencyFormatter.formatCents(item.balanceCents),
+                text = if (hideBalances) "R$ ••••••" else CurrencyFormatter.formatCents(item.balanceCents),
                 color = if (item.balanceCents >= 0) GreenIncome else RedExpense,
                 style = MaterialTheme.typography.bodyLarge,
             )

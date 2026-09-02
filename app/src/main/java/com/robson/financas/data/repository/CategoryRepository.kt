@@ -23,6 +23,11 @@ class CategoryRepository @Inject constructor(
     suspend fun update(category: CategoryEntity) = categoryDao.update(category)
 
     suspend fun delete(category: CategoryEntity) {
+        if (category.isAiTaxonomy) {
+            throw DeletionBlockedException(
+                "Esta categoria faz parte do grupo IA e é mantida pelo sistema — não pode ser excluída.",
+            )
+        }
         try {
             categoryDao.delete(category)
         } catch (e: SQLiteConstraintException) {
@@ -30,7 +35,7 @@ class CategoryRepository @Inject constructor(
             val message = if (hasChildren) {
                 "Não é possível excluir: existem subcategorias vinculadas a esta categoria."
             } else {
-                "Não é possível excluir: existem transações nesta categoria."
+                "Não é possível excluir: há outros dados vinculados a esta categoria."
             }
             throw DeletionBlockedException(message)
         }

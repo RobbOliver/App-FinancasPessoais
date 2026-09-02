@@ -23,6 +23,11 @@ class AccountRepository @Inject constructor(
 
     suspend fun update(account: AccountEntity) = accountDao.update(account)
 
+    suspend fun setShowOnDashboard(accountId: Long, show: Boolean) {
+        val account = accountDao.getById(accountId) ?: return
+        accountDao.update(account.copy(showOnDashboard = show))
+    }
+
     suspend fun delete(account: AccountEntity) {
         try {
             accountDao.delete(account)

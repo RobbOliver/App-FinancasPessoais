@@ -2,6 +2,8 @@ package com.robson.financas.data.repository.fiscal
 
 import com.robson.financas.data.local.dao.CategoryDao
 import com.robson.financas.data.local.dao.fiscal.MicrocategoryDao
+import com.robson.financas.data.local.entity.CategoryType
+import com.robson.financas.domain.fiscal.model.ClassificationOption
 import com.robson.financas.domain.fiscal.model.MicrocategoryOption
 import javax.inject.Inject
 import javax.inject.Singleton
@@ -32,5 +34,30 @@ class FiscalTaxonomyRepository @Inject constructor(
                 categoryName = category.name,
             )
         }.sortedWith(compareBy({ it.categoryName }, { it.subcategoryName }, { it.name }))
+    }
+
+    /** Microcategorias da taxonomia IA + categorias "soltas" do usuário — pra usar no seletor de revisão. */
+    suspend fun getClassificationOptions(): List<ClassificationOption> {
+        val microOptions = getMicrocategoryOptions().map {
+            ClassificationOption.Microcategory(
+                microcategoryId = it.microcategoryId,
+                name = it.name,
+                subcategoryId = it.subcategoryId,
+                subcategoryName = it.subcategoryName,
+                categoryId = it.categoryId,
+                categoryName = it.categoryName,
+            )
+        }
+
+        val plainCategories = categoryDao.getPlainCategories(CategoryType.EXPENSE)
+        val plainById = plainCategories.associateBy { it.id }
+        val plainOptions = plainCategories.map { category ->
+            val displayName = category.parentCategoryId?.let { plainById[it]?.name }
+                ?.let { parentName -> "$parentName › ${category.name}" }
+                ?: category.name
+            ClassificationOption.PlainCategory(categoryId = category.id, categoryName = displayName)
+        }
+
+        return (microOptions + plainOptions).sortedBy { it.categoryName }
     }
 }

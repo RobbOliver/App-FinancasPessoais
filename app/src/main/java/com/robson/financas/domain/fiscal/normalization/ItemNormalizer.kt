@@ -29,23 +29,44 @@ object ItemNormalizer {
         RegexOption.IGNORE_CASE,
     )
 
+    /** Peso/volume embutido na descrição bruta — reaproveitado tanto pelo palpite determinístico quanto pelo nome canônico da IA. */
+    private fun extractWeightVolume(upperDescription: String): Pair<Int?, Int?> {
+        val weightMatch = weightVolumeRegex.findAll(upperDescription).lastOrNull() ?: return null to null
+        val amount = BigDecimal(weightMatch.groupValues[1].replace(',', '.'))
+        return when (weightMatch.groupValues[2].uppercase(Locale.ROOT)) {
+            "KG" -> amount.multiply(BigDecimal(1000)).toInt() to null
+            "G" -> amount.toInt() to null
+            "L", "LT" -> null to amount.multiply(BigDecimal(1000)).toInt()
+            "ML" -> null to amount.toInt()
+            else -> null to null
+        }
+    }
+
+    /**
+     * Usa nome/marca já canonicalizados (cache local ou IA — ver `ProductAliasRepository`) em
+     * vez do palpite por lista fixa de marcas — é isso que faz duas lojas abreviando o mesmo
+     * produto de formas diferentes convergirem para o mesmo [com.robson.financas.data.local.entity.fiscal.ProductEntity].
+     */
+    fun fromCanonical(rawDescription: String, canonicalName: String, canonicalBrand: String?): NormalizedProduct {
+        val (weightGrams, volumeMl) = extractWeightVolume(rawDescription.uppercase(Locale.ROOT).trim())
+        val normalizedName = listOfNotNull(canonicalName, canonicalBrand)
+            .joinToString(" ")
+            .trim()
+            .ifBlank { rawDescription.trim() }
+        return NormalizedProduct(
+            normalizedName = normalizedName,
+            genericName = canonicalName,
+            brand = canonicalBrand,
+            weightGrams = weightGrams,
+            volumeMl = volumeMl,
+        )
+    }
+
     fun normalize(rawDescription: String): NormalizedProduct {
         val upper = rawDescription.uppercase(Locale.ROOT).trim()
 
-        val weightMatch = weightVolumeRegex.findAll(upper).lastOrNull()
-        var weightGrams: Int? = null
-        var volumeMl: Int? = null
-        var withoutUnit = upper
-        weightMatch?.let { match ->
-            val amount = BigDecimal(match.groupValues[1].replace(',', '.'))
-            when (match.groupValues[2].uppercase(Locale.ROOT)) {
-                "KG" -> weightGrams = amount.multiply(BigDecimal(1000)).toInt()
-                "G" -> weightGrams = amount.toInt()
-                "L", "LT" -> volumeMl = amount.multiply(BigDecimal(1000)).toInt()
-                "ML" -> volumeMl = amount.toInt()
-            }
-            withoutUnit = upper.removeRange(match.range).trim()
-        }
+        val (weightGrams, volumeMl) = extractWeightVolume(upper)
+        val withoutUnit = weightVolumeRegex.findAll(upper).lastOrNull()?.let { upper.removeRange(it.range).trim() } ?: upper
 
         val brand = knownBrands.firstOrNull { withoutUnit.contains(it) }
         val withoutBrand = brand?.let { withoutUnit.replace(it, "").trim() } ?: withoutUnit

@@ -55,6 +55,12 @@ fun AppPrimaryButton(
     }
 }
 
+/**
+ * Espaço mínimo que uma `LazyColumn` com `AppFab` flutuando por cima deve reservar no fim do
+ * `contentPadding` — sem isso o FAB fica sobre (e esconde) o valor do último item da lista.
+ */
+val FabClearance = 72.dp
+
 /** FAB — sempre accent azul cheio, consistente em todas as telas (nunca o container apagado do M3). */
 @Composable
 fun AppFab(

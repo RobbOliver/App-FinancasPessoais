@@ -10,4 +10,6 @@ data class TransactionWithDetails(
     val categoryName: String?,
     val categoryIcon: String?,
     val categoryColorHex: String?,
+    /** Não nulo quando a transação foi gerada a partir de uma nota fiscal vinculada. */
+    val fiscalDocumentId: Long?,
 )

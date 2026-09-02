@@ -18,6 +18,7 @@ import com.robson.financas.data.local.dao.fiscal.FiscalDocumentDao
 import com.robson.financas.data.local.dao.fiscal.MicrocategoryBudgetDao
 import com.robson.financas.data.local.dao.fiscal.MicrocategoryDao
 import com.robson.financas.data.local.dao.fiscal.PriceHistoryDao
+import com.robson.financas.data.local.dao.fiscal.ProductAliasDao
 import com.robson.financas.data.local.dao.fiscal.ProductDao
 import com.robson.financas.data.local.dao.fiscal.PurchaseItemDao
 import com.robson.financas.data.local.dao.fiscal.RecurringPatternDao
@@ -27,6 +28,7 @@ import com.robson.financas.data.local.entity.CategoryEntity
 import com.robson.financas.data.local.entity.CreditCardEntity
 import com.robson.financas.data.local.entity.CreditCardInvoiceEntity
 import com.robson.financas.data.local.entity.CreditCardPurchaseEntity
+import com.robson.financas.data.local.entity.GoalCategoryCrossRef
 import com.robson.financas.data.local.entity.GoalEntity
 import com.robson.financas.data.local.entity.NotificationAppMappingEntity
 import com.robson.financas.data.local.entity.SavingsGoalContributionEntity
@@ -41,6 +43,7 @@ import com.robson.financas.data.local.entity.fiscal.FiscalDocumentEntity
 import com.robson.financas.data.local.entity.fiscal.MicrocategoryBudgetEntity
 import com.robson.financas.data.local.entity.fiscal.MicrocategoryEntity
 import com.robson.financas.data.local.entity.fiscal.PriceHistoryEntity
+import com.robson.financas.data.local.entity.fiscal.ProductAliasEntity
 import com.robson.financas.data.local.entity.fiscal.ProductEntity
 import com.robson.financas.data.local.entity.fiscal.PurchaseItemEntity
 import com.robson.financas.data.local.entity.fiscal.RecurringPatternEntity
@@ -53,6 +56,7 @@ import com.robson.financas.data.local.entity.fiscal.UserClassificationRuleEntity
         TransactionEntity::class,
         NotificationAppMappingEntity::class,
         GoalEntity::class,
+        GoalCategoryCrossRef::class,
         CreditCardEntity::class,
         CreditCardPurchaseEntity::class,
         CreditCardInvoiceEntity::class,
@@ -71,8 +75,9 @@ import com.robson.financas.data.local.entity.fiscal.UserClassificationRuleEntity
         MicrocategoryBudgetEntity::class,
         RecurringPatternEntity::class,
         FiscalAuditLogEntity::class,
+        ProductAliasEntity::class,
     ],
-    version = 5,
+    version = 10,
     exportSchema = false,
 )
 @TypeConverters(Converters::class)
@@ -96,4 +101,5 @@ abstract class AppDatabase : RoomDatabase() {
     abstract fun microcategoryBudgetDao(): MicrocategoryBudgetDao
     abstract fun recurringPatternDao(): RecurringPatternDao
     abstract fun fiscalAuditLogDao(): FiscalAuditLogDao
+    abstract fun productAliasDao(): ProductAliasDao
 }

@@ -12,19 +12,21 @@ import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.CornerRadius
 import androidx.compose.ui.unit.dp
+import com.robson.financas.ui.theme.RedExpense
 
 @Composable
 fun GoalProgressBar(
     goalCents: Long,
     spentCents: Long,
     modifier: Modifier = Modifier,
+    overBudget: Boolean = spentCents > goalCents && goalCents > 0,
 ) {
     val trackColor = MaterialTheme.colorScheme.surfaceVariant
-    val fillColor = MaterialTheme.colorScheme.primary
-    val fraction = if (goalCents > 0) {
-        (1f - spentCents.toFloat() / goalCents.toFloat()).coerceIn(0f, 1f)
-    } else {
-        0f
+    val fillColor = if (overBudget) RedExpense else MaterialTheme.colorScheme.primary
+    val fraction = when {
+        overBudget -> 1f
+        goalCents > 0 -> (1f - spentCents.toFloat() / goalCents.toFloat()).coerceIn(0f, 1f)
+        else -> 0f
     }
     val animatedFraction by animateFloatAsState(
         targetValue = fraction,

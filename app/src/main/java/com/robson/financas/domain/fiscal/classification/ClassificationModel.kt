@@ -13,15 +13,19 @@ data class ClassificationResult(
     val reason: String,
 )
 
-/** Uma regra pessoal já resolvida para o formato que as estratégias precisam (sem depender de Room). */
+/**
+ * Uma regra pessoal já resolvida para o formato que as estratégias precisam (sem depender de Room).
+ * [subcategoryId]/[microcategoryId] são nulos quando a regra aponta pra uma categoria "solta" do
+ * usuário (fora da taxonomia IA), não uma microcategoria.
+ */
 data class UserRule(
     val id: Long,
     val matchType: MatchType,
     val matchValue: String,
     val productId: Long?,
     val categoryId: Long,
-    val subcategoryId: Long,
-    val microcategoryId: Long,
+    val subcategoryId: Long?,
+    val microcategoryId: Long?,
     val priority: Int,
 )
 

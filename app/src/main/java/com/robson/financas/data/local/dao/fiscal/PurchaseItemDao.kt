@@ -15,12 +15,15 @@ private const val WITH_DETAILS_SELECT = """
         e.name AS establishmentName,
         cat.name AS categoryName,
         sub.name AS subcategoryName,
-        m.name AS microcategoryName
+        m.name AS microcategoryName,
+        p.brand AS productBrand,
+        p.genericName AS productGenericName
     FROM purchase_items pi
     LEFT JOIN establishments e ON e.id = pi.establishmentId
     LEFT JOIN categories cat ON cat.id = pi.categoryId
     LEFT JOIN categories sub ON sub.id = pi.subcategoryId
     LEFT JOIN microcategories m ON m.id = pi.microcategoryId
+    LEFT JOIN products p ON p.id = pi.productId
 """
 
 @Dao

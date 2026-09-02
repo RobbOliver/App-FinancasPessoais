@@ -35,6 +35,7 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalLifecycleOwner
 import androidx.compose.ui.viewinterop.AndroidView
 import androidx.core.content.ContextCompat
+import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import com.google.mlkit.vision.barcode.BarcodeScannerOptions
 import com.google.mlkit.vision.barcode.BarcodeScanning
 import com.google.mlkit.vision.barcode.common.Barcode
@@ -49,17 +50,23 @@ import java.util.concurrent.Executors
  * Detecta o primeiro QR Code cujo conteúdo tenha uma sequência de 44 dígitos plausível de
  * chave de acesso e devolve o texto bruto do QR via [onScanned]; quem decide o que fazer com
  * ele (validar o dígito verificador, etc.) é a camada de domínio, não esta tela.
+ *
+ * A leitura por IA que vem depois do QR precisa de rede, então checamos a conexão já aqui, no
+ * momento do escaneamento — nunca deixamos avançar para uma etapa que vai precisar de dados
+ * sem ter dados disponíveis.
  */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun QrScannerScreen(
     onBack: () -> Unit,
     onScanned: (String) -> Unit,
+    viewModel: QrScannerViewModel = hiltViewModel(),
 ) {
     val context = LocalContext.current
     var hasCameraPermission by remember {
         mutableStateOf(ContextCompat.checkSelfPermission(context, Manifest.permission.CAMERA) == PackageManager.PERMISSION_GRANTED)
     }
+    var noNetwork by remember { mutableStateOf(false) }
     val permissionLauncher = rememberLauncherForActivityResult(ActivityResultContracts.RequestPermission()) { granted ->
         hasCameraPermission = granted
     }
@@ -81,8 +88,31 @@ fun QrScannerScreen(
         },
     ) { innerPadding ->
         Box(modifier = Modifier.fillMaxSize().padding(innerPadding)) {
-            if (hasCameraPermission) {
-                CameraPreview(onQrDetected = onScanned)
+            if (noNetwork) {
+                Box(modifier = Modifier.fillMaxSize().padding(Spacing.lg), contentAlignment = Alignment.Center) {
+                    androidx.compose.foundation.layout.Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                        Text(
+                            "Sem conexão com a internet.",
+                            style = MaterialTheme.typography.titleMedium,
+                        )
+                        Text(
+                            "Ler a nota completa exige internet. Conecte-se e tente de novo.",
+                            style = MaterialTheme.typography.bodyMedium,
+                            modifier = Modifier.padding(top = Spacing.xs),
+                        )
+                        AppPrimaryButton(
+                            text = "Tentar de novo",
+                            onClick = { noNetwork = false },
+                            modifier = Modifier.padding(top = Spacing.lg),
+                        )
+                    }
+                }
+            } else if (hasCameraPermission) {
+                CameraPreview(
+                    onQrDetected = { raw ->
+                        if (viewModel.isConnected()) onScanned(raw) else noNetwork = true
+                    },
+                )
             } else {
                 Box(modifier = Modifier.fillMaxSize().padding(Spacing.lg), contentAlignment = Alignment.Center) {
                     androidx.compose.foundation.layout.Column(horizontalAlignment = Alignment.CenterHorizontally) {

@@ -4,6 +4,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.robson.financas.data.local.entity.AccountEntity
 import com.robson.financas.data.local.relation.AccountWithBalance
+import com.robson.financas.data.preferences.UiPreferencesRepository
 import com.robson.financas.data.repository.AccountRepository
 import com.robson.financas.data.repository.DeletionBlockedException
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -17,11 +18,14 @@ import javax.inject.Inject
 @HiltViewModel
 class AccountsViewModel @Inject constructor(
     private val accountRepository: AccountRepository,
+    uiPreferencesRepository: UiPreferencesRepository,
 ) : ViewModel() {
 
     val accounts: StateFlow<List<AccountWithBalance>> = accountRepository
         .observeActiveAccountsWithBalance()
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
+
+    val hideBalances: StateFlow<Boolean> = uiPreferencesRepository.hideBalances
 
     private val _deletionError = MutableStateFlow<String?>(null)
     val deletionError: StateFlow<String?> = _deletionError

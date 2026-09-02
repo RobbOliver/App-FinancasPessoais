@@ -14,4 +14,6 @@ data class AccountEntity(
     val icon: String,
     val isArchived: Boolean = false,
     val createdAt: Instant = Instant.now(),
+    /** Se essa conta aparece no card de saldo por conta do Resumo (Dashboard). */
+    val showOnDashboard: Boolean = true,
 )

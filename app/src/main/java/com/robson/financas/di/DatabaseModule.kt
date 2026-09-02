@@ -5,6 +5,11 @@ import androidx.room.Room
 import androidx.room.RoomDatabase
 import androidx.sqlite.db.SupportSQLiteDatabase
 import com.robson.financas.data.local.AppDatabase
+import com.robson.financas.data.local.MIGRATION_5_6
+import com.robson.financas.data.local.MIGRATION_6_7
+import com.robson.financas.data.local.MIGRATION_7_8
+import com.robson.financas.data.local.MIGRATION_8_9
+import com.robson.financas.data.local.MIGRATION_9_10
 import com.robson.financas.data.local.dao.AccountDao
 import com.robson.financas.data.local.dao.CategoryDao
 import com.robson.financas.data.local.dao.CreditCardDao
@@ -20,6 +25,7 @@ import com.robson.financas.data.local.dao.fiscal.FiscalDocumentDao
 import com.robson.financas.data.local.dao.fiscal.MicrocategoryBudgetDao
 import com.robson.financas.data.local.dao.fiscal.MicrocategoryDao
 import com.robson.financas.data.local.dao.fiscal.PriceHistoryDao
+import com.robson.financas.data.local.dao.fiscal.ProductAliasDao
 import com.robson.financas.data.local.dao.fiscal.ProductDao
 import com.robson.financas.data.local.dao.fiscal.PurchaseItemDao
 import com.robson.financas.data.local.dao.fiscal.RecurringPatternDao
@@ -48,6 +54,7 @@ object DatabaseModule {
         databaseProvider: Provider<AppDatabase>,
     ): AppDatabase =
         Room.databaseBuilder(context, AppDatabase::class.java, "financas.db")
+            .addMigrations(MIGRATION_5_6, MIGRATION_6_7, MIGRATION_7_8, MIGRATION_8_9, MIGRATION_9_10)
             .fallbackToDestructiveMigration(dropAllTables = true)
             .addCallback(object : RoomDatabase.Callback() {
                 override fun onOpen(db: SupportSQLiteDatabase) {
@@ -126,4 +133,7 @@ object DatabaseModule {
 
     @Provides
     fun provideFiscalAuditLogDao(database: AppDatabase): FiscalAuditLogDao = database.fiscalAuditLogDao()
+
+    @Provides
+    fun provideProductAliasDao(database: AppDatabase): ProductAliasDao = database.productAliasDao()
 }

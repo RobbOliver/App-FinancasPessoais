@@ -1,5 +1,6 @@
 package com.robson.financas.ui.dashboard
 
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -14,30 +15,39 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.ArrowDownward
 import androidx.compose.material.icons.filled.ArrowUpward
-import androidx.compose.material.icons.filled.CreditCard
+import androidx.compose.material.icons.filled.QrCodeScanner
+import androidx.compose.material.icons.filled.Visibility
+import androidx.compose.material.icons.filled.VisibilityOff
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.unit.dp
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
+import com.robson.financas.data.local.relation.AccountWithBalance
 import com.robson.financas.ui.common.DonutChart
-import com.robson.financas.ui.common.GoalProgressBar
 import com.robson.financas.ui.common.MonthlyBarChart
 import com.robson.financas.ui.common.TransactionListItem
+import com.robson.financas.ui.common.label
 import com.robson.financas.ui.designsystem.AppCard
 import com.robson.financas.ui.designsystem.AppFab
 import com.robson.financas.ui.designsystem.CardLabel
 import com.robson.financas.ui.designsystem.EmptyState
+import com.robson.financas.ui.designsystem.FabClearance
 import com.robson.financas.ui.designsystem.HeroCard
 import com.robson.financas.ui.designsystem.SurfaceLevel
 import com.robson.financas.ui.designsystem.scanlineOverlay
@@ -53,15 +63,17 @@ import com.robson.financas.util.CurrencyFormatter
 fun DashboardScreen(
     onAddTransaction: () -> Unit,
     onEditTransaction: (Long) -> Unit,
-    onOpenCreditCards: () -> Unit,
+    onOpenAccounts: () -> Unit,
+    onScanQrCode: () -> Unit,
     viewModel: DashboardViewModel = hiltViewModel(),
 ) {
     val uiState by viewModel.uiState.collectAsState()
+    var showActionSheet by remember { mutableStateOf(false) }
 
     Scaffold(
         topBar = { TopAppBar(title = { Text("Resumo") }) },
         floatingActionButton = {
-            AppFab(onClick = onAddTransaction, contentDescription = "Nova transação", icon = Icons.Filled.Add)
+            AppFab(onClick = { showActionSheet = true }, contentDescription = "Nova transação", icon = Icons.Filled.Add)
         },
     ) { innerPadding ->
         if (uiState.accounts.isEmpty()) {
@@ -85,10 +97,21 @@ fun DashboardScreen(
             modifier = Modifier
                 .fillMaxSize()
                 .padding(innerPadding),
-            contentPadding = PaddingValues(Spacing.lg),
+            contentPadding = PaddingValues(
+                start = Spacing.lg,
+                top = Spacing.lg,
+                end = Spacing.lg,
+                bottom = Spacing.lg + FabClearance,
+            ),
             verticalArrangement = Arrangement.spacedBy(Spacing.lg),
         ) {
-            item { TotalBalanceCard(totalCents = uiState.totalBalanceCents) }
+            item {
+                TotalBalanceCard(
+                    totalCents = uiState.totalBalanceCents,
+                    hideBalances = uiState.hideBalances,
+                    onToggleHideBalances = viewModel::toggleHideBalances,
+                )
+            }
             if (uiState.hasPending) {
                 item {
                     PendingSummaryCard(
@@ -119,35 +142,18 @@ fun DashboardScreen(
                 }
             }
             item {
-                if (uiState.creditCards.isEmpty()) {
-                    EmptyState(
-                        icon = Icons.Filled.CreditCard,
-                        title = "Nenhum cartão de crédito cadastrado",
-                        subtitle = "Ops! Você ainda não tem nenhum cartão de crédito cadastrado.",
-                        actionLabel = "Adicionar novo cartão",
-                        onAction = onOpenCreditCards,
-                    )
-                } else {
-                    AppCard(modifier = Modifier.fillMaxWidth(), onClick = onOpenCreditCards) {
-                        CardLabel("Cartões de crédito")
-                        uiState.creditCards.forEach { summary ->
-                            Column(modifier = Modifier.padding(top = Spacing.md)) {
-                                Row(
-                                    modifier = Modifier.fillMaxWidth(),
-                                    horizontalArrangement = Arrangement.SpaceBetween,
-                                ) {
-                                    Text(summary.card.name, style = MaterialTheme.typography.bodyLarge)
-                                    Text(
-                                        CurrencyFormatter.formatCents(summary.invoiceTotalCents),
-                                        style = MaterialTheme.typography.bodyLarge.merge(DataTextStyle),
-                                    )
-                                }
-                                GoalProgressBar(
-                                    goalCents = summary.card.limitCents,
-                                    spentCents = summary.invoiceTotalCents,
-                                    modifier = Modifier.padding(top = Spacing.sm),
-                                )
-                            }
+                AppCard(modifier = Modifier.fillMaxWidth(), onClick = onOpenAccounts) {
+                    CardLabel("Contas")
+                    if (uiState.dashboardAccounts.isEmpty()) {
+                        Text(
+                            "Nenhuma conta selecionada pra aparecer aqui — ajuste em Configurações.",
+                            style = MaterialTheme.typography.bodyMedium,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant,
+                            modifier = Modifier.padding(top = Spacing.sm),
+                        )
+                    } else {
+                        uiState.dashboardAccounts.forEach { item ->
+                            AccountBalanceRow(item = item, hideBalances = uiState.hideBalances, modifier = Modifier.padding(top = Spacing.md))
                         }
                     }
                 }
@@ -207,6 +213,49 @@ fun DashboardScreen(
             }
         }
     }
+
+    if (showActionSheet) {
+        NewEntrySheet(
+            onDismiss = { showActionSheet = false },
+            onManualEntry = {
+                showActionSheet = false
+                onAddTransaction()
+            },
+            onScanQrCode = {
+                showActionSheet = false
+                onScanQrCode()
+            },
+        )
+    }
+}
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+private fun NewEntrySheet(onDismiss: () -> Unit, onManualEntry: () -> Unit, onScanQrCode: () -> Unit) {
+    ModalBottomSheet(onDismissRequest = onDismiss) {
+        Column(modifier = Modifier.padding(horizontal = Spacing.lg, vertical = Spacing.sm)) {
+            NewEntryOption(icon = Icons.Filled.Add, label = "Lançamento manual", onClick = onManualEntry)
+            NewEntryOption(icon = Icons.Filled.QrCodeScanner, label = "Escanear nota fiscal", onClick = onScanQrCode)
+        }
+    }
+}
+
+@Composable
+private fun NewEntryOption(icon: ImageVector, label: String, onClick: () -> Unit) {
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .clickable(onClick = onClick)
+            .padding(vertical = Spacing.md),
+        verticalAlignment = Alignment.CenterVertically,
+    ) {
+        Icon(icon, contentDescription = null, tint = MaterialTheme.colorScheme.primary)
+        Text(
+            label,
+            style = MaterialTheme.typography.bodyLarge,
+            modifier = Modifier.padding(start = Spacing.md),
+        )
+    }
 }
 
 @Composable
@@ -240,18 +289,54 @@ private fun PendingSummaryCard(pendingIncomeCents: Long, pendingExpenseCents: Lo
     }
 }
 
+private const val HIDDEN_BALANCE_PLACEHOLDER = "R$ ••••••"
+
 @Composable
-private fun TotalBalanceCard(totalCents: Long) {
+private fun TotalBalanceCard(totalCents: Long, hideBalances: Boolean, onToggleHideBalances: () -> Unit) {
     HeroCard(
         modifier = Modifier
             .fillMaxWidth()
             .scanlineOverlay(),
     ) {
-        CardLabel("Saldo total")
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.SpaceBetween,
+            verticalAlignment = Alignment.CenterVertically,
+        ) {
+            CardLabel("Saldo total")
+            IconButton(onClick = onToggleHideBalances) {
+                Icon(
+                    if (hideBalances) Icons.Filled.VisibilityOff else Icons.Filled.Visibility,
+                    contentDescription = if (hideBalances) "Mostrar saldos" else "Ocultar saldos",
+                )
+            }
+        }
         Text(
-            CurrencyFormatter.formatCents(totalCents),
+            if (hideBalances) HIDDEN_BALANCE_PLACEHOLDER else CurrencyFormatter.formatCents(totalCents),
             style = MaterialTheme.typography.displaySmall.merge(DataTextStyle),
             modifier = Modifier.padding(top = Spacing.xs),
+        )
+    }
+}
+
+@Composable
+private fun AccountBalanceRow(item: AccountWithBalance, hideBalances: Boolean, modifier: Modifier = Modifier) {
+    Row(
+        modifier = modifier.fillMaxWidth(),
+        horizontalArrangement = Arrangement.SpaceBetween,
+    ) {
+        Column {
+            Text(item.account.name, style = MaterialTheme.typography.bodyLarge)
+            Text(
+                item.account.type.label(),
+                style = MaterialTheme.typography.bodySmall,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+            )
+        }
+        Text(
+            if (hideBalances) HIDDEN_BALANCE_PLACEHOLDER else CurrencyFormatter.formatCents(item.balanceCents),
+            style = MaterialTheme.typography.bodyLarge.merge(DataTextStyle),
+            color = if (item.balanceCents >= 0) GreenIncome else RedExpense,
         )
     }
 }

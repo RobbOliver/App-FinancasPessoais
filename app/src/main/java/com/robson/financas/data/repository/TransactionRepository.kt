@@ -46,6 +46,8 @@ class TransactionRepository @Inject constructor(
 
     fun observeRecent(limit: Int): Flow<List<TransactionWithDetails>> = transactionDao.observeRecent(limit)
 
+    fun observeByIdWithDetails(id: Long): Flow<TransactionWithDetails?> = transactionDao.observeByIdWithDetails(id)
+
     fun observeMonthSummary(start: LocalDate, end: LocalDate): Flow<MonthSummary> =
         transactionDao.observeMonthSummary(start, end)
 

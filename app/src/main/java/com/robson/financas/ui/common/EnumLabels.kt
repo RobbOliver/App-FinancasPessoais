@@ -3,6 +3,7 @@ package com.robson.financas.ui.common
 import com.robson.financas.data.local.entity.AccountType
 import com.robson.financas.data.local.entity.CategoryType
 import com.robson.financas.data.local.entity.TransactionType
+import com.robson.financas.ui.categories.CategoryTab
 
 fun AccountType.label(): String = when (this) {
     AccountType.CHECKING -> "Conta corrente"
@@ -20,4 +21,10 @@ fun TransactionType.label(): String = when (this) {
     TransactionType.INCOME -> "Receita"
     TransactionType.EXPENSE -> "Despesa"
     TransactionType.TRANSFER -> "Transferência"
+}
+
+fun CategoryTab.label(): String = when (this) {
+    CategoryTab.RECEITAS -> "Receitas"
+    CategoryTab.DESPESAS -> "Despesas"
+    CategoryTab.IA -> "IA"
 }

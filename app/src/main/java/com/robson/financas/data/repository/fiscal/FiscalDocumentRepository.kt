@@ -21,7 +21,6 @@ import com.robson.financas.data.local.entity.fiscal.PriceHistoryEntity
 import com.robson.financas.data.local.entity.fiscal.ProductEntity
 import com.robson.financas.data.local.entity.fiscal.PurchaseItemEntity
 import com.robson.financas.data.local.entity.fiscal.UserClassificationRuleEntity
-import com.robson.financas.data.local.seed.fiscal.toJsonArray
 import com.robson.financas.data.local.relation.fiscal.PurchaseItemWithDetails
 import com.robson.financas.data.local.seed.fiscal.parseJsonStringArray
 import com.robson.financas.domain.fiscal.AccessKeyValidator
@@ -35,6 +34,7 @@ import com.robson.financas.domain.fiscal.model.FiscalImportResult
 import com.robson.financas.domain.fiscal.model.NormalizedProduct
 import com.robson.financas.domain.fiscal.model.ParsedFiscalDocument
 import com.robson.financas.domain.fiscal.model.ParsedItem
+import com.robson.financas.domain.fiscal.model.RuleScope
 import com.robson.financas.domain.fiscal.normalization.ItemNormalizer
 import com.robson.financas.domain.fiscal.ocr.ReceiptTextParser
 import com.robson.financas.domain.fiscal.parser.FiscalXmlParseException
@@ -76,6 +76,25 @@ class FiscalDocumentRepository @Inject constructor(
 
     suspend fun findByAccessKey(accessKey: String): FiscalDocumentEntity? = fiscalDocumentDao.findByAccessKey(accessKey)
 
+    suspend fun getById(documentId: Long): FiscalDocumentEntity? = fiscalDocumentDao.getById(documentId)
+
+    suspend fun getEstablishmentName(establishmentId: Long): String? = establishmentDao.getById(establishmentId)?.name
+
+    /** Apaga só a nota e seus itens (cascade cuida de `purchase_items`/`price_history`) — nunca o lançamento vinculado. */
+    suspend fun deleteDocument(document: FiscalDocumentEntity) = fiscalDocumentDao.delete(document)
+
+    /** Grava o vínculo nota↔lançamento depois que o usuário salva o lançamento pré-preenchido pela extração. */
+    suspend fun linkTransaction(documentId: Long, transactionId: Long) {
+        val document = fiscalDocumentDao.getById(documentId) ?: return
+        fiscalDocumentDao.update(document.copy(linkedTransactionId = transactionId))
+    }
+
+    suspend fun getByLinkedTransactionId(transactionId: Long): FiscalDocumentEntity? =
+        fiscalDocumentDao.getByLinkedTransactionId(transactionId)
+
+    fun observeByLinkedTransactionId(transactionId: Long): Flow<FiscalDocumentEntity?> =
+        fiscalDocumentDao.observeByLinkedTransactionId(transactionId)
+
     /** O sistema já sugeriu certo — o usuário só confirma, sem trocar nada. */
     suspend fun confirmClassification(itemId: Long) {
         val item = purchaseItemDao.getById(itemId) ?: return
@@ -83,14 +102,36 @@ class FiscalDocumentRepository @Inject constructor(
     }
 
     /**
-     * O usuário escolheu a microcategoria certa manualmente. [createRuleForDescription] grava
-     * uma regra pessoal só se o usuário pedir explicitamente (seção 10 — nunca automático).
+     * O usuário escolheu a categoria certa manualmente — ou uma microcategoria da taxonomia IA
+     * ([microcategoryId]) ou uma categoria "solta" dele mesmo ([plainCategoryId]); exatamente uma
+     * das duas deve vir preenchida. [scope] controla se isso vira regra pra próximas compras do
+     * mesmo produto ([RuleScope.THIS_PRODUCT]) ou fica só neste item ([RuleScope.NONE]).
      */
-    suspend fun correctClassification(itemId: Long, microcategoryId: Long, createRuleForDescription: Boolean) {
+    suspend fun correctClassification(
+        itemId: Long,
+        microcategoryId: Long?,
+        plainCategoryId: Long?,
+        scope: RuleScope,
+    ) {
         val item = purchaseItemDao.getById(itemId) ?: return
-        val microcategory = microcategoryDao.getById(microcategoryId) ?: return
-        val subcategory = categoryDao.getById(microcategory.subcategoryId) ?: return
-        val categoryId = subcategory.parentCategoryId ?: return
+
+        val categoryId: Long
+        val subcategoryId: Long?
+        val resolvedMicrocategoryId: Long?
+        if (microcategoryId != null) {
+            val microcategory = microcategoryDao.getById(microcategoryId) ?: return
+            val subcategory = categoryDao.getById(microcategory.subcategoryId) ?: return
+            categoryId = subcategory.parentCategoryId ?: return
+            subcategoryId = subcategory.id
+            resolvedMicrocategoryId = microcategoryId
+        } else if (plainCategoryId != null) {
+            val category = categoryDao.getById(plainCategoryId) ?: return
+            categoryId = category.id
+            subcategoryId = null
+            resolvedMicrocategoryId = null
+        } else {
+            return
+        }
 
         classificationHistoryDao.insert(
             ClassificationHistoryEntity(
@@ -99,8 +140,8 @@ class FiscalDocumentRepository @Inject constructor(
                 previousSubcategoryId = item.subcategoryId,
                 previousMicrocategoryId = item.microcategoryId,
                 newCategoryId = categoryId,
-                newSubcategoryId = subcategory.id,
-                newMicrocategoryId = microcategoryId,
+                newSubcategoryId = subcategoryId,
+                newMicrocategoryId = resolvedMicrocategoryId,
                 source = ClassificationSource.USER_CORRECTION,
                 confidence = 1.0f,
                 changedByUser = true,
@@ -110,8 +151,8 @@ class FiscalDocumentRepository @Inject constructor(
         purchaseItemDao.update(
             item.copy(
                 categoryId = categoryId,
-                subcategoryId = subcategory.id,
-                microcategoryId = microcategoryId,
+                subcategoryId = subcategoryId,
+                microcategoryId = resolvedMicrocategoryId,
                 classificationConfidence = 1.0f,
                 classificationSource = ClassificationSource.USER_CORRECTION,
                 classificationStatus = ClassificationStatus.CONFIRMED,
@@ -119,17 +160,26 @@ class FiscalDocumentRepository @Inject constructor(
             ),
         )
 
-        if (createRuleForDescription) {
+        if (scope == RuleScope.THIS_PRODUCT && item.productId != null) {
             userClassificationRuleDao.insert(
                 UserClassificationRuleEntity(
-                    matchType = MatchType.DESCRIPTION_CONTAINS,
-                    matchValue = listOf(item.normalizedDescription).toJsonArray(),
+                    matchType = MatchType.EXACT_PRODUCT,
+                    matchValue = "",
+                    productId = item.productId,
                     categoryId = categoryId,
-                    subcategoryId = subcategory.id,
-                    microcategoryId = microcategoryId,
+                    subcategoryId = subcategoryId,
+                    microcategoryId = resolvedMicrocategoryId,
                 ),
             )
         }
+    }
+
+    /** Corrige marca/nome do produto ligado a este item — independente da classificação (Departamento/Categoria/Subcategoria). */
+    suspend fun updateProductIdentity(purchaseItemId: Long, brand: String?, genericName: String) {
+        val item = purchaseItemDao.getById(purchaseItemId) ?: return
+        val productId = item.productId ?: return
+        val product = productDao.getById(productId) ?: return
+        productDao.update(product.copy(brand = brand?.trim()?.takeIf { it.isNotEmpty() }, genericName = genericName.trim()))
     }
 
     /** Dispensa da fila sem atribuir categoria — para itens irrelevantes (troco, taxa, etc.). */
@@ -213,7 +263,11 @@ class FiscalDocumentRepository @Inject constructor(
         taxonomy: List<MicrocategoryTaxonomy>,
         rules: List<UserRule>,
     ) {
-        val normalized = ItemNormalizer.normalize(item.originalDescription)
+        val normalized = if (item.canonicalName != null) {
+            ItemNormalizer.fromCanonical(item.originalDescription, item.canonicalName, item.canonicalBrand)
+        } else {
+            ItemNormalizer.normalize(item.originalDescription)
+        }
         val productId = findOrCreateProduct(normalized, item.gtin)
         val rawUpper = item.originalDescription.uppercase(Locale.ROOT).trim()
 
