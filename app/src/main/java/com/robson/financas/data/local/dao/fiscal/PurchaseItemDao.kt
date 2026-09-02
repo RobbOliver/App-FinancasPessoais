@@ -43,6 +43,15 @@ interface PurchaseItemDao {
     @Query("SELECT * FROM purchase_items WHERE id = :id")
     suspend fun getById(id: Long): PurchaseItemEntity?
 
+    @Query("$WITH_DETAILS_SELECT ORDER BY pi.createdAt DESC")
+    fun observeAll(): Flow<List<PurchaseItemWithDetails>>
+
+    @Query("SELECT COUNT(*) FROM purchase_items")
+    fun observeTotalCount(): Flow<Int>
+
+    @Query("SELECT SUM(unitPriceCents * quantity) FROM purchase_items")
+    fun observeTotalSpentCents(): Flow<Long?>
+
     @Query("$WITH_DETAILS_SELECT WHERE pi.fiscalDocumentId = :documentId ORDER BY pi.id ASC")
     fun observeByDocument(documentId: Long): Flow<List<PurchaseItemWithDetails>>
 

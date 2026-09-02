@@ -53,4 +53,6 @@ data class TransactionEntity(
     val isIgnored: Boolean = false,
     val isFavorite: Boolean = false,
     val attachmentPath: String? = null,
+    val isRecurring: Boolean = false,
+    val recurrenceFrequency: TransactionRecurrence? = null,
 )

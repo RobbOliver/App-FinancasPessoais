@@ -125,3 +125,11 @@ val MIGRATION_9_10 = object : Migration(9, 10) {
         db.execSQL("ALTER TABLE `accounts` ADD COLUMN `showOnDashboard` INTEGER NOT NULL DEFAULT 1")
     }
 }
+
+/** Adiciona recorrência em transações agendadas (isPaid = false). */
+val MIGRATION_10_11 = object : Migration(10, 11) {
+    override fun migrate(db: SupportSQLiteDatabase) {
+        db.execSQL("ALTER TABLE `transactions` ADD COLUMN `isRecurring` INTEGER NOT NULL DEFAULT 0")
+        db.execSQL("ALTER TABLE `transactions` ADD COLUMN `recurrenceFrequency` TEXT")
+    }
+}

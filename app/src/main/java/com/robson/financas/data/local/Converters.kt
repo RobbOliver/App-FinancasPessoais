@@ -3,6 +3,7 @@ package com.robson.financas.data.local
 import androidx.room.TypeConverter
 import com.robson.financas.data.local.entity.AccountType
 import com.robson.financas.data.local.entity.CategoryType
+import com.robson.financas.data.local.entity.TransactionRecurrence
 import com.robson.financas.data.local.entity.TransactionSource
 import com.robson.financas.data.local.entity.TransactionType
 import com.robson.financas.data.local.entity.fiscal.ClassificationSource
@@ -86,4 +87,10 @@ class Converters {
 
     @TypeConverter
     fun fromRecurrenceFrequency(value: RecurrenceFrequency?): String? = value?.name
+
+    @TypeConverter
+    fun toTransactionRecurrence(value: String?): TransactionRecurrence? = value?.let { TransactionRecurrence.valueOf(it) }
+
+    @TypeConverter
+    fun fromTransactionRecurrence(value: TransactionRecurrence?): String? = value?.name
 }

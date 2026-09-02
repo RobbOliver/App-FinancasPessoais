@@ -28,7 +28,7 @@ import com.robson.financas.ui.dashboard.DashboardScreen
 import com.robson.financas.ui.fiscal.documents.FiscalDocumentDetailScreen
 import com.robson.financas.ui.fiscal.documents.FiscalDocumentsScreen
 import com.robson.financas.ui.fiscal.importing.ImportScreen
-import com.robson.financas.ui.fiscal.brands.BrandsScreen
+import com.robson.financas.ui.fiscal.brands.MyPurchasesScreen
 import com.robson.financas.ui.fiscal.budget.FiscalBudgetScreen
 import com.robson.financas.ui.fiscal.products.ProductPriceHistoryScreen
 import com.robson.financas.domain.fiscal.qrcode.NfceQrCodeParser
@@ -260,9 +260,10 @@ fun FinanceNavHost(
                 )
             }
             composable(Screen.Brands.route) {
-                BrandsScreen(
+                MyPurchasesScreen(
                     onBack = { navController.popBackStack() },
                     onOpenProduct = { id -> navController.navigate(Screen.ProductPriceHistory.routeFor(id)) },
+                    onOpenReview = { navController.navigate(Screen.FiscalReview.route) },
                 )
             }
             composable(Screen.FiscalReview.route) {

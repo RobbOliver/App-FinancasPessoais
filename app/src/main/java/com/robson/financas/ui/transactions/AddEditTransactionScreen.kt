@@ -62,7 +62,11 @@ import androidx.compose.ui.unit.dp
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import com.robson.financas.data.local.entity.AccountEntity
 import com.robson.financas.data.local.entity.CategoryEntity
+import com.robson.financas.data.local.entity.TransactionRecurrence
 import com.robson.financas.data.local.entity.TransactionType
+import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.expandVertically
+import androidx.compose.animation.shrinkVertically
 import com.robson.financas.ui.common.ColorCatalog
 import com.robson.financas.ui.common.CurrencyInputField
 import com.robson.financas.ui.common.label
@@ -213,6 +217,36 @@ fun AddEditTransactionScreen(
             ) {
                 Text(if (uiState.isPaid) "Pago" else "Agendado (não pago)")
                 Switch(checked = uiState.isPaid, onCheckedChange = viewModel::updateIsPaid)
+            }
+
+            AnimatedVisibility(
+                visible = !uiState.isPaid,
+                enter = expandVertically(),
+                exit = shrinkVertically(),
+            ) {
+                Column {
+                    Row(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(top = Spacing.sm),
+                        horizontalArrangement = Arrangement.SpaceBetween,
+                        verticalAlignment = Alignment.CenterVertically,
+                    ) {
+                        Text("É recorrente?")
+                        Switch(checked = uiState.isRecurring, onCheckedChange = viewModel::updateIsRecurring)
+                    }
+                    AnimatedVisibility(
+                        visible = uiState.isRecurring,
+                        enter = expandVertically(),
+                        exit = shrinkVertically(),
+                    ) {
+                        RecurrenceFrequencyDropdown(
+                            selected = uiState.recurrenceFrequency ?: TransactionRecurrence.MONTHLY,
+                            onSelected = viewModel::updateRecurrenceFrequency,
+                            modifier = Modifier.padding(top = Spacing.sm),
+                        )
+                    }
+                }
             }
 
             if (uiState.type != TransactionType.TRANSFER) {
@@ -445,6 +479,41 @@ private fun CategoryDropdownItem(
         onClick = onClick,
         modifier = Modifier.padding(start = if (indented) 24.dp else 0.dp),
     )
+}
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+private fun RecurrenceFrequencyDropdown(
+    selected: TransactionRecurrence,
+    onSelected: (TransactionRecurrence) -> Unit,
+    modifier: Modifier = Modifier,
+) {
+    var expanded by remember { mutableStateOf(false) }
+    ExposedDropdownMenuBox(expanded = expanded, onExpandedChange = { expanded = it }, modifier = modifier) {
+        OutlinedTextField(
+            value = selected.label(),
+            onValueChange = {},
+            readOnly = true,
+            label = { Text("Frequência") },
+            trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = expanded) },
+            colors = appTextFieldColors(),
+            shape = MaterialTheme.shapes.medium,
+            modifier = Modifier
+                .fillMaxWidth()
+                .menuAnchor(ExposedDropdownMenuAnchorType.PrimaryNotEditable, true),
+        )
+        ExposedDropdownMenu(expanded = expanded, onDismissRequest = { expanded = false }) {
+            TransactionRecurrence.entries.forEach { freq ->
+                DropdownMenuItem(
+                    text = { Text(freq.label()) },
+                    onClick = {
+                        onSelected(freq)
+                        expanded = false
+                    },
+                )
+            }
+        }
+    }
 }
 
 @OptIn(ExperimentalMaterial3Api::class)

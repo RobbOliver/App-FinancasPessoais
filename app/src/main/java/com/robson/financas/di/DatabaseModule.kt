@@ -10,6 +10,7 @@ import com.robson.financas.data.local.MIGRATION_6_7
 import com.robson.financas.data.local.MIGRATION_7_8
 import com.robson.financas.data.local.MIGRATION_8_9
 import com.robson.financas.data.local.MIGRATION_9_10
+import com.robson.financas.data.local.MIGRATION_10_11
 import com.robson.financas.data.local.dao.AccountDao
 import com.robson.financas.data.local.dao.CategoryDao
 import com.robson.financas.data.local.dao.CreditCardDao
@@ -54,7 +55,7 @@ object DatabaseModule {
         databaseProvider: Provider<AppDatabase>,
     ): AppDatabase =
         Room.databaseBuilder(context, AppDatabase::class.java, "financas.db")
-            .addMigrations(MIGRATION_5_6, MIGRATION_6_7, MIGRATION_7_8, MIGRATION_8_9, MIGRATION_9_10)
+            .addMigrations(MIGRATION_5_6, MIGRATION_6_7, MIGRATION_7_8, MIGRATION_8_9, MIGRATION_9_10, MIGRATION_10_11)
             .fallbackToDestructiveMigration(dropAllTables = true)
             .addCallback(object : RoomDatabase.Callback() {
                 override fun onOpen(db: SupportSQLiteDatabase) {

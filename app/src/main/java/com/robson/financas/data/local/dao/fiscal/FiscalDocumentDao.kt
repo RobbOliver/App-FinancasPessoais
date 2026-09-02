@@ -40,4 +40,7 @@ interface FiscalDocumentDao {
 
     @Query("SELECT * FROM fiscal_documents WHERE linkedTransactionId = :transactionId LIMIT 1")
     fun observeByLinkedTransactionId(transactionId: Long): Flow<FiscalDocumentEntity?>
+
+    @Query("SELECT COUNT(*) FROM fiscal_documents")
+    fun observeTotalCount(): Flow<Int>
 }

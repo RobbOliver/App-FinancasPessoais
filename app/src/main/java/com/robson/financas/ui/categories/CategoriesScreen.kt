@@ -52,6 +52,7 @@ import com.robson.financas.ui.common.label
 import com.robson.financas.ui.designsystem.AppCard
 import com.robson.financas.ui.designsystem.AppFab
 import com.robson.financas.ui.designsystem.EmptyState
+import com.robson.financas.ui.designsystem.FabClearance
 import com.robson.financas.ui.theme.BorderSubtle
 import com.robson.financas.ui.theme.Spacing
 import kotlinx.coroutines.launch
@@ -138,7 +139,12 @@ fun CategoriesScreen(
             } else {
                 LazyColumn(
                     modifier = Modifier.fillMaxSize(),
-                    contentPadding = PaddingValues(horizontal = Spacing.lg, vertical = Spacing.sm),
+                    contentPadding = PaddingValues(
+                        start = Spacing.lg,
+                        end = Spacing.lg,
+                        top = Spacing.sm,
+                        bottom = Spacing.sm + FabClearance,
+                    ),
                     verticalArrangement = Arrangement.spacedBy(Spacing.sm),
                 ) {
                     items(parentGroups, key = { it.first.id }) { (parent, children) ->

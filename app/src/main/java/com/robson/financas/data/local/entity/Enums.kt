@@ -22,3 +22,13 @@ enum class TransactionSource {
     MANUAL,
     NOTIFICATION,
 }
+
+enum class TransactionRecurrence {
+    DAILY,
+    WEEKLY,
+    BIWEEKLY,
+    MONTHLY,
+    BIMONTHLY,
+    QUARTERLY,
+    YEARLY,
+}

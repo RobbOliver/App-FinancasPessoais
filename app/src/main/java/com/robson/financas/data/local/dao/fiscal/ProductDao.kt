@@ -27,4 +27,7 @@ interface ProductDao {
 
     @Query("SELECT * FROM products ORDER BY normalizedName ASC")
     fun observeAll(): Flow<List<ProductEntity>>
+
+    @Query("UPDATE products SET brand = :brand WHERE id = :productId")
+    suspend fun updateBrand(productId: Long, brand: String?)
 }
