@@ -59,8 +59,15 @@ class TransactionsViewModel @Inject constructor(
         .observeAll()
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
 
-    val scheduledTransactions: StateFlow<List<TransactionWithDetails>> = transactionRepository
-        .observeScheduled()
+    val scheduledTransactions: StateFlow<List<TransactionWithDetails>> = _filter
+        .flatMapLatest { f ->
+            transactionRepository.observeScheduled().map { list ->
+                list.filter {
+                    it.transaction.date.year == f.selectedMonth.year &&
+                        it.transaction.date.month == f.selectedMonth.month
+                }
+            }
+        }
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
 
     val transactions: StateFlow<List<TransactionWithDetails>> = _filter
