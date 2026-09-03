@@ -30,7 +30,11 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material.icons.automirrored.filled.ArrowForward
 import androidx.compose.material.icons.filled.Add
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.ExposedDropdownMenuAnchorType
@@ -71,6 +75,9 @@ import com.robson.financas.ui.theme.HudCyan
 import com.robson.financas.ui.theme.Spacing
 import com.robson.financas.util.DateFormatter
 import kotlinx.coroutines.launch
+import java.time.YearMonth
+import java.time.format.DateTimeFormatter
+import java.util.Locale
 import kotlin.math.PI
 import kotlin.math.sin
 
@@ -108,6 +115,13 @@ fun TransactionsScreen(
                 .padding(innerPadding)
                 .fillMaxSize(),
         ) {
+            // ── Navegação por mês ────────────────────────────────────────────
+            MonthNavigationBar(
+                yearMonth = filter.selectedMonth,
+                onPrevious = viewModel::previousMonth,
+                onNext = viewModel::nextMonth,
+            )
+
             // ── Filtros ──────────────────────────────────────────────────────
             Row(
                 modifier = Modifier
@@ -151,11 +165,6 @@ fun TransactionsScreen(
                     .horizontalScroll(rememberScrollState()),
                 horizontalArrangement = Arrangement.spacedBy(8.dp),
             ) {
-                FilterChip(
-                    selected = filter.onlyCurrentMonth,
-                    onClick = { viewModel.toggleCurrentMonth(!filter.onlyCurrentMonth) },
-                    label = { Text("Este mês") },
-                )
                 FilterChip(
                     selected = filter.onlyNeedsReview,
                     onClick = { viewModel.toggleNeedsReview(!filter.onlyNeedsReview) },
@@ -341,7 +350,7 @@ private fun ScheduledPanel(
     )
 
     val grouped = remember(items) {
-        items.sortedBy { it.transaction.date }.groupBy { it.transaction.date }
+        items.sortedByDescending { it.transaction.date }.groupBy { it.transaction.date }
     }
     val totalLazyItems = remember(grouped) { grouped.values.sumOf { it.size + 1 } }
     val listState = rememberLazyListState()
@@ -449,6 +458,33 @@ private fun ScheduledPanel(
                     }
                 }
             }
+        }
+    }
+}
+
+@Composable
+private fun MonthNavigationBar(
+    yearMonth: YearMonth,
+    onPrevious: () -> Unit,
+    onNext: () -> Unit,
+) {
+    val monthFormatter = remember { DateTimeFormatter.ofPattern("MMMM yyyy", Locale("pt", "BR")) }
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(horizontal = Spacing.xs, vertical = 0.dp),
+        horizontalArrangement = Arrangement.SpaceBetween,
+        verticalAlignment = Alignment.CenterVertically,
+    ) {
+        IconButton(onClick = onPrevious) {
+            Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Mês anterior")
+        }
+        Text(
+            text = yearMonth.format(monthFormatter).replaceFirstChar { it.uppercase() },
+            style = MaterialTheme.typography.titleMedium,
+        )
+        IconButton(onClick = onNext) {
+            Icon(Icons.AutoMirrored.Filled.ArrowForward, contentDescription = "Próximo mês")
         }
     }
 }

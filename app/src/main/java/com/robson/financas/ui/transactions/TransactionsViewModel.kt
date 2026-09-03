@@ -20,14 +20,14 @@ import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
-import java.time.LocalDate
+import java.time.YearMonth
 import javax.inject.Inject
 
 data class TransactionsFilterState(
     val accountId: Long? = null,
     val categoryId: Long? = null,
     val tagId: Long? = null,
-    val onlyCurrentMonth: Boolean = false,
+    val selectedMonth: YearMonth = YearMonth.now(),
     val onlyNeedsReview: Boolean = false,
     val onlyScheduled: Boolean = false,
     val onlyFavorite: Boolean = false,
@@ -65,14 +65,11 @@ class TransactionsViewModel @Inject constructor(
 
     val transactions: StateFlow<List<TransactionWithDetails>> = _filter
         .flatMapLatest { f ->
-            val today = LocalDate.now()
-            val start = if (f.onlyCurrentMonth) today.withDayOfMonth(1) else null
-            val end = if (f.onlyCurrentMonth) today.withDayOfMonth(today.lengthOfMonth()) else null
             transactionRepository.observeFiltered(
                 f.accountId,
                 f.categoryId,
-                start,
-                end,
+                f.selectedMonth.atDay(1),
+                f.selectedMonth.atEndOfMonth(),
                 f.onlyNeedsReview,
                 f.onlyScheduled,
                 f.onlyFavorite,
@@ -85,7 +82,8 @@ class TransactionsViewModel @Inject constructor(
     fun updateAccountFilter(id: Long?) = _filter.update { it.copy(accountId = id) }
     fun updateCategoryFilter(id: Long?) = _filter.update { it.copy(categoryId = id) }
     fun updateTagFilter(id: Long?) = _filter.update { it.copy(tagId = id) }
-    fun toggleCurrentMonth(only: Boolean) = _filter.update { it.copy(onlyCurrentMonth = only) }
+    fun previousMonth() = _filter.update { it.copy(selectedMonth = it.selectedMonth.minusMonths(1)) }
+    fun nextMonth() = _filter.update { it.copy(selectedMonth = it.selectedMonth.plusMonths(1)) }
     fun toggleNeedsReview(only: Boolean) = _filter.update { it.copy(onlyNeedsReview = only) }
     fun toggleScheduled(only: Boolean) = _filter.update { it.copy(onlyScheduled = only) }
     fun toggleFavorite(only: Boolean) = _filter.update { it.copy(onlyFavorite = only) }
