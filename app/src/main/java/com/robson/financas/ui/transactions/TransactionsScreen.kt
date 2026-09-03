@@ -25,6 +25,8 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.lazy.rememberLazyListState
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
@@ -339,7 +341,12 @@ private fun ScheduledPanel(
     )
 
     val grouped = remember(items) {
-        items.sortedByDescending { it.transaction.date }.groupBy { it.transaction.date }
+        items.sortedBy { it.transaction.date }.groupBy { it.transaction.date }
+    }
+    val totalLazyItems = remember(grouped) { grouped.values.sumOf { it.size + 1 } }
+    val listState = rememberLazyListState()
+    LaunchedEffect(totalLazyItems) {
+        if (totalLazyItems > 0) listState.scrollToItem(totalLazyItems - 1)
     }
 
     Column(
@@ -400,10 +407,10 @@ private fun ScheduledPanel(
             }
         } else {
             LazyColumn(
+                state = listState,
                 modifier = Modifier.fillMaxSize(),
                 contentPadding = PaddingValues(horizontal = Spacing.lg, vertical = Spacing.xs),
                 verticalArrangement = Arrangement.spacedBy(Spacing.sm),
-                reverseLayout = true,
             ) {
                 grouped.entries.toList().forEachIndexed { dateIndex, (date, dateItems) ->
                     item(key = "sched_header_$date") {
