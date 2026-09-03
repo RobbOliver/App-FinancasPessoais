@@ -53,6 +53,8 @@ class GoalRepository @Inject constructor(
         goalDao.delete(existing)
     }
 
+    fun observeAll(): Flow<List<GoalEntity>> = goalDao.observeAll()
+
     suspend fun hasGoalsForMonth(yearMonth: Int): Boolean = goalDao.getForMonth(yearMonth).isNotEmpty()
 
     suspend fun importFromPreviousMonth(fromYearMonth: Int, toYearMonth: Int) {

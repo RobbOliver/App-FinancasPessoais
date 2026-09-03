@@ -109,4 +109,6 @@ sealed class Screen(val route: String) {
         const val ARG_DOCUMENT_ID = "documentId"
         fun routeFor(documentId: Long) = "fiscal/$documentId"
     }
+
+    data object Reports : Screen("reports")
 }

@@ -9,6 +9,7 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.KeyboardArrowRight
 import androidx.compose.material.icons.filled.AccountBalanceWallet
+import androidx.compose.material.icons.filled.BarChart
 import androidx.compose.material.icons.filled.Category
 import androidx.compose.material.icons.filled.CreditCard
 import androidx.compose.material.icons.filled.Description
@@ -44,6 +45,7 @@ fun MoreScreen(
     onNavigateToCreditCards: () -> Unit,
     onNavigateToFiscalDocuments: () -> Unit,
     onNavigateToBrands: () -> Unit,
+    onNavigateToReports: () -> Unit,
 ) {
     Scaffold(
         topBar = { TopAppBar(expandedHeight = 40.dp, title = { Text("Mais opções") }) },
@@ -70,6 +72,8 @@ fun MoreScreen(
                     MoreListItem(icon = Icons.Filled.Label, label = "Tags", onClick = onNavigateToTags)
                     HorizontalDivider(color = BorderSubtle)
                     MoreListItem(icon = Icons.Filled.TrackChanges, label = "Objetivos", onClick = onNavigateToObjectives)
+                    HorizontalDivider(color = BorderSubtle)
+                    MoreListItem(icon = Icons.Filled.BarChart, label = "Relatórios", onClick = onNavigateToReports)
                     HorizontalDivider(color = BorderSubtle)
                     MoreListItem(icon = Icons.Filled.Settings, label = "Configurações", onClick = onNavigateToSettings)
                 }

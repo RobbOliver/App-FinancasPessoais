@@ -78,4 +78,7 @@ interface GoalDao {
         startDate: LocalDate,
         endDate: LocalDate,
     ): Flow<List<GoalCategoryDetail>>
+
+    @Query("SELECT * FROM goals ORDER BY yearMonth DESC")
+    fun observeAll(): Flow<List<GoalEntity>>
 }

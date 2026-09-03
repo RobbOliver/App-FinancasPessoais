@@ -43,6 +43,7 @@ import com.robson.financas.ui.objectives.AddEditObjectiveScreen
 import com.robson.financas.ui.objectives.ObjectiveDetailScreen
 import com.robson.financas.ui.objectives.ObjectivesScreen
 import com.robson.financas.ui.settings.SettingsScreen
+import com.robson.financas.ui.reports.ReportsScreen
 import com.robson.financas.ui.tags.TagsScreen
 import com.robson.financas.ui.transactions.AddEditTransactionScreen
 import com.robson.financas.ui.transactions.TransactionDetailScreen
@@ -181,10 +182,14 @@ fun FinanceNavHost(
                     onNavigateToCreditCards = { navController.navigate(Screen.CreditCards.route) },
                     onNavigateToFiscalDocuments = { navController.navigate(Screen.FiscalDocuments.route) },
                     onNavigateToBrands = { navController.navigate(Screen.Brands.route) },
+                    onNavigateToReports = { navController.navigate(Screen.Reports.route) },
                 )
             }
             composable(Screen.Tags.route) {
                 TagsScreen(onBack = { navController.popBackStack() })
+            }
+            composable(Screen.Reports.route) {
+                ReportsScreen(onBack = { navController.popBackStack() })
             }
             composable(Screen.Objectives.route) {
                 ObjectivesScreen(
