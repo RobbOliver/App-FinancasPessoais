@@ -6,6 +6,7 @@ import com.robson.financas.data.local.entity.AccountEntity
 import com.robson.financas.data.local.entity.CategoryEntity
 import com.robson.financas.data.local.entity.TagEntity
 import com.robson.financas.data.local.entity.TransactionEntity
+import com.robson.financas.data.local.entity.TransactionRecurrence
 import com.robson.financas.data.local.relation.TransactionWithDetails
 import com.robson.financas.data.repository.AccountRepository
 import com.robson.financas.data.repository.CategoryRepository
@@ -15,12 +16,15 @@ import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
+import java.time.LocalDate
 import java.time.YearMonth
+import java.time.temporal.ChronoUnit
 import javax.inject.Inject
 
 data class TransactionsFilterState(
@@ -59,16 +63,33 @@ class TransactionsViewModel @Inject constructor(
         .observeAll()
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
 
-    val scheduledTransactions: StateFlow<List<TransactionWithDetails>> = _filter
-        .flatMapLatest { f ->
-            transactionRepository.observeScheduled().map { list ->
-                list.filter {
-                    it.transaction.date.year == f.selectedMonth.year &&
-                        it.transaction.date.month == f.selectedMonth.month
-                }
-            }
+    val scheduledTransactions: StateFlow<List<TransactionWithDetails>> = combine(
+        _filter,
+        transactionRepository.observeScheduled(),
+        transactionRepository.observeAllRecurring(),
+    ) { f, actual, recurring ->
+        val month = f.selectedMonth
+        val monthStart = month.atDay(1)
+        val monthEnd = month.atEndOfMonth()
+
+        val actualThisMonth = actual.filter {
+            val d = it.transaction.date
+            d.year == month.year && d.month == month.month
         }
-        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
+
+        val projected = recurring.flatMap { item ->
+            val t = item.transaction
+            val originalMonth = YearMonth.from(t.date)
+            val freq = t.recurrenceFrequency ?: return@flatMap emptyList()
+            if (originalMonth == month || month.isBefore(originalMonth)) return@flatMap emptyList()
+            val endDate = t.recurrenceEndDate
+            projectOccurrences(t.date, freq, monthStart, monthEnd)
+                .filter { date -> endDate == null || !date.isAfter(endDate) }
+                .map { date -> item.copy(transaction = t.copy(date = date)) }
+        }
+
+        (actualThisMonth + projected).sortedBy { it.transaction.date }
+    }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
 
     val transactions: StateFlow<List<TransactionWithDetails>> = _filter
         .flatMapLatest { f ->
@@ -101,5 +122,48 @@ class TransactionsViewModel @Inject constructor(
 
     fun togglePaid(transaction: TransactionEntity) {
         viewModelScope.launch { transactionRepository.update(transaction.copy(isPaid = !transaction.isPaid)) }
+    }
+}
+
+private fun projectOccurrences(
+    originalDate: LocalDate,
+    freq: TransactionRecurrence,
+    monthStart: LocalDate,
+    monthEnd: LocalDate,
+): List<LocalDate> {
+    val originalMonth = YearMonth.from(originalDate)
+    val selectedMonth = YearMonth.from(monthStart)
+    val monthsBetween = originalMonth.until(selectedMonth, ChronoUnit.MONTHS)
+    val cappedDay = minOf(originalDate.dayOfMonth, monthEnd.dayOfMonth)
+
+    return when (freq) {
+        TransactionRecurrence.MONTHLY ->
+            listOf(monthStart.withDayOfMonth(cappedDay))
+
+        TransactionRecurrence.BIMONTHLY ->
+            if (monthsBetween % 2 == 0L) listOf(monthStart.withDayOfMonth(cappedDay)) else emptyList()
+
+        TransactionRecurrence.QUARTERLY ->
+            if (monthsBetween % 3 == 0L) listOf(monthStart.withDayOfMonth(cappedDay)) else emptyList()
+
+        TransactionRecurrence.YEARLY ->
+            if (selectedMonth.month == originalMonth.month) listOf(monthStart.withDayOfMonth(cappedDay)) else emptyList()
+
+        TransactionRecurrence.WEEKLY -> buildList {
+            var next = originalDate
+            while (next.isBefore(monthStart)) next = next.plusWeeks(1)
+            while (!next.isAfter(monthEnd)) { add(next); next = next.plusWeeks(1) }
+        }
+
+        TransactionRecurrence.BIWEEKLY -> buildList {
+            var next = originalDate
+            while (next.isBefore(monthStart)) next = next.plusWeeks(2)
+            while (!next.isAfter(monthEnd)) { add(next); next = next.plusWeeks(2) }
+        }
+
+        TransactionRecurrence.DAILY -> buildList {
+            var current = monthStart
+            while (!current.isAfter(monthEnd)) { add(current); current = current.plusDays(1) }
+        }
     }
 }

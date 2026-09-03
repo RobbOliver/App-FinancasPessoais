@@ -48,6 +48,8 @@ class TransactionRepository @Inject constructor(
 
     fun observeScheduled(): Flow<List<TransactionWithDetails>> = transactionDao.observeScheduled()
 
+    fun observeAllRecurring(): Flow<List<TransactionWithDetails>> = transactionDao.observeAllRecurring()
+
     fun observeRecent(limit: Int): Flow<List<TransactionWithDetails>> = transactionDao.observeRecent(limit)
 
     fun observeByIdWithDetails(id: Long): Flow<TransactionWithDetails?> = transactionDao.observeByIdWithDetails(id)

@@ -114,6 +114,26 @@ interface TransactionDao {
         LEFT JOIN accounts a2 ON a2.id = t.transferToAccountId
         LEFT JOIN categories c ON c.id = t.categoryId
         LEFT JOIN fiscal_documents fd ON fd.linkedTransactionId = t.id
+        WHERE t.isRecurring = 1 AND t.isIgnored = 0
+        ORDER BY t.date ASC, t.createdAt DESC
+        """,
+    )
+    fun observeAllRecurring(): Flow<List<TransactionWithDetails>>
+
+    @Query(
+        """
+        SELECT t.*,
+            a.name AS accountName,
+            a2.name AS transferToAccountName,
+            c.name AS categoryName,
+            c.icon AS categoryIcon,
+            c.colorHex AS categoryColorHex,
+            fd.id AS fiscalDocumentId
+        FROM transactions t
+        JOIN accounts a ON a.id = t.accountId
+        LEFT JOIN accounts a2 ON a2.id = t.transferToAccountId
+        LEFT JOIN categories c ON c.id = t.categoryId
+        LEFT JOIN fiscal_documents fd ON fd.linkedTransactionId = t.id
         ORDER BY t.date DESC, t.createdAt DESC
         LIMIT :limit
         """,
