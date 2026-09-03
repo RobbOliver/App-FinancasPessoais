@@ -133,6 +133,7 @@ fun AddEditTransactionScreen(
     Scaffold(
         topBar = {
             TopAppBar(
+                expandedHeight = 40.dp,
                 title = { Text(if (uiState.isEditing) "Editar transação" else "Nova transação") },
                 navigationIcon = {
                     IconButton(onClick = onBack) {
@@ -219,30 +220,31 @@ fun AddEditTransactionScreen(
                 Switch(checked = uiState.isPaid, onCheckedChange = viewModel::updateIsPaid)
             }
 
-            AnimatedVisibility(
-                visible = !uiState.isPaid,
-                enter = expandVertically(),
-                exit = shrinkVertically(),
-            ) {
-                Column {
-                    Row(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(top = Spacing.sm),
-                        horizontalArrangement = Arrangement.SpaceBetween,
-                        verticalAlignment = Alignment.CenterVertically,
-                    ) {
-                        Text("É recorrente?")
-                        Switch(checked = uiState.isRecurring, onCheckedChange = viewModel::updateIsRecurring)
-                    }
-                    AnimatedVisibility(
-                        visible = uiState.isRecurring,
-                        enter = expandVertically(),
-                        exit = shrinkVertically(),
-                    ) {
+            Column {
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(top = Spacing.sm),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.CenterVertically,
+                ) {
+                    Text("É recorrente?")
+                    Switch(checked = uiState.isRecurring, onCheckedChange = viewModel::updateIsRecurring)
+                }
+                AnimatedVisibility(
+                    visible = uiState.isRecurring,
+                    enter = expandVertically(),
+                    exit = shrinkVertically(),
+                ) {
+                    Column {
                         RecurrenceFrequencyDropdown(
                             selected = uiState.recurrenceFrequency ?: TransactionRecurrence.MONTHLY,
                             onSelected = viewModel::updateRecurrenceFrequency,
+                            modifier = Modifier.padding(top = Spacing.sm),
+                        )
+                        EndDateField(
+                            date = uiState.recurrenceEndDate,
+                            onDateSelected = viewModel::updateRecurrenceEndDate,
                             modifier = Modifier.padding(top = Spacing.sm),
                         )
                     }
@@ -479,6 +481,54 @@ private fun CategoryDropdownItem(
         onClick = onClick,
         modifier = Modifier.padding(start = if (indented) 24.dp else 0.dp),
     )
+}
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+private fun EndDateField(
+    date: LocalDate?,
+    onDateSelected: (LocalDate?) -> Unit,
+    modifier: Modifier = Modifier,
+) {
+    var showDialog by remember { mutableStateOf(false) }
+
+    OutlinedTextField(
+        value = if (date != null) DateFormatter.formatShort(date) else "Sem prazo de término",
+        onValueChange = {},
+        readOnly = true,
+        label = { Text("Prazo de término (opcional)") },
+        trailingIcon = {
+            if (date != null) {
+                TextButton(onClick = { onDateSelected(null) }) { Text("Remover") }
+            } else {
+                TextButton(onClick = { showDialog = true }) { Text("Definir") }
+            }
+        },
+        colors = appTextFieldColors(),
+        shape = MaterialTheme.shapes.medium,
+        modifier = modifier.fillMaxWidth(),
+    )
+
+    if (showDialog) {
+        val initialMillis = (date ?: LocalDate.now()).atStartOfDay(ZoneOffset.UTC).toInstant().toEpochMilli()
+        val state = rememberDatePickerState(initialSelectedDateMillis = initialMillis)
+        DatePickerDialog(
+            onDismissRequest = { showDialog = false },
+            confirmButton = {
+                TextButton(onClick = {
+                    state.selectedDateMillis?.let { millis ->
+                        onDateSelected(Instant.ofEpochMilli(millis).atZone(ZoneOffset.UTC).toLocalDate())
+                    }
+                    showDialog = false
+                }) { Text("OK") }
+            },
+            dismissButton = {
+                TextButton(onClick = { showDialog = false }) { Text("Cancelar") }
+            },
+        ) {
+            DatePicker(state = state)
+        }
+    }
 }
 
 @OptIn(ExperimentalMaterial3Api::class)

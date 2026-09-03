@@ -26,6 +26,7 @@ import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.unit.dp
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import com.robson.financas.ui.designsystem.AppCard
 import com.robson.financas.ui.designsystem.AppFab
@@ -51,6 +52,7 @@ fun CreditCardDetailScreen(
     Scaffold(
         topBar = {
             TopAppBar(
+                expandedHeight = 40.dp,
                 title = { Text(card?.name ?: "Cartão") },
                 navigationIcon = {
                     IconButton(onClick = onBack) {

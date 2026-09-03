@@ -133,3 +133,72 @@ val MIGRATION_10_11 = object : Migration(10, 11) {
         db.execSQL("ALTER TABLE `transactions` ADD COLUMN `recurrenceFrequency` TEXT")
     }
 }
+
+/** Adiciona data de término opcional para transações recorrentes. */
+val MIGRATION_11_12 = object : Migration(11, 12) {
+    override fun migrate(db: SupportSQLiteDatabase) {
+        db.execSQL("ALTER TABLE `transactions` ADD COLUMN `recurrenceEndDate` INTEGER")
+    }
+}
+
+/**
+ * Corrige o tipo da coluna `recurrenceEndDate` de TEXT para INTEGER (LocalDate é armazenado
+ * como epoch day = Long). Dispositivos que rodaram a MIGRATION_11_12 incorreta precisam desta
+ * migração. Recria a tabela inteira já que SQLite não permite ALTER COLUMN.
+ */
+val MIGRATION_12_13 = object : Migration(12, 13) {
+    override fun migrate(db: SupportSQLiteDatabase) {
+        db.execSQL("PRAGMA foreign_keys=OFF")
+        db.execSQL(
+            """
+            CREATE TABLE `transactions_new` (
+                `id` INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT,
+                `type` TEXT NOT NULL,
+                `amountCents` INTEGER NOT NULL,
+                `accountId` INTEGER NOT NULL,
+                `transferToAccountId` INTEGER,
+                `categoryId` INTEGER,
+                `date` INTEGER NOT NULL,
+                `description` TEXT NOT NULL,
+                `createdAt` INTEGER NOT NULL,
+                `source` TEXT NOT NULL,
+                `needsReview` INTEGER NOT NULL,
+                `counterpartyName` TEXT,
+                `rawNotificationText` TEXT,
+                `isPaid` INTEGER NOT NULL,
+                `isIgnored` INTEGER NOT NULL,
+                `isFavorite` INTEGER NOT NULL,
+                `attachmentPath` TEXT,
+                `isRecurring` INTEGER NOT NULL,
+                `recurrenceFrequency` TEXT,
+                `recurrenceEndDate` INTEGER,
+                FOREIGN KEY(`accountId`) REFERENCES `accounts`(`id`) ON UPDATE NO ACTION ON DELETE RESTRICT,
+                FOREIGN KEY(`transferToAccountId`) REFERENCES `accounts`(`id`) ON UPDATE NO ACTION ON DELETE RESTRICT,
+                FOREIGN KEY(`categoryId`) REFERENCES `categories`(`id`) ON UPDATE NO ACTION ON DELETE SET NULL
+            )
+            """.trimIndent(),
+        )
+        db.execSQL(
+            """
+            INSERT INTO `transactions_new` (
+                `id`,`type`,`amountCents`,`accountId`,`transferToAccountId`,`categoryId`,`date`,
+                `description`,`createdAt`,`source`,`needsReview`,`counterpartyName`,
+                `rawNotificationText`,`isPaid`,`isIgnored`,`isFavorite`,`attachmentPath`,
+                `isRecurring`,`recurrenceFrequency`,`recurrenceEndDate`
+            )
+            SELECT
+                `id`,`type`,`amountCents`,`accountId`,`transferToAccountId`,`categoryId`,`date`,
+                `description`,`createdAt`,`source`,`needsReview`,`counterpartyName`,
+                `rawNotificationText`,`isPaid`,`isIgnored`,`isFavorite`,`attachmentPath`,
+                `isRecurring`,`recurrenceFrequency`,CAST(`recurrenceEndDate` AS INTEGER)
+            FROM `transactions`
+            """.trimIndent(),
+        )
+        db.execSQL("DROP TABLE `transactions`")
+        db.execSQL("ALTER TABLE `transactions_new` RENAME TO `transactions`")
+        db.execSQL("CREATE INDEX IF NOT EXISTS `index_transactions_accountId` ON `transactions` (`accountId`)")
+        db.execSQL("CREATE INDEX IF NOT EXISTS `index_transactions_transferToAccountId` ON `transactions` (`transferToAccountId`)")
+        db.execSQL("CREATE INDEX IF NOT EXISTS `index_transactions_categoryId` ON `transactions` (`categoryId`)")
+        db.execSQL("PRAGMA foreign_keys=ON")
+    }
+}

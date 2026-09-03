@@ -72,6 +72,7 @@ fun AccountsScreen(
     Scaffold(
         topBar = {
             TopAppBar(
+                expandedHeight = 40.dp,
                 title = { Text("Contas") },
                 navigationIcon = {
                     IconButton(onClick = onBack) {

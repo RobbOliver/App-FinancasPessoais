@@ -77,7 +77,7 @@ import com.robson.financas.data.local.entity.fiscal.UserClassificationRuleEntity
         FiscalAuditLogEntity::class,
         ProductAliasEntity::class,
     ],
-    version = 11,
+    version = 13,
     exportSchema = false,
 )
 @TypeConverters(Converters::class)

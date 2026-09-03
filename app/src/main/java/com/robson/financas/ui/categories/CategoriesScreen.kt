@@ -89,6 +89,7 @@ fun CategoriesScreen(
     Scaffold(
         topBar = {
             TopAppBar(
+                expandedHeight = 40.dp,
                 title = { Text("Categorias") },
                 navigationIcon = {
                     IconButton(onClick = onBack) {

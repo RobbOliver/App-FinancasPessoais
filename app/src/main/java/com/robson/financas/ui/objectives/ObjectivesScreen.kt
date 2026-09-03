@@ -54,6 +54,7 @@ fun ObjectivesScreen(
     Scaffold(
         topBar = {
             TopAppBar(
+                expandedHeight = 40.dp,
                 title = { Text("Objetivos") },
                 navigationIcon = {
                     IconButton(onClick = onBack) {

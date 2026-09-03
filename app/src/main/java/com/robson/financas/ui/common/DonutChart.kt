@@ -65,7 +65,7 @@ fun DonutChart(slices: List<CategoryExpenseSlice>, modifier: Modifier = Modifier
                 }
             }
         }
-        Spacer(modifier = Modifier.height(20.dp))
+        Spacer(modifier = Modifier.height(28.dp))
         slices.forEach { slice ->
             val percent = (slice.totalCents * 100 / total).toInt()
             Row(

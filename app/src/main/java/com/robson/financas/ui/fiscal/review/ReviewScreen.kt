@@ -26,6 +26,7 @@ import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.unit.dp
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import com.robson.financas.data.local.relation.fiscal.PurchaseItemWithDetails
 import com.robson.financas.ui.designsystem.AppCard
@@ -47,6 +48,7 @@ fun ReviewScreen(
     Scaffold(
         topBar = {
             TopAppBar(
+                expandedHeight = 40.dp,
                 title = { Text("Revisão (${uiState.items.size})") },
                 navigationIcon = {
                     IconButton(onClick = onBack) {

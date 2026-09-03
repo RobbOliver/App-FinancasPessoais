@@ -54,6 +54,7 @@ fun CreditCardsScreen(
     Scaffold(
         topBar = {
             TopAppBar(
+                expandedHeight = 40.dp,
                 title = { Text("Cartões de crédito") },
                 navigationIcon = {
                     IconButton(onClick = onBack) {

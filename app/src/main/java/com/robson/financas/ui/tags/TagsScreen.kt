@@ -62,6 +62,7 @@ fun TagsScreen(
     Scaffold(
         topBar = {
             TopAppBar(
+                expandedHeight = 40.dp,
                 title = { Text("Tags") },
                 navigationIcon = {
                     IconButton(onClick = onBack) {

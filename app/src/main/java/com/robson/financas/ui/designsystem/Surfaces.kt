@@ -91,6 +91,6 @@ fun HeroCard(
     modifier = modifier,
     level = SurfaceLevel.Elevated,
     shape = shape,
-    contentPadding = PaddingValues(horizontal = Spacing.xl, vertical = Spacing.lg),
+    contentPadding = PaddingValues(horizontal = Spacing.xl, vertical = Spacing.sm),
     content = content,
 )

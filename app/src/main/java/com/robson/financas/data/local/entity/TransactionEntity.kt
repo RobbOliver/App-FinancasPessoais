@@ -55,4 +55,5 @@ data class TransactionEntity(
     val attachmentPath: String? = null,
     val isRecurring: Boolean = false,
     val recurrenceFrequency: TransactionRecurrence? = null,
+    val recurrenceEndDate: LocalDate? = null,
 )

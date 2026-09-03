@@ -46,7 +46,7 @@ fun MoreScreen(
     onNavigateToBrands: () -> Unit,
 ) {
     Scaffold(
-        topBar = { TopAppBar(title = { Text("Mais opções") }) },
+        topBar = { TopAppBar(expandedHeight = 40.dp, title = { Text("Mais opções") }) },
     ) { innerPadding ->
         LazyColumn(modifier = Modifier.fillMaxWidth().padding(innerPadding)) {
             item { SectionHeader("Gerenciar") }

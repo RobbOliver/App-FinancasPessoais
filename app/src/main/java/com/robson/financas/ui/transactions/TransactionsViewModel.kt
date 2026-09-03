@@ -31,6 +31,7 @@ data class TransactionsFilterState(
     val onlyNeedsReview: Boolean = false,
     val onlyScheduled: Boolean = false,
     val onlyFavorite: Boolean = false,
+    val excludeScheduled: Boolean = true,
 )
 
 @OptIn(kotlinx.coroutines.ExperimentalCoroutinesApi::class)
@@ -58,6 +59,10 @@ class TransactionsViewModel @Inject constructor(
         .observeAll()
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
 
+    val scheduledTransactions: StateFlow<List<TransactionWithDetails>> = transactionRepository
+        .observeScheduled()
+        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
+
     val transactions: StateFlow<List<TransactionWithDetails>> = _filter
         .flatMapLatest { f ->
             val today = LocalDate.now()
@@ -72,6 +77,7 @@ class TransactionsViewModel @Inject constructor(
                 f.onlyScheduled,
                 f.onlyFavorite,
                 f.tagId,
+                f.excludeScheduled,
             )
         }
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())

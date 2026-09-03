@@ -26,6 +26,7 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.unit.dp
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import com.robson.financas.data.local.relation.fiscal.PurchaseItemWithDetails
 import com.robson.financas.ui.common.ConfirmDeleteDialog
@@ -50,6 +51,7 @@ fun FiscalDocumentDetailScreen(
     Scaffold(
         topBar = {
             TopAppBar(
+                expandedHeight = 40.dp,
                 title = { Text(document?.let { DateFormatter.formatShort(it.issuedAt) } ?: "Nota fiscal") },
                 navigationIcon = {
                     IconButton(onClick = onBack) {

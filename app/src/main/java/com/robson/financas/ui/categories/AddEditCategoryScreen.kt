@@ -30,6 +30,7 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.unit.dp
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import com.robson.financas.data.local.entity.CategoryType
 import com.robson.financas.ui.common.ColorPicker
@@ -64,6 +65,7 @@ fun AddEditCategoryScreen(
     Scaffold(
         topBar = {
             TopAppBar(
+                expandedHeight = 40.dp,
                 title = { Text(if (uiState.isEditing) "Editar categoria" else "Nova categoria") },
                 navigationIcon = {
                     IconButton(onClick = onBack) {

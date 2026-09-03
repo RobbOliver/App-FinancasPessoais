@@ -45,6 +45,7 @@ data class AddEditTransactionUiState(
     val isSaved: Boolean = false,
     val isRecurring: Boolean = false,
     val recurrenceFrequency: TransactionRecurrence? = TransactionRecurrence.MONTHLY,
+    val recurrenceEndDate: LocalDate? = null,
 ) {
     val isEditing: Boolean get() = existingTransaction != null
 
@@ -107,6 +108,7 @@ class AddEditTransactionViewModel @Inject constructor(
                             existingTransaction = transaction,
                             isRecurring = transaction.isRecurring,
                             recurrenceFrequency = transaction.recurrenceFrequency ?: TransactionRecurrence.MONTHLY,
+                            recurrenceEndDate = transaction.recurrenceEndDate,
                         )
                     }
                 }
@@ -159,11 +161,10 @@ class AddEditTransactionViewModel @Inject constructor(
     fun updateCategory(categoryId: Long?) = _uiState.update { it.copy(categoryId = categoryId) }
     fun updateDate(date: LocalDate) = _uiState.update { it.copy(date = date) }
     fun updateDescription(description: String) = _uiState.update { it.copy(description = description) }
-    fun updateIsPaid(isPaid: Boolean) = _uiState.update {
-        it.copy(isPaid = isPaid, isRecurring = if (isPaid) false else it.isRecurring)
-    }
+    fun updateIsPaid(isPaid: Boolean) = _uiState.update { it.copy(isPaid = isPaid) }
     fun updateIsRecurring(value: Boolean) = _uiState.update { it.copy(isRecurring = value) }
     fun updateRecurrenceFrequency(freq: TransactionRecurrence) = _uiState.update { it.copy(recurrenceFrequency = freq) }
+    fun updateRecurrenceEndDate(date: LocalDate?) = _uiState.update { it.copy(recurrenceEndDate = date) }
     fun toggleFavorite() = _uiState.update { it.copy(isFavorite = !it.isFavorite) }
     fun updateIsIgnored(isIgnored: Boolean) = _uiState.update { it.copy(isIgnored = isIgnored) }
     fun updateAttachmentPath(path: String?) = _uiState.update { it.copy(attachmentPath = path) }
@@ -201,8 +202,9 @@ class AddEditTransactionViewModel @Inject constructor(
                 isIgnored = state.isIgnored,
                 isFavorite = state.isFavorite,
                 attachmentPath = state.attachmentPath,
-                isRecurring = state.isRecurring && !state.isPaid,
-                recurrenceFrequency = if (state.isRecurring && !state.isPaid) state.recurrenceFrequency else null,
+                isRecurring = state.isRecurring,
+                recurrenceFrequency = if (state.isRecurring) state.recurrenceFrequency else null,
+                recurrenceEndDate = if (state.isRecurring) state.recurrenceEndDate else null,
             )
             val savedId = if (state.existingTransaction != null) {
                 transactionRepository.update(entity)

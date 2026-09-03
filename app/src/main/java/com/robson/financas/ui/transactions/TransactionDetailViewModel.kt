@@ -4,6 +4,7 @@ import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.robson.financas.data.local.relation.TransactionWithDetails
+import java.time.LocalDate
 import com.robson.financas.data.local.relation.fiscal.PurchaseItemWithDetails
 import com.robson.financas.data.repository.TransactionRepository
 import com.robson.financas.data.repository.fiscal.FiscalDocumentRepository
@@ -60,6 +61,13 @@ class TransactionDetailViewModel @Inject constructor(
         viewModelScope.launch {
             transactionRepository.delete(transaction)
             _deleted.value = true
+        }
+    }
+
+    fun markAsPaid(paidDate: LocalDate) {
+        val transaction = uiState.value.transaction?.transaction ?: return
+        viewModelScope.launch {
+            transactionRepository.update(transaction.copy(isPaid = true, date = paidDate))
         }
     }
 }

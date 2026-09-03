@@ -50,6 +50,7 @@ fun QrScanResultScreen(
     Scaffold(
         topBar = {
             TopAppBar(
+                expandedHeight = 40.dp,
                 title = { Text("QR Code lido") },
                 navigationIcon = {
                     IconButton(onClick = onBack) {

@@ -61,6 +61,7 @@ interface TransactionDao {
           AND (:onlyNeedsReview = 0 OR t.needsReview = 1)
           AND (:onlyScheduled = 0 OR t.isPaid = 0)
           AND (:onlyFavorite = 0 OR t.isFavorite = 1)
+          AND (:excludeScheduled = 0 OR t.isPaid = 1)
           AND (:tagId IS NULL OR EXISTS (
               SELECT 1 FROM transaction_tag_cross_refs x WHERE x.transactionId = t.id AND x.tagId = :tagId
           ))
@@ -76,7 +77,28 @@ interface TransactionDao {
         onlyScheduled: Boolean = false,
         onlyFavorite: Boolean = false,
         tagId: Long? = null,
+        excludeScheduled: Boolean = false,
     ): Flow<List<TransactionWithDetails>>
+
+    @Query(
+        """
+        SELECT t.*,
+            a.name AS accountName,
+            a2.name AS transferToAccountName,
+            c.name AS categoryName,
+            c.icon AS categoryIcon,
+            c.colorHex AS categoryColorHex,
+            fd.id AS fiscalDocumentId
+        FROM transactions t
+        JOIN accounts a ON a.id = t.accountId
+        LEFT JOIN accounts a2 ON a2.id = t.transferToAccountId
+        LEFT JOIN categories c ON c.id = t.categoryId
+        LEFT JOIN fiscal_documents fd ON fd.linkedTransactionId = t.id
+        WHERE t.isPaid = 0 AND t.isIgnored = 0
+        ORDER BY t.date ASC, t.createdAt DESC
+        """,
+    )
+    fun observeScheduled(): Flow<List<TransactionWithDetails>>
 
     @Query(
         """

@@ -1,5 +1,6 @@
 package com.robson.financas.ui.transactions
 
+import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
@@ -9,12 +10,18 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material.icons.filled.CheckCircle
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material.icons.filled.ReceiptLong
+import androidx.compose.material3.AlertDialog
+import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.FilterChip
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
@@ -22,7 +29,9 @@ import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Tab
 import androidx.compose.material3.TabRow
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBar
+import com.robson.financas.ui.theme.GreenIncome
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
@@ -30,7 +39,10 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.unit.dp
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import com.robson.financas.data.local.entity.TransactionType
 import com.robson.financas.data.local.relation.TransactionWithDetails
@@ -43,6 +55,7 @@ import com.robson.financas.ui.fiscal.common.ClassificationStatusPill
 import com.robson.financas.ui.theme.Spacing
 import com.robson.financas.util.CurrencyFormatter
 import com.robson.financas.util.DateFormatter
+import java.time.LocalDate
 
 private enum class DetailTab { GERAL, ITENS }
 
@@ -57,6 +70,7 @@ fun TransactionDetailScreen(
     val uiState by viewModel.uiState.collectAsState()
     var selectedTab by remember { mutableStateOf(DetailTab.GERAL) }
     var showDeleteDialog by remember { mutableStateOf(false) }
+    var showPaymentDateDialog by remember { mutableStateOf(false) }
 
     LaunchedEffect(uiState.deleted) {
         if (uiState.deleted) onBack()
@@ -65,8 +79,24 @@ fun TransactionDetailScreen(
     val details = uiState.transaction
 
     Scaffold(
+        bottomBar = {
+            if (details != null && !details.transaction.isPaid) {
+                Button(
+                    onClick = { showPaymentDateDialog = true },
+                    colors = ButtonDefaults.buttonColors(containerColor = GreenIncome),
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(Spacing.lg),
+                    shape = MaterialTheme.shapes.medium,
+                ) {
+                    Icon(Icons.Filled.CheckCircle, contentDescription = null, modifier = Modifier.padding(end = Spacing.sm))
+                    Text("Marcar como pago", style = MaterialTheme.typography.labelLarge)
+                }
+            }
+        },
         topBar = {
             TopAppBar(
+                expandedHeight = 40.dp,
                 title = { Text(details?.transaction?.description?.ifBlank { details.categoryName ?: "Transação" } ?: "Transação") },
                 navigationIcon = {
                     IconButton(onClick = onBack) {
@@ -124,6 +154,71 @@ fun TransactionDetailScreen(
             onDismiss = { showDeleteDialog = false },
         )
     }
+
+    if (showPaymentDateDialog) {
+        PaymentDateDialog(
+            onConfirm = { date ->
+                viewModel.markAsPaid(date)
+                showPaymentDateDialog = false
+            },
+            onDismiss = { showPaymentDateDialog = false },
+        )
+    }
+}
+
+@Composable
+private fun PaymentDateDialog(
+    onConfirm: (LocalDate) -> Unit,
+    onDismiss: () -> Unit,
+) {
+    val today = LocalDate.now()
+    var selectedDate by remember { mutableStateOf(today) }
+
+    val shortcuts = listOf(
+        "Hoje" to today,
+        "Ontem" to today.minusDays(1),
+        "há 2 dias" to today.minusDays(2),
+        "há 15 dias" to today.minusDays(15),
+    )
+
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        title = { Text("Quando foi pago?") },
+        text = {
+            Column(verticalArrangement = Arrangement.spacedBy(Spacing.md)) {
+                Text(
+                    text = DateFormatter.formatShort(selectedDate),
+                    style = MaterialTheme.typography.headlineSmall,
+                    textAlign = TextAlign.Center,
+                    modifier = Modifier.fillMaxWidth(),
+                )
+                Row(
+                    modifier = Modifier.horizontalScroll(rememberScrollState()),
+                    horizontalArrangement = Arrangement.spacedBy(Spacing.sm),
+                    verticalAlignment = Alignment.CenterVertically,
+                ) {
+                    shortcuts.forEach { (label, date) ->
+                        FilterChip(
+                            selected = selectedDate == date,
+                            onClick = { selectedDate = date },
+                            label = { Text(label) },
+                        )
+                    }
+                }
+            }
+        },
+        confirmButton = {
+            Button(
+                onClick = { onConfirm(selectedDate) },
+                colors = ButtonDefaults.buttonColors(containerColor = GreenIncome),
+            ) {
+                Text("Confirmar")
+            }
+        },
+        dismissButton = {
+            TextButton(onClick = onDismiss) { Text("Cancelar") }
+        },
+    )
 }
 
 @Composable

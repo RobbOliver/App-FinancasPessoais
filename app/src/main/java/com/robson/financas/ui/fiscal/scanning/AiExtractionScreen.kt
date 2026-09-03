@@ -64,6 +64,7 @@ fun AiExtractionScreen(
     Scaffold(
         topBar = {
             TopAppBar(
+                expandedHeight = 40.dp,
                 title = { Text("Itens extraídos por IA") },
                 navigationIcon = {
                     IconButton(onClick = onBack) {

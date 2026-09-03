@@ -71,7 +71,7 @@ fun DashboardScreen(
     var showActionSheet by remember { mutableStateOf(false) }
 
     Scaffold(
-        topBar = { TopAppBar(title = { Text("Resumo") }, expandedHeight = 48.dp) },
+        topBar = { TopAppBar(title = { Text("Resumo") }, expandedHeight = 40.dp) },
         floatingActionButton = {
             AppFab(onClick = { showActionSheet = true }, contentDescription = "Nova transação", icon = Icons.Filled.Add)
         },
@@ -173,7 +173,7 @@ fun DashboardScreen(
                             slices = uiState.expenseByCategory,
                             modifier = Modifier
                                 .fillMaxWidth()
-                                .padding(top = Spacing.lg),
+                                .padding(top = Spacing.xl),
                         )
                     }
                 }

@@ -1,5 +1,18 @@
 package com.robson.financas.ui.transactions
 
+import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.core.FastOutSlowInEasing
+import androidx.compose.animation.core.RepeatMode
+import androidx.compose.animation.core.animateFloat
+import androidx.compose.animation.core.infiniteRepeatable
+import androidx.compose.animation.core.rememberInfiniteTransition
+import androidx.compose.animation.core.tween
+import androidx.compose.animation.expandVertically
+import androidx.compose.animation.shrinkVertically
+import androidx.compose.foundation.Canvas
+import androidx.compose.foundation.background
+import androidx.compose.foundation.border
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -8,10 +21,12 @@ import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material3.DropdownMenuItem
@@ -36,9 +51,13 @@ import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import com.robson.financas.data.local.entity.TransactionEntity
+import com.robson.financas.data.local.relation.TransactionWithDetails
 import com.robson.financas.ui.common.ConfirmDeleteDialog
 import com.robson.financas.ui.common.TransactionListItem
 import com.robson.financas.ui.designsystem.AppCard
@@ -46,9 +65,12 @@ import com.robson.financas.ui.designsystem.AppFab
 import com.robson.financas.ui.designsystem.EmptyState
 import com.robson.financas.ui.designsystem.FabClearance
 import com.robson.financas.ui.designsystem.appTextFieldColors
+import com.robson.financas.ui.theme.HudCyan
 import com.robson.financas.ui.theme.Spacing
 import com.robson.financas.util.DateFormatter
 import kotlinx.coroutines.launch
+import kotlin.math.PI
+import kotlin.math.sin
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -63,20 +85,28 @@ fun TransactionsScreen(
     val categories by viewModel.categories.collectAsState()
     val tags by viewModel.tags.collectAsState()
     val transactions by viewModel.transactions.collectAsState()
+    val scheduledTransactions by viewModel.scheduledTransactions.collectAsState()
     var pendingDelete by remember { mutableStateOf<TransactionEntity?>(null) }
     val snackbarHostState = remember { SnackbarHostState() }
     val coroutineScope = rememberCoroutineScope()
+    var scheduledPanelOpen by remember { mutableStateOf(false) }
 
     val grouped = remember(transactions) { transactions.groupBy { it.transaction.date } }
+    val groupedEntries = remember(grouped) { grouped.entries.toList() }
 
     Scaffold(
-        topBar = { TopAppBar(title = { Text("Transações") }) },
+        topBar = { TopAppBar(expandedHeight = 40.dp, title = { Text("Transações") }) },
         snackbarHost = { SnackbarHost(snackbarHostState) },
         floatingActionButton = {
             AppFab(onClick = onAddTransaction, contentDescription = "Nova transação", icon = Icons.Filled.Add)
         },
     ) { innerPadding ->
-        Column(modifier = Modifier.padding(innerPadding)) {
+        Column(
+            modifier = Modifier
+                .padding(innerPadding)
+                .fillMaxSize(),
+        ) {
+            // ── Filtros ──────────────────────────────────────────────────────
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
@@ -130,29 +160,53 @@ fun TransactionsScreen(
                     label = { Text("Pendências") },
                 )
                 FilterChip(
-                    selected = filter.onlyScheduled,
-                    onClick = { viewModel.toggleScheduled(!filter.onlyScheduled) },
-                    label = { Text("Agendadas") },
-                )
-                FilterChip(
                     selected = filter.onlyFavorite,
                     onClick = { viewModel.toggleFavorite(!filter.onlyFavorite) },
                     label = { Text("Favoritas") },
                 )
             }
 
+            // ── Painel cyberpunk de agendados ─────────────────────────────────
+            AnimatedVisibility(
+                visible = scheduledPanelOpen,
+                enter = expandVertically(tween(400, easing = FastOutSlowInEasing)),
+                exit = shrinkVertically(tween(300, easing = FastOutSlowInEasing)),
+            ) {
+                ScheduledPanel(
+                    items = scheduledTransactions,
+                    onClickItem = onEditTransaction,
+                )
+            }
+
+            // ── Conteúdo principal ────────────────────────────────────────────
             if (transactions.isEmpty()) {
-                Box(
-                    modifier = Modifier
-                        .fillMaxSize()
-                        .padding(Spacing.lg),
-                    contentAlignment = Alignment.Center,
-                ) {
-                    EmptyState(
-                        icon = Icons.Filled.Add,
-                        title = "Nenhuma transação encontrada",
-                        subtitle = "Ajuste os filtros ou lance uma nova transação.",
-                    )
+                Column(modifier = Modifier.fillMaxSize()) {
+                    // Botão AGENDADOS mesmo sem lista
+                    Row(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(horizontal = Spacing.lg, vertical = Spacing.xs),
+                        horizontalArrangement = Arrangement.End,
+                        verticalAlignment = Alignment.CenterVertically,
+                    ) {
+                        ScheduledTabButton(
+                            isOpen = scheduledPanelOpen,
+                            count = scheduledTransactions.size,
+                            onClick = { scheduledPanelOpen = !scheduledPanelOpen },
+                        )
+                    }
+                    Box(
+                        modifier = Modifier
+                            .weight(1f)
+                            .padding(Spacing.lg),
+                        contentAlignment = Alignment.Center,
+                    ) {
+                        EmptyState(
+                            icon = Icons.Filled.Add,
+                            title = "Nenhuma transação encontrada",
+                            subtitle = "Ajuste os filtros ou lance uma nova transação.",
+                        )
+                    }
                 }
             } else {
                 LazyColumn(
@@ -165,15 +219,33 @@ fun TransactionsScreen(
                     ),
                     verticalArrangement = Arrangement.spacedBy(Spacing.sm),
                 ) {
-                    grouped.forEach { (date, items) ->
-                        item {
-                            Text(
-                                text = DateFormatter.formatDayMonth(date),
-                                style = MaterialTheme.typography.titleSmall,
-                                modifier = Modifier.padding(top = Spacing.sm, bottom = Spacing.xs),
-                            )
+                    groupedEntries.forEachIndexed { dateIndex, (date, dateItems) ->
+                        item(key = "header_$date") {
+                            Row(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .padding(
+                                        top = if (dateIndex == 0) Spacing.sm else Spacing.lg,
+                                        bottom = Spacing.xs,
+                                    ),
+                                horizontalArrangement = Arrangement.SpaceBetween,
+                                verticalAlignment = Alignment.CenterVertically,
+                            ) {
+                                Text(
+                                    text = DateFormatter.formatDayMonth(date),
+                                    style = MaterialTheme.typography.titleSmall,
+                                )
+                                // Botão "AGENDADOS" só aparece no topo (primeiro grupo de datas)
+                                if (dateIndex == 0) {
+                                    ScheduledTabButton(
+                                        isOpen = scheduledPanelOpen,
+                                        count = scheduledTransactions.size,
+                                        onClick = { scheduledPanelOpen = !scheduledPanelOpen },
+                                    )
+                                }
+                            }
                         }
-                        items(items, key = { it.transaction.id }) { item ->
+                        items(dateItems, key = { it.transaction.id }) { item ->
                             AppCard(
                                 modifier = Modifier.fillMaxWidth().animateItem(),
                                 contentPadding = PaddingValues(0.dp),
@@ -204,6 +276,173 @@ fun TransactionsScreen(
             },
             onDismiss = { pendingDelete = null },
         )
+    }
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Botão "AGENDADOS" — fica na linha da data do topo da lista
+// ─────────────────────────────────────────────────────────────────────────────
+@Composable
+private fun ScheduledTabButton(
+    isOpen: Boolean,
+    count: Int,
+    onClick: () -> Unit,
+    modifier: Modifier = Modifier,
+) {
+    val bgAlpha = if (isOpen) 1f else 0.75f
+    Row(
+        modifier = modifier
+            .clip(RoundedCornerShape(6.dp))
+            .background(HudCyan.copy(alpha = bgAlpha))
+            .border(1.dp, HudCyan, RoundedCornerShape(6.dp))
+            .clickable(onClick = onClick)
+            .padding(horizontal = 8.dp, vertical = 4.dp),
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.spacedBy(4.dp),
+    ) {
+        Text(
+            text = "AGENDADOS",
+            style = MaterialTheme.typography.labelSmall,
+            color = Color.Black,
+        )
+        if (count > 0) {
+            Box(
+                modifier = Modifier
+                    .clip(RoundedCornerShape(4.dp))
+                    .background(Color.Black.copy(alpha = 0.22f))
+                    .padding(horizontal = 4.dp, vertical = 1.dp),
+            ) {
+                Text(
+                    text = "$count",
+                    style = MaterialTheme.typography.labelSmall,
+                    color = Color.Black,
+                )
+            }
+        }
+    }
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Painel de agendados — abre acima da lista com animação de raios
+// ─────────────────────────────────────────────────────────────────────────────
+@Composable
+private fun ScheduledPanel(
+    items: List<TransactionWithDetails>,
+    onClickItem: (Long) -> Unit,
+) {
+    val infiniteTransition = rememberInfiniteTransition(label = "lightning")
+    val lightningProgress by infiniteTransition.animateFloat(
+        initialValue = 0f,
+        targetValue = 1f,
+        animationSpec = infiniteRepeatable(tween(1100, easing = FastOutSlowInEasing), RepeatMode.Restart),
+        label = "lightningProgress",
+    )
+
+    val grouped = remember(items) {
+        items.sortedByDescending { it.transaction.date }.groupBy { it.transaction.date }
+    }
+
+    Column(
+        modifier = Modifier
+            .fillMaxWidth()
+            .height(228.dp)
+            .background(MaterialTheme.colorScheme.surfaceContainerHighest)
+            .border(
+                width = 1.5.dp,
+                color = HudCyan.copy(alpha = 0.6f),
+                shape = RoundedCornerShape(bottomStart = 10.dp, bottomEnd = 10.dp),
+            ),
+    ) {
+        // Raios animados na borda superior
+        Canvas(
+            modifier = Modifier
+                .fillMaxWidth()
+                .height(5.dp),
+        ) {
+            val segments = 12
+            val segW = size.width / segments
+            var prevY = size.height / 2f
+            for (i in 0 until segments) {
+                val x1 = i * segW
+                val x2 = (i + 1) * segW
+                val wave = sin((lightningProgress + i * 0.13f) * PI.toFloat() * 2)
+                val spike = sin((lightningProgress * 3.7f + i * 0.4f) * PI.toFloat() * 2)
+                val nextY = (size.height / 2f + wave * size.height * 1.2f + spike * size.height * 0.8f)
+                    .coerceIn(0f, size.height)
+                val alpha = 0.5f + 0.5f * ((wave + 1f) / 2f)
+                drawLine(
+                    color = HudCyan.copy(alpha = alpha),
+                    start = Offset(x1, prevY),
+                    end = Offset(x2, nextY),
+                    strokeWidth = 2.dp.toPx(),
+                )
+                // raio secundário mais fino
+                drawLine(
+                    color = HudCyan.copy(alpha = alpha * 0.35f),
+                    start = Offset(x1, prevY + 1.dp.toPx()),
+                    end = Offset(x2, nextY - 1.dp.toPx()),
+                    strokeWidth = 1.dp.toPx(),
+                )
+                prevY = nextY
+            }
+        }
+
+        if (items.isEmpty()) {
+            Box(
+                modifier = Modifier.fillMaxSize(),
+                contentAlignment = Alignment.Center,
+            ) {
+                Text(
+                    "Nenhuma transação agendada",
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                )
+            }
+        } else {
+            LazyColumn(
+                modifier = Modifier.fillMaxSize(),
+                contentPadding = PaddingValues(horizontal = Spacing.lg, vertical = Spacing.xs),
+                verticalArrangement = Arrangement.spacedBy(Spacing.sm),
+                reverseLayout = true,
+            ) {
+                grouped.entries.toList().forEachIndexed { dateIndex, (date, dateItems) ->
+                    item(key = "sched_header_$date") {
+                        Text(
+                            text = DateFormatter.formatDayMonth(date),
+                            style = MaterialTheme.typography.titleSmall,
+                            color = HudCyan,
+                            modifier = Modifier.padding(
+                                top = if (dateIndex == 0) Spacing.xs else Spacing.sm,
+                                bottom = Spacing.xs,
+                            ),
+                        )
+                    }
+                    items(dateItems, key = { "sched_${it.transaction.id}" }) { item ->
+                        // Card "invertido": fundo cyan tintado em vez do cinza escuro padrão
+                        Box(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .clip(MaterialTheme.shapes.medium)
+                                .background(HudCyan.copy(alpha = 0.10f))
+                                .border(
+                                    width = 1.dp,
+                                    color = HudCyan.copy(alpha = 0.35f),
+                                    shape = MaterialTheme.shapes.medium,
+                                )
+                                .clickable { onClickItem(item.transaction.id) },
+                        ) {
+                            TransactionListItem(
+                                item = item,
+                                onClick = { onClickItem(item.transaction.id) },
+                                onDeleteClick = {},
+                                onTogglePaid = {},
+                                onUseAsTemplate = {},
+                            )
+                        }
+                    }
+                }
+            }
+        }
     }
 }
 

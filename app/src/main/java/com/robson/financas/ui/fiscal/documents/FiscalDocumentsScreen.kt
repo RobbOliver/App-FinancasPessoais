@@ -56,6 +56,7 @@ fun FiscalDocumentsScreen(
     Scaffold(
         topBar = {
             TopAppBar(
+                expandedHeight = 40.dp,
                 title = { Text("Notas fiscais") },
                 navigationIcon = {
                     IconButton(onClick = onBack) {

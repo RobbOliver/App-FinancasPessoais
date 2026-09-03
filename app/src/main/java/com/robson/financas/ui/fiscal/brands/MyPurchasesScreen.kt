@@ -80,7 +80,7 @@ fun MyPurchasesScreen(
                         Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Voltar")
                     }
                 },
-                expandedHeight = 48.dp,
+                expandedHeight = 40.dp,
             )
         },
     ) { innerPadding ->

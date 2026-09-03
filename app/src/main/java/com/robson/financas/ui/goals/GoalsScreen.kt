@@ -58,7 +58,7 @@ fun GoalsScreen(onOpenGoal: (Long) -> Unit, viewModel: GoalsViewModel = hiltView
     val balanceCents = plannedCents - spentCents
 
     Scaffold(
-        topBar = { TopAppBar(title = { Text("Metas") }) },
+        topBar = { TopAppBar(expandedHeight = 40.dp, title = { Text("Metas") }) },
         floatingActionButton = {
             AppFab(onClick = viewModel::openNewGoal, contentDescription = "Nova meta", icon = Icons.Filled.Add)
         },
