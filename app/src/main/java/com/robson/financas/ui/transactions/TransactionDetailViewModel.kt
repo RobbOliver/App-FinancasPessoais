@@ -64,10 +64,35 @@ class TransactionDetailViewModel @Inject constructor(
         }
     }
 
-    fun markAsPaid(paidDate: LocalDate) {
+    fun markAsPaid(paidDate: LocalDate, paidAmountCents: Long) {
         val transaction = uiState.value.transaction?.transaction ?: return
         viewModelScope.launch {
-            transactionRepository.update(transaction.copy(isPaid = true, date = paidDate))
+            transactionRepository.update(transaction.copy(isPaid = true, date = paidDate, amountCents = paidAmountCents))
+        }
+    }
+
+    fun advancePayment(advanceCents: Long, date: LocalDate) {
+        val transaction = uiState.value.transaction?.transaction ?: return
+        if (advanceCents <= 0 || advanceCents > transaction.amountCents) return
+        viewModelScope.launch {
+            val remaining = transaction.amountCents - advanceCents
+            val advanceTransaction = transaction.copy(
+                id = 0,
+                amountCents = advanceCents,
+                date = date,
+                isPaid = true,
+                isRecurring = false,
+                recurrenceFrequency = null,
+                recurrenceEndDate = null,
+                parentTransactionId = transaction.id,
+            )
+            transactionRepository.create(advanceTransaction)
+            transactionRepository.update(
+                transaction.copy(
+                    amountCents = remaining,
+                    isPaid = remaining == 0L,
+                ),
+            )
         }
     }
 }

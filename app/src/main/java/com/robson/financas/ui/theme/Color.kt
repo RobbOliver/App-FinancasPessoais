@@ -35,6 +35,7 @@ val OnSurfaceMutedGray = TextSecondary
 
 val RedExpense = Color(0xFFFF453A)
 val GreenIncome = Color(0xFF30D158)
+val BlueAdvance = Color(0xFF0A84FF)
 
 // Alphas usados pelos overlays de textura (grão/grade de pontos) em Texture.kt —
 // deliberadamente muito baixos, nunca sobre texto de leitura densa.

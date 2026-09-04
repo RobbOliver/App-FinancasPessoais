@@ -51,7 +51,12 @@ interface GoalDao {
             (SELECT GROUP_CONCAT(c.name, ', ') FROM categories c
              JOIN goal_categories gc ON gc.categoryId = c.id WHERE gc.goalId = g.id) AS categoryNames,
             COALESCE((SELECT SUM(t.amountCents) FROM transactions t
-                      WHERE t.categoryId IN (SELECT categoryId FROM goal_categories WHERE goalId = g.id)
+                      WHERE t.categoryId IN (
+                          SELECT categoryId FROM goal_categories WHERE goalId = g.id
+                          UNION
+                          SELECT c2.id FROM categories c2
+                          WHERE c2.parentCategoryId IN (SELECT categoryId FROM goal_categories WHERE goalId = g.id)
+                      )
                         AND t.type = 'EXPENSE' AND t.date >= :startDate AND t.date <= :endDate
                         AND t.isPaid = 1 AND t.isIgnored = 0), 0) AS spentCents
         FROM goals g
@@ -65,7 +70,8 @@ interface GoalDao {
         """
         SELECT c.id AS categoryId, c.name AS categoryName, gc.allocatedCents AS allocatedCents,
             COALESCE((SELECT SUM(t.amountCents) FROM transactions t
-                      WHERE t.categoryId = c.id AND t.type = 'EXPENSE' AND t.date >= :startDate AND t.date <= :endDate
+                      WHERE (t.categoryId = c.id OR t.categoryId IN (SELECT id FROM categories WHERE parentCategoryId = c.id))
+                        AND t.type = 'EXPENSE' AND t.date >= :startDate AND t.date <= :endDate
                         AND t.isPaid = 1 AND t.isIgnored = 0), 0) AS spentCents
         FROM goal_categories gc
         JOIN categories c ON c.id = gc.categoryId

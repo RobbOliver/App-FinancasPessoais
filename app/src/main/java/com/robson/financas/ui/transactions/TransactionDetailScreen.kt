@@ -13,6 +13,7 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material.icons.filled.Bolt
 import androidx.compose.material.icons.filled.CheckCircle
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.Edit
@@ -32,6 +33,8 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBar
 import com.robson.financas.ui.theme.GreenIncome
+import com.robson.financas.ui.theme.BlueAdvance
+import com.robson.financas.ui.common.CurrencyInputField
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
@@ -71,6 +74,7 @@ fun TransactionDetailScreen(
     var selectedTab by remember { mutableStateOf(DetailTab.GERAL) }
     var showDeleteDialog by remember { mutableStateOf(false) }
     var showPaymentDateDialog by remember { mutableStateOf(false) }
+    var showAdvanceDialog by remember { mutableStateOf(false) }
 
     LaunchedEffect(uiState.deleted) {
         if (uiState.deleted) onBack()
@@ -81,16 +85,32 @@ fun TransactionDetailScreen(
     Scaffold(
         bottomBar = {
             if (details != null && !details.transaction.isPaid) {
-                Button(
-                    onClick = { showPaymentDateDialog = true },
-                    colors = ButtonDefaults.buttonColors(containerColor = GreenIncome),
+                Row(
                     modifier = Modifier
                         .fillMaxWidth()
                         .padding(Spacing.lg),
-                    shape = MaterialTheme.shapes.medium,
+                    horizontalArrangement = Arrangement.spacedBy(Spacing.sm),
                 ) {
-                    Icon(Icons.Filled.CheckCircle, contentDescription = null, modifier = Modifier.padding(end = Spacing.sm))
-                    Text("Marcar como pago", style = MaterialTheme.typography.labelLarge)
+                    Button(
+                        onClick = { showPaymentDateDialog = true },
+                        colors = ButtonDefaults.buttonColors(containerColor = GreenIncome),
+                        modifier = Modifier.weight(1f),
+                        shape = MaterialTheme.shapes.medium,
+                    ) {
+                        Icon(Icons.Filled.CheckCircle, contentDescription = null, modifier = Modifier.padding(end = Spacing.sm))
+                        Text("Marcar como pago", style = MaterialTheme.typography.labelLarge)
+                    }
+                    if (details.transaction.type == TransactionType.INCOME) {
+                        Button(
+                            onClick = { showAdvanceDialog = true },
+                            colors = ButtonDefaults.buttonColors(containerColor = BlueAdvance),
+                            modifier = Modifier.weight(1f),
+                            shape = MaterialTheme.shapes.medium,
+                        ) {
+                            Icon(Icons.Filled.Bolt, contentDescription = null, modifier = Modifier.padding(end = Spacing.sm))
+                            Text("Adiantamento", style = MaterialTheme.typography.labelLarge)
+                        }
+                    }
                 }
             }
         },
@@ -155,24 +175,38 @@ fun TransactionDetailScreen(
         )
     }
 
-    if (showPaymentDateDialog) {
+    if (showPaymentDateDialog && details != null) {
         PaymentDateDialog(
-            onConfirm = { date ->
-                viewModel.markAsPaid(date)
+            initialAmountCents = details.transaction.amountCents,
+            onConfirm = { date, amount ->
+                viewModel.markAsPaid(date, amount)
                 showPaymentDateDialog = false
             },
             onDismiss = { showPaymentDateDialog = false },
+        )
+    }
+
+    if (showAdvanceDialog && details != null) {
+        AdvanceDialog(
+            maxAmountCents = details.transaction.amountCents,
+            onConfirm = { amount, date ->
+                viewModel.advancePayment(amount, date)
+                showAdvanceDialog = false
+            },
+            onDismiss = { showAdvanceDialog = false },
         )
     }
 }
 
 @Composable
 private fun PaymentDateDialog(
-    onConfirm: (LocalDate) -> Unit,
+    initialAmountCents: Long,
+    onConfirm: (LocalDate, Long) -> Unit,
     onDismiss: () -> Unit,
 ) {
     val today = LocalDate.now()
     var selectedDate by remember { mutableStateOf(today) }
+    var amountCents by remember { mutableStateOf(initialAmountCents) }
 
     val shortcuts = listOf(
         "Hoje" to today,
@@ -186,6 +220,12 @@ private fun PaymentDateDialog(
         title = { Text("Quando foi pago?") },
         text = {
             Column(verticalArrangement = Arrangement.spacedBy(Spacing.md)) {
+                CurrencyInputField(
+                    amountCents = amountCents,
+                    onAmountChange = { amountCents = it },
+                    label = "Valor pago",
+                    modifier = Modifier.fillMaxWidth(),
+                )
                 Text(
                     text = DateFormatter.formatShort(selectedDate),
                     style = MaterialTheme.typography.headlineSmall,
@@ -209,8 +249,81 @@ private fun PaymentDateDialog(
         },
         confirmButton = {
             Button(
-                onClick = { onConfirm(selectedDate) },
+                onClick = { onConfirm(selectedDate, amountCents) },
                 colors = ButtonDefaults.buttonColors(containerColor = GreenIncome),
+                enabled = amountCents > 0,
+            ) {
+                Text("Confirmar")
+            }
+        },
+        dismissButton = {
+            TextButton(onClick = onDismiss) { Text("Cancelar") }
+        },
+    )
+}
+
+@Composable
+private fun AdvanceDialog(
+    maxAmountCents: Long,
+    onConfirm: (Long, LocalDate) -> Unit,
+    onDismiss: () -> Unit,
+) {
+    val today = LocalDate.now()
+    var selectedDate by remember { mutableStateOf(today) }
+    var amountCents by remember { mutableStateOf(0L) }
+
+    val shortcuts = listOf(
+        "Hoje" to today,
+        "Ontem" to today.minusDays(1),
+        "há 2 dias" to today.minusDays(2),
+        "há 15 dias" to today.minusDays(15),
+    )
+
+    val isValid = amountCents in 1..maxAmountCents
+
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        title = { Text("Adiantamento de receita") },
+        text = {
+            Column(verticalArrangement = Arrangement.spacedBy(Spacing.md)) {
+                Text(
+                    "Máximo: ${CurrencyFormatter.formatCents(maxAmountCents)}",
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                )
+                CurrencyInputField(
+                    amountCents = amountCents,
+                    onAmountChange = { amountCents = it.coerceAtMost(maxAmountCents) },
+                    label = "Quanto foi adiantado?",
+                    isError = amountCents > maxAmountCents,
+                    modifier = Modifier.fillMaxWidth(),
+                )
+                Text(
+                    text = DateFormatter.formatShort(selectedDate),
+                    style = MaterialTheme.typography.headlineSmall,
+                    textAlign = TextAlign.Center,
+                    modifier = Modifier.fillMaxWidth(),
+                )
+                Row(
+                    modifier = Modifier.horizontalScroll(rememberScrollState()),
+                    horizontalArrangement = Arrangement.spacedBy(Spacing.sm),
+                    verticalAlignment = Alignment.CenterVertically,
+                ) {
+                    shortcuts.forEach { (label, date) ->
+                        FilterChip(
+                            selected = selectedDate == date,
+                            onClick = { selectedDate = date },
+                            label = { Text(label) },
+                        )
+                    }
+                }
+            }
+        },
+        confirmButton = {
+            Button(
+                onClick = { onConfirm(amountCents, selectedDate) },
+                colors = ButtonDefaults.buttonColors(containerColor = BlueAdvance),
+                enabled = isValid,
             ) {
                 Text("Confirmar")
             }

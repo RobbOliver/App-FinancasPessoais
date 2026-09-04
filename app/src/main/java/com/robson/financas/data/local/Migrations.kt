@@ -202,3 +202,11 @@ val MIGRATION_12_13 = object : Migration(12, 13) {
         db.execSQL("PRAGMA foreign_keys=ON")
     }
 }
+
+/** Adiciona parentTransactionId — liga um adiantamento de receita à transação agendada original. */
+val MIGRATION_13_14 = object : Migration(13, 14) {
+    override fun migrate(db: SupportSQLiteDatabase) {
+        db.execSQL("ALTER TABLE `transactions` ADD COLUMN `parentTransactionId` INTEGER")
+        db.execSQL("CREATE INDEX IF NOT EXISTS `index_transactions_parentTransactionId` ON `transactions` (`parentTransactionId`)")
+    }
+}

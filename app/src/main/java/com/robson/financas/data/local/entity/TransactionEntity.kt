@@ -33,6 +33,7 @@ import java.time.LocalDate
         Index("accountId"),
         Index("transferToAccountId"),
         Index("categoryId"),
+        Index("parentTransactionId"),
     ],
 )
 data class TransactionEntity(
@@ -56,4 +57,5 @@ data class TransactionEntity(
     val isRecurring: Boolean = false,
     val recurrenceFrequency: TransactionRecurrence? = null,
     val recurrenceEndDate: LocalDate? = null,
+    val parentTransactionId: Long? = null,
 )
