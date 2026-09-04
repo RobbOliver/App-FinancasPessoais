@@ -33,6 +33,9 @@ interface GoalDao {
     @Query("SELECT * FROM goals WHERE yearMonth = :yearMonth")
     suspend fun getForMonth(yearMonth: Int): List<GoalEntity>
 
+    @Query("SELECT * FROM goal_categories")
+    fun observeAllCrossRefs(): Flow<List<GoalCategoryCrossRef>>
+
     @Query("SELECT categoryId FROM goal_categories WHERE goalId = :goalId")
     suspend fun getCategoryIdsForGoal(goalId: Long): List<Long>
 

@@ -65,12 +65,23 @@ class ReportsViewModel @Inject constructor(
         currentBalance,
         transactionRepository.observeAllRecurring(),
         goalRepository.observeAll(),
-    ) { selectedMonth, balance, recurring, allGoals ->
+        goalRepository.observeAllCategoryCrossRefs(),
+    ) { selectedMonth, balance, recurring, allGoals, allCrossRefs ->
         // Um mês pode ter várias metas separadas (uma por categoria, por ex.) — soma todas em
         // vez de pegar só uma, senão a despesa prevista fica muito abaixo do que foi planejado.
         val goalTotalsByMonth: Map<Int, Long> = allGoals
             .groupBy { it.yearMonth }
             .mapValues { (_, goals) -> goals.sumOf { it.amountCents } }
+
+        // categoryId das metas de cada mês — usado pra não somar duas vezes uma transação
+        // recorrente cuja categoria já está embutida no valor da meta (ex.: aluguel agendado +
+        // meta "Essenciais" que também cobre a categoria Moradia).
+        val goalIdsByMonth: Map<Int, List<Long>> = allGoals.groupBy({ it.yearMonth }, { it.id })
+        val categoryIdsByGoalId: Map<Long, List<Long>> = allCrossRefs.groupBy({ it.goalId }, { it.categoryId })
+        val goalCategoryIdsByMonth: Map<Int, Set<Long>> = goalIdsByMonth.mapValues { (_, goalIds) ->
+            goalIds.flatMap { categoryIdsByGoalId[it].orEmpty() }.toSet()
+        }
+
         val lastGoalMonthKey = goalTotalsByMonth.keys.maxOrNull()
         val lastGoalTotalCents = lastGoalMonthKey?.let { goalTotalsByMonth.getValue(it) } ?: 0L
         val hasLastGoal = lastGoalMonthKey != null
@@ -80,13 +91,19 @@ class ReportsViewModel @Inject constructor(
         var cumBalance = balance
         val projections = (0..11).map { offset ->
             val month = currentMonth.plusMonths(offset.toLong())
-            val (income, expense, status) = computeMonthTotals(month, recurring, goalTotalsByMonth, lastGoalTotalCents, hasLastGoal)
+            val (income, expense, status) = computeMonthTotals(
+                month, recurring, goalTotalsByMonth, goalCategoryIdsByMonth,
+                lastGoalMonthKey, lastGoalTotalCents, hasLastGoal,
+            )
             cumBalance += income - expense
             MonthProjection(month, income, expense, cumBalance, status)
         }
 
         // Chart data for selected month
-        val chartDays = computeChartDays(selectedMonth, recurring, goalTotalsByMonth, lastGoalTotalCents, hasLastGoal)
+        val chartDays = computeChartDays(
+            selectedMonth, recurring, goalTotalsByMonth, goalCategoryIdsByMonth,
+            lastGoalMonthKey, lastGoalTotalCents, hasLastGoal,
+        )
 
         ReportsUiState(
             selectedMonth = selectedMonth,
@@ -103,11 +120,24 @@ class ReportsViewModel @Inject constructor(
         month: YearMonth,
         recurring: List<TransactionWithDetails>,
         goalTotalsByMonth: Map<Int, Long>,
+        goalCategoryIdsByMonth: Map<Int, Set<Long>>,
+        lastGoalMonthKey: Int?,
         lastGoalTotalCents: Long,
         hasLastGoal: Boolean,
     ): Triple<Long, Long, GoalStatus> {
         val monthStart = month.atDay(1)
         val monthEnd = month.atEndOfMonth()
+        val monthKey = month.year * 100 + month.monthValue
+
+        val (goalAmount, status, excludedCategoryIds) = when {
+            goalTotalsByMonth[monthKey] != null ->
+                Triple(goalTotalsByMonth.getValue(monthKey), GoalStatus.REAL, goalCategoryIdsByMonth[monthKey].orEmpty())
+            hasLastGoal ->
+                Triple(lastGoalTotalCents, GoalStatus.SIMULATED, goalCategoryIdsByMonth[lastGoalMonthKey].orEmpty())
+            else ->
+                Triple(0L, GoalStatus.NONE, emptySet())
+        }
+
         var projIncome = 0L
         var projExpense = 0L
 
@@ -129,18 +159,12 @@ class ReportsViewModel @Inject constructor(
             val total = dates.size.toLong() * t.amountCents
             when (t.type) {
                 TransactionType.INCOME -> projIncome += total
-                TransactionType.EXPENSE -> projExpense += total
+                TransactionType.EXPENSE ->
+                    if (t.categoryId == null || t.categoryId !in excludedCategoryIds) projExpense += total
                 else -> {}
             }
         }
 
-        val monthKey = month.year * 100 + month.monthValue
-        val goalForMonth = goalTotalsByMonth[monthKey]
-        val (goalAmount, status) = when {
-            goalForMonth != null -> Pair(goalForMonth, GoalStatus.REAL)
-            hasLastGoal -> Pair(lastGoalTotalCents, GoalStatus.SIMULATED)
-            else -> Pair(0L, GoalStatus.NONE)
-        }
         projExpense += goalAmount
 
         return Triple(projIncome, projExpense, status)
@@ -150,12 +174,24 @@ class ReportsViewModel @Inject constructor(
         selectedMonth: YearMonth,
         recurring: List<TransactionWithDetails>,
         goalTotalsByMonth: Map<Int, Long>,
+        goalCategoryIdsByMonth: Map<Int, Set<Long>>,
+        lastGoalMonthKey: Int?,
         lastGoalTotalCents: Long,
         hasLastGoal: Boolean,
     ): List<DailyPoint> {
         val monthStart = selectedMonth.atDay(1)
         val monthEnd = selectedMonth.atEndOfMonth()
         val daysInMonth = monthEnd.dayOfMonth
+        val monthKey = selectedMonth.year * 100 + selectedMonth.monthValue
+
+        val (goalAmount, excludedCategoryIds) = when {
+            goalTotalsByMonth[monthKey] != null ->
+                Pair(goalTotalsByMonth.getValue(monthKey), goalCategoryIdsByMonth[monthKey].orEmpty())
+            hasLastGoal ->
+                Pair(lastGoalTotalCents, goalCategoryIdsByMonth[lastGoalMonthKey].orEmpty())
+            else ->
+                Pair(0L, emptySet())
+        }
 
         val dailyIncome = LongArray(daysInMonth + 1)
         val dailyExpense = LongArray(daysInMonth + 1)
@@ -179,15 +215,14 @@ class ReportsViewModel @Inject constructor(
                 val day = date.dayOfMonth
                 when (t.type) {
                     TransactionType.INCOME -> dailyIncome[day] += t.amountCents
-                    TransactionType.EXPENSE -> dailyExpense[day] += t.amountCents
+                    TransactionType.EXPENSE ->
+                        if (t.categoryId == null || t.categoryId !in excludedCategoryIds) dailyExpense[day] += t.amountCents
                     else -> {}
                 }
             }
         }
 
         // Spread meta expense evenly across days
-        val monthKey = selectedMonth.year * 100 + selectedMonth.monthValue
-        val goalAmount = goalTotalsByMonth[monthKey] ?: lastGoalTotalCents.takeIf { hasLastGoal } ?: 0L
         val dailyMeta = goalAmount / daysInMonth
         val metaRemainder = goalAmount % daysInMonth
 

@@ -19,6 +19,8 @@ class GoalRepository @Inject constructor(
 
     fun observeGoal(goalId: Long): Flow<GoalEntity?> = goalDao.observeById(goalId)
 
+    fun observeAllCategoryCrossRefs(): Flow<List<GoalCategoryCrossRef>> = goalDao.observeAllCrossRefs()
+
     fun observeCategoryDetailsForGoal(
         goalId: Long,
         startDate: LocalDate,
