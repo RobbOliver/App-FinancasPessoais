@@ -49,7 +49,6 @@ fun GoalsScreen(onOpenGoal: (Long) -> Unit, viewModel: GoalsViewModel = hiltView
     val yearMonth by viewModel.yearMonth.collectAsState()
     val rows by viewModel.rows.collectAsState()
     val expenseCategories by viewModel.expenseCategories.collectAsState()
-    val hasAnyGoalThisMonth by viewModel.hasAnyGoalThisMonth.collectAsState()
     val previousMonthHasGoals by viewModel.previousMonthHasGoals.collectAsState()
     val editingGoal by viewModel.editingGoal.collectAsState()
 
@@ -63,56 +62,61 @@ fun GoalsScreen(onOpenGoal: (Long) -> Unit, viewModel: GoalsViewModel = hiltView
             AppFab(onClick = viewModel::openNewGoal, contentDescription = "Nova meta", icon = Icons.Filled.Add)
         },
     ) { innerPadding ->
-        if (rows.isEmpty()) {
-            Box(
-                modifier = Modifier
-                    .fillMaxSize()
-                    .padding(innerPadding)
-                    .padding(Spacing.lg),
-                contentAlignment = Alignment.Center,
-            ) {
-                EmptyState(
-                    icon = Icons.Filled.Flag,
-                    title = "Nenhuma meta criada ainda",
-                    subtitle = "Toque em + e escolha quais categorias fazem parte de cada meta.",
-                    actionLabel = "Criar meta",
-                    onAction = viewModel::openNewGoal,
-                )
-            }
-        } else {
-            LazyColumn(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(innerPadding),
-                contentPadding = PaddingValues(
-                    start = Spacing.lg,
-                    top = Spacing.lg,
-                    end = Spacing.lg,
-                    bottom = Spacing.lg + FabClearance,
-                ),
-                verticalArrangement = Arrangement.spacedBy(Spacing.md),
-            ) {
-                item {
-                    MonthNavigator(
-                        label = DateFormatter.formatMonthYear(yearMonth),
-                        onPrevious = viewModel::prevMonth,
-                        onNext = viewModel::nextMonth,
+        Column(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(innerPadding),
+        ) {
+            // Navegação de mês sempre visível, mesmo sem metas cadastradas no mês.
+            MonthNavigator(
+                label = DateFormatter.formatMonthYear(yearMonth),
+                onPrevious = viewModel::prevMonth,
+                onNext = viewModel::nextMonth,
+                modifier = Modifier.padding(horizontal = Spacing.lg, vertical = Spacing.sm),
+            )
+
+            if (rows.isEmpty()) {
+                if (previousMonthHasGoals) {
+                    AppPrimaryButton(
+                        text = "Copiar metas de ${DateFormatter.formatMonthYear(yearMonth.minusMonths(1))}",
+                        onClick = viewModel::importFromPreviousMonth,
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(horizontal = Spacing.lg),
                     )
                 }
-                item {
-                    GoalsSummaryCard(plannedCents = plannedCents, spentCents = spentCents, balanceCents = balanceCents)
+                Box(
+                    modifier = Modifier
+                        .weight(1f)
+                        .fillMaxWidth()
+                        .padding(Spacing.lg),
+                    contentAlignment = Alignment.Center,
+                ) {
+                    EmptyState(
+                        icon = Icons.Filled.Flag,
+                        title = "Nenhuma meta criada ainda",
+                        subtitle = "Toque em + e escolha quais categorias fazem parte de cada meta.",
+                        actionLabel = "Criar meta",
+                        onAction = viewModel::openNewGoal,
+                    )
                 }
-                if (!hasAnyGoalThisMonth && previousMonthHasGoals) {
+            } else {
+                LazyColumn(
+                    modifier = Modifier.fillMaxWidth(),
+                    contentPadding = PaddingValues(
+                        start = Spacing.lg,
+                        top = Spacing.sm,
+                        end = Spacing.lg,
+                        bottom = Spacing.lg + FabClearance,
+                    ),
+                    verticalArrangement = Arrangement.spacedBy(Spacing.md),
+                ) {
                     item {
-                        AppPrimaryButton(
-                            text = "Importar metas de ${DateFormatter.formatMonthYear(yearMonth.minusMonths(1))}",
-                            onClick = viewModel::importFromPreviousMonth,
-                            modifier = Modifier.fillMaxWidth(),
-                        )
+                        GoalsSummaryCard(plannedCents = plannedCents, spentCents = spentCents, balanceCents = balanceCents)
                     }
-                }
-                items(rows, key = { it.goalId }) { row ->
-                    GoalRowItem(row = row, onClick = { onOpenGoal(row.goalId) })
+                    items(rows, key = { it.goalId }) { row ->
+                        GoalRowItem(row = row, onClick = { onOpenGoal(row.goalId) })
+                    }
                 }
             }
         }
@@ -133,9 +137,14 @@ fun GoalsScreen(onOpenGoal: (Long) -> Unit, viewModel: GoalsViewModel = hiltView
 }
 
 @Composable
-private fun MonthNavigator(label: String, onPrevious: () -> Unit, onNext: () -> Unit) {
+private fun MonthNavigator(
+    label: String,
+    onPrevious: () -> Unit,
+    onNext: () -> Unit,
+    modifier: Modifier = Modifier,
+) {
     Row(
-        modifier = Modifier.fillMaxWidth(),
+        modifier = modifier.fillMaxWidth(),
         horizontalArrangement = Arrangement.SpaceBetween,
         verticalAlignment = Alignment.CenterVertically,
     ) {

@@ -39,10 +39,6 @@ class GoalsViewModel @Inject constructor(
         .observeByType(CategoryType.EXPENSE)
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
 
-    val hasAnyGoalThisMonth: StateFlow<Boolean> = rows
-        .map { it.isNotEmpty() }
-        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), true)
-
     val previousMonthHasGoals: StateFlow<Boolean> = _yearMonth
         .flatMapLatest { ym ->
             val prev = ym.minusMonths(1)
