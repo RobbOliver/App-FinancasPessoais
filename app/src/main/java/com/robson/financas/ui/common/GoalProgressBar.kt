@@ -25,7 +25,7 @@ fun GoalProgressBar(
     val fillColor = if (overBudget) RedExpense else MaterialTheme.colorScheme.primary
     val fraction = when {
         overBudget -> 1f
-        goalCents > 0 -> (1f - spentCents.toFloat() / goalCents.toFloat()).coerceIn(0f, 1f)
+        goalCents > 0 -> (spentCents.toFloat() / goalCents.toFloat()).coerceIn(0f, 1f)
         else -> 0f
     }
     val animatedFraction by animateFloatAsState(
