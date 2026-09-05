@@ -10,6 +10,11 @@ sealed class Screen(val route: String) {
         fun routeFor(accountId: Long? = null) = "accounts/edit?accountId=${accountId ?: -1L}"
     }
 
+    data object AccountStatement : Screen("accounts/{accountId}/statement") {
+        const val ARG_ACCOUNT_ID = "accountId"
+        fun routeFor(accountId: Long) = "accounts/$accountId/statement"
+    }
+
     data object Categories : Screen("categories")
 
     data object AddEditCategory : Screen("categories/edit?categoryId={categoryId}") {

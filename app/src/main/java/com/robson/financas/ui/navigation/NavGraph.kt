@@ -16,6 +16,7 @@ import androidx.navigation.compose.composable
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
+import com.robson.financas.ui.accounts.AccountStatementScreen
 import com.robson.financas.ui.accounts.AccountsScreen
 import com.robson.financas.ui.accounts.AddEditAccountScreen
 import com.robson.financas.ui.categories.AddEditCategoryScreen
@@ -89,6 +90,7 @@ fun FinanceNavHost(
                     onBack = { navController.popBackStack() },
                     onAddAccount = { navController.navigate(Screen.AddEditAccount.routeFor()) },
                     onEditAccount = { id -> navController.navigate(Screen.AddEditAccount.routeFor(id)) },
+                    onOpenStatement = { id -> navController.navigate(Screen.AccountStatement.routeFor(id)) },
                 )
             }
             composable(
@@ -101,6 +103,17 @@ fun FinanceNavHost(
                 ),
             ) {
                 AddEditAccountScreen(onBack = { navController.popBackStack() })
+            }
+            composable(
+                route = Screen.AccountStatement.route,
+                arguments = listOf(
+                    navArgument(Screen.AccountStatement.ARG_ACCOUNT_ID) { type = NavType.LongType },
+                ),
+            ) {
+                AccountStatementScreen(
+                    onBack = { navController.popBackStack() },
+                    onOpenTransaction = { id -> navController.navigate(Screen.TransactionDetail.routeFor(id)) },
+                )
             }
             composable(Screen.Categories.route) {
                 CategoriesScreen(

@@ -17,6 +17,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Delete
+import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -60,6 +61,7 @@ fun AccountsScreen(
     onBack: () -> Unit,
     onAddAccount: () -> Unit,
     onEditAccount: (Long) -> Unit,
+    onOpenStatement: (Long) -> Unit,
     viewModel: AccountsViewModel = hiltViewModel(),
 ) {
     val accounts by viewModel.accounts.collectAsState()
@@ -112,11 +114,12 @@ fun AccountsScreen(
                     AppCard(
                         modifier = Modifier.fillMaxWidth(),
                         contentPadding = PaddingValues(0.dp),
-                        onClick = { onEditAccount(item.account.id) },
+                        onClick = { onOpenStatement(item.account.id) },
                     ) {
                         AccountRow(
                             item = item,
                             hideBalances = hideBalances,
+                            onEditClick = { onEditAccount(item.account.id) },
                             onDeleteClick = { pendingDelete = item.account },
                         )
                     }
@@ -155,6 +158,7 @@ fun AccountsScreen(
 private fun AccountRow(
     item: AccountWithBalance,
     hideBalances: Boolean,
+    onEditClick: () -> Unit,
     onDeleteClick: () -> Unit,
 ) {
     Row(
@@ -189,6 +193,9 @@ private fun AccountRow(
                 color = if (item.balanceCents >= 0) GreenIncome else RedExpense,
                 style = MaterialTheme.typography.bodyLarge,
             )
+            IconButton(onClick = onEditClick) {
+                Icon(Icons.Filled.Edit, contentDescription = "Editar conta")
+            }
             IconButton(onClick = onDeleteClick) {
                 Icon(Icons.Filled.Delete, contentDescription = "Excluir")
             }

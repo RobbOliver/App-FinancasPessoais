@@ -181,6 +181,7 @@ fun TransactionDetailScreen(
             onConfirm = { date, amount ->
                 viewModel.markAsPaid(date, amount)
                 showPaymentDateDialog = false
+                onBack()
             },
             onDismiss = { showPaymentDateDialog = false },
         )
@@ -192,6 +193,7 @@ fun TransactionDetailScreen(
             onConfirm = { amount, date ->
                 viewModel.advancePayment(amount, date)
                 showAdvanceDialog = false
+                onBack()
             },
             onDismiss = { showAdvanceDialog = false },
         )
