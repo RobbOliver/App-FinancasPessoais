@@ -21,6 +21,7 @@ enum class TransactionType {
 enum class TransactionSource {
     MANUAL,
     NOTIFICATION,
+    ADJUSTMENT,
 }
 
 enum class TransactionRecurrence {

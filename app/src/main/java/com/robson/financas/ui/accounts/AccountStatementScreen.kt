@@ -10,20 +10,28 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material.icons.filled.Tune
+import androidx.compose.material3.AlertDialog
+import androidx.compose.material3.Button
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
+import com.robson.financas.ui.common.CurrencyInputField
 import com.robson.financas.ui.common.TransactionListItem
 import com.robson.financas.ui.designsystem.AppCard
 import com.robson.financas.ui.theme.GreenIncome
@@ -39,6 +47,7 @@ fun AccountStatementScreen(
     viewModel: AccountStatementViewModel = hiltViewModel(),
 ) {
     val uiState by viewModel.uiState.collectAsState()
+    var showAdjustDialog by remember { mutableStateOf(false) }
 
     Scaffold(
         topBar = {
@@ -48,6 +57,11 @@ fun AccountStatementScreen(
                 navigationIcon = {
                     IconButton(onClick = onBack) {
                         Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Voltar")
+                    }
+                },
+                actions = {
+                    IconButton(onClick = { showAdjustDialog = true }) {
+                        Icon(Icons.Filled.Tune, contentDescription = "Ajustar saldo")
                     }
                 },
             )
@@ -104,4 +118,67 @@ fun AccountStatementScreen(
             }
         }
     }
+
+    if (showAdjustDialog) {
+        AdjustBalanceDialog(
+            currentBalanceCents = uiState.currentBalanceCents,
+            onConfirm = { target ->
+                viewModel.adjustBalance(target)
+                showAdjustDialog = false
+            },
+            onDismiss = { showAdjustDialog = false },
+        )
+    }
+}
+
+@Composable
+private fun AdjustBalanceDialog(
+    currentBalanceCents: Long,
+    onConfirm: (Long) -> Unit,
+    onDismiss: () -> Unit,
+) {
+    var targetCents by remember { mutableStateOf(currentBalanceCents.coerceAtLeast(0L)) }
+    val diff = targetCents - currentBalanceCents
+
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        title = { Text("Ajustar saldo") },
+        text = {
+            Column(verticalArrangement = Arrangement.spacedBy(Spacing.md)) {
+                Text(
+                    "Saldo atual no app: ${CurrencyFormatter.formatCents(currentBalanceCents)}",
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                )
+                CurrencyInputField(
+                    amountCents = targetCents,
+                    onAmountChange = { targetCents = it },
+                    label = "Saldo correto (conforme o banco)",
+                    modifier = Modifier.fillMaxWidth(),
+                )
+                if (diff != 0L) {
+                    Text(
+                        text = if (diff > 0) {
+                            "Cria um lançamento de ajuste de entrada: +${CurrencyFormatter.formatCents(diff)}"
+                        } else {
+                            "Cria um lançamento de ajuste de saída: -${CurrencyFormatter.formatCents(-diff)}"
+                        },
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = if (diff > 0) GreenIncome else RedExpense,
+                    )
+                }
+            }
+        },
+        confirmButton = {
+            Button(
+                onClick = { onConfirm(targetCents) },
+                enabled = diff != 0L,
+            ) {
+                Text("Confirmar")
+            }
+        },
+        dismissButton = {
+            TextButton(onClick = onDismiss) { Text("Cancelar") }
+        },
+    )
 }
