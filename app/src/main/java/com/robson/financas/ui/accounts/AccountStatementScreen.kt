@@ -137,7 +137,7 @@ private fun AdjustBalanceDialog(
     onConfirm: (Long) -> Unit,
     onDismiss: () -> Unit,
 ) {
-    var targetCents by remember { mutableStateOf(currentBalanceCents.coerceAtLeast(0L)) }
+    var targetCents by remember { mutableStateOf(0L) }
     val diff = targetCents - currentBalanceCents
 
     AlertDialog(
@@ -156,7 +156,7 @@ private fun AdjustBalanceDialog(
                     label = "Saldo correto (conforme o banco)",
                     modifier = Modifier.fillMaxWidth(),
                 )
-                if (diff != 0L) {
+                if (targetCents > 0 && diff != 0L) {
                     Text(
                         text = if (diff > 0) {
                             "Cria um lançamento de ajuste de entrada: +${CurrencyFormatter.formatCents(diff)}"
@@ -172,7 +172,7 @@ private fun AdjustBalanceDialog(
         confirmButton = {
             Button(
                 onClick = { onConfirm(targetCents) },
-                enabled = diff != 0L,
+                enabled = targetCents > 0 && diff != 0L,
             ) {
                 Text("Confirmar")
             }
